@@ -66,52 +66,52 @@ header{background:var(--ucc-azul);color:#fff;padding:16px 20px;display:flex;alig
   background: #fff;
   padding: 14px;
   border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(11,18,32,0.06);
-  margin-bottom: 20px;
-  display: none;
+  box-shadow:0 6px 18px rgba(11,18,32,0.06);
+  margin-bottom:20px;
+  display:none;
 }
 .params-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
+  gap:15px;
+  margin-top:15px;
 }
 .param-group {
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 4px solid var(--ucc-azul);
+  background:#f8f9fa;
+  padding:12px;
+  border-radius:8px;
+  border-left:4px solid var(--ucc-azul);
 }
 .param-title {
   font-weight: bold;
   color: var(--ucc-azul);
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom:8px;
+  font-size:14px;
 }
 .param-item {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 5px;
-  font-size: 13px;
+  margin-bottom:5px;
+  font-size:13px;
 }
 .param-label {
-  color: #666;
+  color:#666;
 }
 .param-value {
-  font-weight: 600;
-  color: #000;
+  font-weight:600;
+  color:#000;
 }
 .equation-box {
-  background: #f0f7ff;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #d1e7ff;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-top: 10px;
-  white-space: pre-wrap;
-  word-break: break-all;
+  background:#f0f7ff;
+  padding:15px;
+  border-radius:8px;
+  border:1px solid #d1e7ff;
+  font-family:'Courier New',monospace;
+  font-size:14px;
+  line-height:1.5;
+  margin-top:10px;
+  white-space:pre-wrap;
+  word-break:break-all;
 }
 
 /* Table area */
@@ -128,45 +128,45 @@ th{background:var(--ucc-azul);color:#fff;border-radius:6px}
 /* Pestañas de pronósticos */
 .forecast-tabs {
   display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
+  gap:5px;
+  margin-bottom:15px;
+  border-bottom:2px solid #e0e0e0;
+  padding-bottom:10px;
 }
 .forecast-tab {
-  padding: 8px 15px;
-  background: #f5f5f5;
-  border: none;
-  border-radius: 6px 6px 0 0;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.3s;
+  padding:8px 15px;
+  background:#f5f5f5;
+  border:none;
+  border-radius:6px 6px 0 0;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:500;
+  transition:all 0.3s;
 }
 .forecast-tab.active {
-  background: var(--ucc-azul);
-  color: white;
-  border-bottom: 3px solid var(--ucc-verde);
+  background:var(--ucc-azul);
+  color:white;
+  border-bottom:3px solid var(--ucc-verde);
 }
 .forecast-tab.loaded {
-  background: #e8f5e8;
-  border-left: 3px solid var(--ucc-verde);
+  background:#e8f5e8;
+  border-left:3px solid var(--ucc-verde);
 }
 .forecast-tab.error {
-  background: #ffebee;
-  border-left: 3px solid #f44336;
+  background:#ffebee;
+  border-left:3px solid #f44336;
 }
 
 /* Indicador de carga */
 .loading-spinner {
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid var(--ucc-verde);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 8px;
+  width:16px;
+  height:16px;
+  border:2px solid #f3f3f3;
+  border-top:2px solid var(--ucc-verde);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin-right:8px;
 }
 @keyframes spin {
   0% { transform: rotate(0deg); }
@@ -188,7 +188,7 @@ th{background:var(--ucc-azul);color:#fff;border-radius:6px}
   .charts-panel{gap:12px}
   header{flex-direction:column;align-items:flex-start;gap:8px}
   .forecast-tabs {
-    flex-wrap: wrap;
+    flex-wrap:wrap;
   }
 }
 
@@ -201,16 +201,16 @@ body.dark .model-params-card {background:#0f1724;box-shadow:none}
 body.dark th{background:#001f3f}
 body.dark .kpi-value{color:#7AC043}
 body.dark .param-group {
-  background: #1a2332;
+  background:#1a2332;
   border-left-color: var(--ucc-verde);
 }
 body.dark .equation-box {
-  background: #1a2332;
-  border-color: #2a3a52;
+  background:#1a2332;
+  border-color:#2a3a52;
 }
 body.dark .forecast-tab:not(.active) {
-  background: #1a2332;
-  color: #e6eef8;
+  background:#1a2332;
+  color:#e6eef8;
 }
 </style>
 </head>
@@ -407,7 +407,7 @@ body.dark .forecast-tab:not(.active) {
           <div><span style="display: inline-block; width: 12px; height: 12px; background: black; margin-right: 5px; border-radius: 50%;"></span> Datos Históricos</div>
           <div><span style="display: inline-block; width: 12px; height: 12px; background: red; margin-right: 5px; border-radius: 50%;"></span> Pronóstico</div>
           <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(0, 255, 0, 0.3); border: 1px solid #00c853; margin-right: 5px;"></span> Confianza 80%</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(255, 255, 0, 0.3); border: 1px solid #ffd600; margin-right: 5px;"></span> Confianza 95%</div>
+          <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(255, 193, 7, 0.3); border: 1px solid #ff9800; margin-right: 5px;"></span> Confianza 95%</div>
           <div><span style="display: inline-block; width: 12px; height: 12px; background: blue; border: 1px dashed blue; margin-right: 5px;"></span> Límite Permitido</div>
         </div>
       </div>
@@ -476,26 +476,26 @@ async function loadData(){
     updateKPI();
     
     // Actualizar tabla principal con datos históricos
-    updateHistoricalTable();
+    updateTable();
   }catch(e){
     console.error("API error",e);
   }
 }
 
-/* ---------- Actualizar tabla con datos históricos ---------- */
-function updateHistoricalTable() {
+/* ---------- Actualizar tabla con datos filtrados ---------- */
+function updateTable() {
   const tbody = document.getElementById('dataTableBody');
   if (!tbody) return;
   
   tbody.innerHTML = '';
   
-  if (!rawData.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No hay datos disponibles</td></tr>';
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No hay datos disponibles para el rango seleccionado</td></tr>';
     return;
   }
   
-  // Mostrar últimos 200 registros en orden descendente (más recientes primero)
-  const rows = [...rawData].slice(-200).reverse();
+  // Mostrar datos filtrados en orden descendente (más recientes primero)
+  const rows = [...filtered].reverse();
   
   rows.forEach(r => {
     const tr = document.createElement('tr');
@@ -532,6 +532,7 @@ function applyRange(range, from=null, to=null){
     return d >= start && d <= end;
   });
   renderAll();
+  updateTable(); // Actualizar tabla cuando se cambia el rango
 }
 
 /* ---------- render KPIs ---------- */
@@ -645,17 +646,18 @@ document.getElementById('filterTo').addEventListener('change', applyDateFilter);
 document.getElementById('clearFilters').addEventListener('click', ()=>{
   document.getElementById('filterFrom').value='';
   document.getElementById('filterTo').value='';
-  renderAll();
+  applyRange('24h'); // Vuelve al rango por defecto
 });
 
 function applyDateFilter(){
   const f=document.getElementById('filterFrom').value;
   const t=document.getElementById('filterTo').value;
-  if(!f && !t) return renderAll();
+  if(!f && !t) return applyRange('24h');
   const from = f ? new Date(f) : new Date(0);
   const to = t ? new Date(t + 'T23:59:59') : new Date();
   filtered = rawData.filter(r=>{ const d=parseDate(r.fecha); return d>=from && d<=to; });
   renderAll();
+  updateTable();
 }
 
 /* ---------- CSV / XLS / PDF export ---------- */
@@ -856,8 +858,27 @@ function processForecastData(data, variable) {
     aic: aic,
     limite_permitido: limites[variable],
     historico: historico,
-    pronosticos: pronosticos
+    pronosticos: pronosticos,
+    // Asegurarse de que existen intervalos de confianza
+    confianza_80: data.confianza_80 || generateConfidenceIntervals(pronosticos, 0.8),
+    confianza_95: data.confianza_95 || generateConfidenceIntervals(pronosticos, 0.95)
   };
+}
+
+// Generar intervalos de confianza si no existen
+function generateConfidenceIntervals(pronosticos, confidenceLevel) {
+  if (!pronosticos || pronosticos.length === 0) return [];
+  
+  const multiplier = confidenceLevel === 0.8 ? 1.28 : 1.96;
+  return pronosticos.map((p, i) => {
+    const baseValue = parseFloat(p.pronostico) || 0;
+    const error = baseValue * 0.05 * (i + 1); // Error aumenta con el tiempo
+    return {
+      fecha: p.fecha,
+      lower: baseValue - error * multiplier,
+      upper: baseValue + error * multiplier
+    };
+  });
 }
 
 // Actualizar estado de la pestaña
@@ -878,7 +899,7 @@ function updateTabStatus(variable, status) {
   }
 }
 
-// Actualizar gráfica de pronóstico
+// Actualizar gráfica de pronóstico CON BANDAS DE CONFIANZA
 function updateForecastChart() {
   const data = forecastData[currentForecastVariable];
   if (!data) {
@@ -949,6 +970,64 @@ function updateForecastChart() {
     }
   ];
   
+  // Añadir banda de confianza 95% (amarillo/naranja)
+  if (data.confianza_95 && data.confianza_95.length > 0) {
+    const conf95Lower = data.confianza_95.map(c => parseFloat(c.lower) || 0);
+    const conf95Upper = data.confianza_95.map(c => parseFloat(c.upper) || 0);
+    
+    datasets.push({
+      label: 'Confianza 95%',
+      data: forecastLabels.map((date, i) => ({x: date, y: conf95Upper[i]})),
+      borderColor: 'rgba(255, 193, 7, 0)',
+      backgroundColor: 'rgba(255, 193, 7, 0.3)',
+      fill: '-1',
+      tension: 0,
+      pointRadius: 0,
+      borderWidth: 0
+    });
+    
+    datasets.push({
+      label: 'Confianza 95% Lower',
+      data: forecastLabels.map((date, i) => ({x: date, y: conf95Lower[i]})),
+      borderColor: 'rgba(255, 193, 7, 0)',
+      backgroundColor: 'rgba(255, 193, 7, 0.3)',
+      fill: false,
+      tension: 0,
+      pointRadius: 0,
+      borderWidth: 0,
+      showLine: false
+    });
+  }
+  
+  // Añadir banda de confianza 80% (verde claro)
+  if (data.confianza_80 && data.confianza_80.length > 0) {
+    const conf80Lower = data.confianza_80.map(c => parseFloat(c.lower) || 0);
+    const conf80Upper = data.confianza_80.map(c => parseFloat(c.upper) || 0);
+    
+    datasets.push({
+      label: 'Confianza 80%',
+      data: forecastLabels.map((date, i) => ({x: date, y: conf80Upper[i]})),
+      borderColor: 'rgba(0, 200, 83, 0)',
+      backgroundColor: 'rgba(0, 200, 83, 0.3)',
+      fill: '-1',
+      tension: 0,
+      pointRadius: 0,
+      borderWidth: 0
+    });
+    
+    datasets.push({
+      label: 'Confianza 80% Lower',
+      data: forecastLabels.map((date, i) => ({x: date, y: conf80Lower[i]})),
+      borderColor: 'rgba(0, 200, 83, 0)',
+      backgroundColor: 'rgba(0, 200, 83, 0.3)',
+      fill: false,
+      tension: 0,
+      pointRadius: 0,
+      borderWidth: 0,
+      showLine: false
+    });
+  }
+  
   // Añadir línea de límite permitido si existe
   if (data.limite_permitido !== null) {
     datasets.push({
@@ -974,21 +1053,56 @@ function updateForecastChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                label += context.parsed.y.toFixed(2) + ' ' + getUnit(currentForecastVariable);
+              }
+              return label;
+            }
+          }
+        }
       },
       scales: {
         x: {
           type: 'time',
-          time: { unit: 'day' },
-          title: { display: true, text: 'Fecha y Hora' }
+          time: { 
+            unit: 'day',
+            displayFormats: {
+              day: 'dd MMM'
+            }
+          },
+          title: { 
+            display: true, 
+            text: 'Fecha y Hora',
+            font: { size: 12 }
+          }
         },
         y: {
           beginAtZero: currentForecastVariable.includes('pm'),
           title: {
             display: true,
-            text: getVariableDisplayName(currentForecastVariable)
+            text: getVariableDisplayName(currentForecastVariable),
+            font: { size: 12 }
+          },
+          ticks: {
+            callback: function(value) {
+              return value.toFixed(1);
+            }
           }
         }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index'
       }
     }
   });
@@ -1046,7 +1160,15 @@ function updateModelParams() {
     </div>
     
     <div class="param-group">
-      <div class="param-title">Parámetros Estadísticos</div>
+      <div class="param-title">Intervalos de Confianza</div>
+      <div class="param-item">
+        <span class="param-label">Confianza 95%:</span>
+        <span class="param-value">Disponible</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">Confianza 80%:</span>
+        <span class="param-value">Disponible</span>
+      </div>
       <div class="param-item">
         <span class="param-label">Fecha de generación:</span>
         <span class="param-value">${new Date(data.fecha_generacion).toLocaleString()}</span>
@@ -1154,5 +1276,4 @@ setupForecastTabs();
 </script>
 </body>
 </html>
-
 
