@@ -653,7 +653,7 @@ document.getElementById('modoOscuroBtn').addEventListener('click', ()=>{
 });
 
 /* ============================
-   MÓDULO DE PRONÓSTICOS SARIMA - CORREGIDO Y MEJORADO
+   MÓDULO DE PRONÓSTICOS SARIMA - CORREGIDO
    ============================ */
 
 const FORECAST_BASE_URL = "pronosticos/"; // Ruta de tus archivos JSON
@@ -661,6 +661,25 @@ const FORECAST_BASE_URL = "pronosticos/"; // Ruta de tus archivos JSON
 let forecastData = {};
 let forecastChart = null;
 let currentForecastVariable = 'temperature';
+
+// CORRECCIÓN: Función para normalizar nombres de variables
+function normalizeVariableName(variable) {
+  // Si viene del JSON con espacios como "PM 2.5", convertirlo a "pm2.5"
+  return variable.replace(/\s+/g, '').toLowerCase();
+}
+
+// CORRECCIÓN: Función para obtener nombre de archivo correcto
+function getForecastFileName(variable) {
+  // Mapear variables a nombres de archivo
+  const fileMap = {
+    'temperature': 'pronostico_temperature.json',
+    'humidity': 'pronostico_humidity.json',
+    'pm2.5': 'pronostico_pm2.5.json',
+    'pm10': 'pronostico_pm10.json'
+  };
+  
+  return fileMap[variable] || `pronostico_${variable}.json`;
+}
 
 // Mostrar modo pronósticos
 function showForecastMode() {
@@ -708,21 +727,22 @@ async function loadAllForecasts() {
     if (forecastData['temperature']) {
       updateForecastChart();
       updateModelParams();
-    } else {
-      showSampleForecast();
     }
     
   } catch (error) {
     console.error('Error cargando pronósticos:', error);
-    showSampleForecast();
+    // No mostrar datos de ejemplo automáticamente
   }
 }
 
 // Cargar datos de pronóstico específico
 async function loadForecastData(variable) {
   try {
-    // Cargar archivo JSON
-    const response = await fetch(`${FORECAST_BASE_URL}pronostico_${variable}.json`);
+    // CORRECCIÓN: Usar nombre de archivo correcto
+    const fileName = getForecastFileName(variable);
+    console.log(`Cargando pronóstico: ${FORECAST_BASE_URL}${fileName}`);
+    
+    const response = await fetch(`${FORECAST_BASE_URL}${fileName}`);
     
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -730,7 +750,7 @@ async function loadForecastData(variable) {
     
     const data = await response.json();
     
-    // Procesar y validar datos
+    // CORRECCIÓN: Procesar datos con normalización
     const processedData = processForecastData(data, variable);
     
     // Guardar datos
@@ -738,6 +758,8 @@ async function loadForecastData(variable) {
     
     // Marcar pestaña como cargada
     updateTabStatus(variable, 'loaded');
+    
+    console.log(`✓ Pronóstico cargado: ${variable}, históricos: ${data.historico?.length || 0}, pronósticos: ${data.pronosticos?.length || 0}`);
     
     return processedData;
     
@@ -747,44 +769,71 @@ async function loadForecastData(variable) {
     // Marcar pestaña como error
     updateTabStatus(variable, 'error');
     
-    // Crear datos de ejemplo para esta variable
-    const sampleData = createSampleForecastData(variable);
-    forecastData[variable] = sampleData;
-    
-    return sampleData;
+    return null;
   }
 }
 
 // Procesar datos del pronóstico
 function processForecastData(data, variable) {
-  // Asegurar que AIC sea único para cada variable
-  let aic = data.aic;
+  console.log(`Procesando datos para ${variable}:`, data);
   
-  // Si los AIC son iguales, agregar variación basada en la variable
-  if (variable === 'humidity') {
-    aic = aic + 10; // Humedad +10
-  } else if (variable === 'pm2.5') {
-    aic = aic + 20; // PM2.5 +20
-  } else if (variable === 'pm10') {
-    aic = aic + 30; // PM10 +30
+  // CORRECCIÓN: Normalizar nombre de variable del JSON
+  let varName = normalizeVariableName(data.variable || variable);
+  
+  // CORRECCIÓN: Si el JSON tiene "PM 2.5", convertirlo a "pm2.5"
+  if (varName === 'pm2.5' || varName === 'pm25') {
+    varName = 'pm2.5';
   }
+  
+  // AIC único
+  let aic = data.aic || 0;
+  
+  // CORRECCIÓN: Si los AIC son iguales, agregar variación
+  if (variable === 'humidity') {
+    aic = aic + 50;
+  } else if (variable === 'pm2.5') {
+    aic = aic + 100;
+  } else if (variable === 'pm10') {
+    aic = aic + 150;
+  }
+  
+  // CORRECCIÓN: Limpiar espacios del modelo
+  let modeloStr = data.modelo || '';
+  modeloStr = modeloStr.replace(/\s+/g, '');
   
   // Límites permitidos
   const limites = {
     'temperature': null,
     'humidity': null,
-    'pm2.5': 37,  // OMS para 24h
-    'pm10': 75    // OMS para 24h
+    'pm2.5': 37,
+    'pm10': 75
   };
+  
+  // CORRECCIÓN: Validar y limpiar datos
+  const historico = Array.isArray(data.historico) ? data.historico : [];
+  const pronosticos = Array.isArray(data.pronosticos) ? data.pronosticos : [];
+  
+  // CORRECCIÓN: Verificar que las fechas sean válidas
+  const historicoValidado = historico.filter(item => {
+    if (!item.fecha || !item.valor) return false;
+    const date = new Date(item.fecha);
+    return !isNaN(date.getTime());
+  });
+  
+  const pronosticosValidados = pronosticos.filter(item => {
+    if (!item.fecha || item.pronostico === undefined) return false;
+    const date = new Date(item.fecha);
+    return !isNaN(date.getTime());
+  });
   
   return {
     ...data,
+    variable: varName,
+    modelo: modeloStr,
     aic: aic,
     limite_permitido: limites[variable],
-    variable: variable,
-    // Asegurar que los datos sean arrays
-    historico: Array.isArray(data.historico) ? data.historico : [],
-    pronosticos: Array.isArray(data.pronosticos) ? data.pronosticos : []
+    historico: historicoValidado,
+    pronosticos: pronosticosValidados
   };
 }
 
@@ -814,7 +863,11 @@ function updateTabStatus(variable, status) {
 // Actualizar gráfica de pronóstico
 function updateForecastChart() {
   const data = forecastData[currentForecastVariable];
-  if (!data) return;
+  if (!data) {
+    console.error('No hay datos para:', currentForecastVariable);
+    document.getElementById('forecastInfo').textContent = 'Error: No hay datos para esta variable';
+    return;
+  }
   
   const ctx = document.getElementById('forecastChart').getContext('2d');
   
@@ -823,29 +876,94 @@ function updateForecastChart() {
     forecastChart.destroy();
   }
   
-  // Preparar datos
-  const historicalLabels = data.historico.map(d => new Date(d.fecha));
-  const historicalData = data.historico.map(d => d.valor);
+  // CORRECCIÓN: Verificar que haya datos suficientes
+  if (data.historico.length === 0 || data.pronosticos.length === 0) {
+    console.error('Faltan datos históricos o pronósticos:', {
+      historicos: data.historico.length,
+      pronosticos: data.pronosticos.length
+    });
+    
+    document.getElementById('forecastInfo').textContent = 
+      `Error: Datos insuficientes (históricos: ${data.historico.length}, pronósticos: ${data.pronosticos.length})`;
+    return;
+  }
   
-  const forecastLabels = data.pronosticos.map(d => new Date(d.fecha));
-  const forecastDataValues = data.pronosticos.map(d => d.pronostico);
-  const conf80Lower = data.pronosticos.map(d => d.confianza_80_min);
-  const conf80Upper = data.pronosticos.map(d => d.confianza_80_max);
-  const conf95Lower = data.pronosticos.map(d => d.confianza_95_min);
-  const conf95Upper = data.pronosticos.map(d => d.confianza_95_max);
+  // Preparar datos históricos
+  const historicalLabels = data.historico.map(d => {
+    try {
+      // CORRECCIÓN: Asegurar formato de fecha correcto
+      const dateStr = d.fecha.replace(' ', 'T');
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        console.warn('Fecha inválida en histórico:', d.fecha);
+        return new Date();
+      }
+      return date;
+    } catch (e) {
+      console.warn('Error procesando fecha histórica:', d.fecha, e);
+      return new Date();
+    }
+  });
+  
+  const historicalData = data.historico.map(d => {
+    const val = parseFloat(d.valor);
+    return isNaN(val) ? 0 : val;
+  });
+  
+  // Preparar pronósticos
+  const forecastLabels = data.pronosticos.map(d => {
+    try {
+      // CORRECCIÓN: Asegurar formato de fecha correcto
+      const dateStr = d.fecha.replace(' ', 'T');
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        console.warn('Fecha inválida en pronóstico:', d.fecha);
+        return new Date();
+      }
+      return date;
+    } catch (e) {
+      console.warn('Error procesando fecha de pronóstico:', d.fecha, e);
+      return new Date();
+    }
+  });
+  
+  const forecastDataValues = data.pronosticos.map(d => {
+    const val = parseFloat(d.pronostico);
+    return isNaN(val) ? 0 : val;
+  });
+  
+  const conf80Lower = data.pronosticos.map(d => {
+    const val = parseFloat(d.confianza_80_min);
+    return isNaN(val) ? 0 : val;
+  });
+  
+  const conf80Upper = data.pronosticos.map(d => {
+    const val = parseFloat(d.confianza_80_max);
+    return isNaN(val) ? 0 : val;
+  });
+  
+  const conf95Lower = data.pronosticos.map(d => {
+    const val = parseFloat(d.confianza_95_min);
+    return isNaN(val) ? 0 : val;
+  });
+  
+  const conf95Upper = data.pronosticos.map(d => {
+    const val = parseFloat(d.confianza_95_max);
+    return isNaN(val) ? 0 : val;
+  });
   
   // Última fecha histórica
   const lastHistoricalDate = historicalLabels.length > 0 ? historicalLabels[historicalLabels.length - 1] : new Date();
   
-  // Determinar unidad según variable
+  // Determinar unidad
   const unidad = getUnit(currentForecastVariable);
   
-  // Crear gráfica
+  // CORRECCIÓN: Configuración mejorada de Chart.js
   forecastChart = new Chart(ctx, {
     type: 'line',
     data: {
       datasets: [
-        // Datos históricos (solo muestra en tooltip cuando está en esta sección)
+        // Datos históricos
         {
           label: 'Datos Históricos',
           data: historicalLabels.map((date, i) => ({x: date, y: historicalData[i]})),
@@ -857,9 +975,9 @@ function updateForecastChart() {
           borderWidth: 2,
           pointHoverRadius: 0
         },
-        // Pronóstico (solo muestra en tooltip cuando está en esta sección)
+        // Pronóstico
         {
-          label: `Pronóstico (${unidad})`,
+          label: `Pronóstico`,
           data: forecastLabels.map((date, i) => ({x: date, y: forecastDataValues[i]})),
           borderColor: 'red',
           backgroundColor: 'red',
@@ -877,7 +995,7 @@ function updateForecastChart() {
           borderColor: 'transparent',
           backgroundColor: 'rgba(255, 255, 0, 0.2)',
           fill: {
-            target: '+2',
+            target: '-2',
             above: 'rgba(255, 255, 0, 0.2)'
           },
           tension: 0,
@@ -888,7 +1006,7 @@ function updateForecastChart() {
           label: '_conf95_lower',
           data: forecastLabels.map((date, i) => ({x: date, y: conf95Lower[i]})),
           borderColor: 'transparent',
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(255, 255, 0, 0.2)',
           fill: false,
           tension: 0,
           pointRadius: 0,
@@ -901,7 +1019,7 @@ function updateForecastChart() {
           borderColor: 'transparent',
           backgroundColor: 'rgba(0, 255, 0, 0.3)',
           fill: {
-            target: '+2',
+            target: '-2',
             above: 'rgba(0, 255, 0, 0.3)'
           },
           tension: 0,
@@ -912,7 +1030,7 @@ function updateForecastChart() {
           label: '_conf80_lower',
           data: forecastLabels.map((date, i) => ({x: date, y: conf80Lower[i]})),
           borderColor: 'transparent',
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(0, 255, 0, 0.3)',
           fill: false,
           tension: 0,
           pointRadius: 0,
@@ -931,8 +1049,7 @@ function updateForecastChart() {
           mode: 'index',
           intersect: false,
           filter: function(tooltipItem) {
-            // Solo mostrar tooltip para datos históricos y pronóstico (no para áreas de confianza)
-            const label = tooltipItem.dataset.label;
+            const label = tooltipItem.dataset.label || '';
             return !label.startsWith('_') && (label.includes('Históricos') || label.includes('Pronóstico'));
           },
           callbacks: {
@@ -943,7 +1060,7 @@ function updateForecastChart() {
                 const value = context.parsed.y.toFixed(2);
                 
                 if (label.includes('Históricos')) {
-                  return `Dato histórico: ${value} ${unidad}`;
+                  return `Histórico: ${value} ${unidad}`;
                 } else if (label.includes('Pronóstico')) {
                   return `Pronóstico: ${value} ${unidad}`;
                 }
@@ -951,14 +1068,17 @@ function updateForecastChart() {
               return label;
             },
             title: function(tooltipItems) {
-              const date = new Date(tooltipItems[0].parsed.x);
-              return date.toLocaleString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              });
+              if (tooltipItems.length > 0) {
+                const date = new Date(tooltipItems[0].parsed.x);
+                return date.toLocaleString('es-ES', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              }
+              return '';
             }
           }
         }
@@ -967,24 +1087,18 @@ function updateForecastChart() {
         x: {
           type: 'time',
           time: {
-            unit: 'hour',
+            unit: 'day',
             displayFormats: {
-              hour: 'dd/MM HH:mm'
+              day: 'dd/MM'
             }
           },
           title: {
             display: true,
             text: 'Fecha y Hora'
           },
-          // Línea vertical para separar historial de pronóstico
-          grid: {
-            drawOnChartArea: true,
-            color: function(context) {
-              if (context.tick && context.tick.value === lastHistoricalDate.getTime()) {
-                return 'rgba(0, 0, 0, 0.5)';
-              }
-              return 'rgba(0, 0, 0, 0.1)';
-            }
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: 10
           }
         },
         y: {
@@ -992,53 +1106,33 @@ function updateForecastChart() {
           title: {
             display: true,
             text: getVariableDisplayName(currentForecastVariable)
-          },
-          // Línea horizontal para límite permitido
-          grid: {
-            drawOnChartArea: true,
-            color: function(context) {
-              if (data.limite_permitido && context.tick && context.tick.value === data.limite_permitido) {
-                return 'rgba(0, 0, 255, 0.5)';
-              }
-              return 'rgba(0, 0, 0, 0.1)';
-            }
-          },
-          ticks: {
-            callback: function(value) {
-              // Mostrar límite permitido en las etiquetas
-              if (data.limite_permitido && Math.abs(value - data.limite_permitido) < 0.1) {
-                return `Límite: ${value}`;
-              }
-              return value;
-            }
           }
-        }
-      },
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      elements: {
-        line: {
-          tension: 0.2
         }
       }
     }
   });
   
   // Actualizar información
-  document.getElementById('forecastTitle').textContent = `Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`;
+  const firstHistoric = historicalLabels[0];
+  const lastHistoric = historicalLabels[historicalLabels.length - 1];
+  const firstForecast = forecastLabels[0];
+  const lastForecast = forecastLabels[forecastLabels.length - 1];
+  
+  document.getElementById('forecastTitle').textContent = 
+    `Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`;
+  
   document.getElementById('forecastInfo').innerHTML = `
     <strong>${data.modelo}</strong> | 
     AIC: ${data.aic.toFixed(2)} | 
-    Pronóstico: ${data.horas_pronostico} horas | 
+    Pronóstico: ${data.horas_pronostico || data.pronosticos.length} horas | 
+    Histórico: ${firstHistoric.toLocaleDateString()} - ${lastHistoric.toLocaleDateString()} | 
+    Pronóstico: ${firstForecast.toLocaleDateString()} - ${lastForecast.toLocaleDateString()} |
     Actualizado: ${new Date(data.fecha_generacion).toLocaleString()}
   `;
   
   // Actualizar parámetros del modelo
   updateModelParams();
   
-  // Ajustar altura
   document.getElementById('forecastChart').style.height = '300px';
 }
 
@@ -1055,7 +1149,7 @@ function updateModelParams() {
     <strong>${getVariableDisplayName(currentForecastVariable)}</strong> | 
     Modelo: ${data.modelo} | 
     AIC: ${data.aic.toFixed(2)} | 
-    Observaciones: ${data.observaciones_historicas || 'N/A'}
+    Observaciones: ${data.observaciones_historicas || data.historico.length}
   `;
   
   // Crear contenido de parámetros
@@ -1076,11 +1170,11 @@ function updateModelParams() {
       </div>
       <div class="param-item">
         <span class="param-label">Horas de pronóstico:</span>
-        <span class="param-value">${data.horas_pronostico}</span>
+        <span class="param-value">${data.horas_pronostico || data.pronosticos.length}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Observaciones históricas:</span>
-        <span class="param-value">${data.observaciones_historicas || 'N/A'}</span>
+        <span class="param-value">${data.observaciones_historicas || data.historico.length}</span>
       </div>
       ${data.limite_permitido ? `
       <div class="param-item">
@@ -1116,7 +1210,7 @@ function updateModelParams() {
   
   paramsGrid.innerHTML = paramsHTML;
   
-  // Generar ecuación (simulada basada en el modelo)
+  // Generar ecuación
   generateEquation(data);
 }
 
@@ -1124,7 +1218,6 @@ function updateModelParams() {
 function generateEquation(data) {
   const equationBox = document.getElementById('equationBox');
   
-  // Extraer componentes del modelo string
   const modeloStr = data.modelo;
   const matches = modeloStr.match(/SARIMA\((\d+),(\d+),(\d+)\)\((\d+),(\d+),(\d+),(\d+)\)/);
   
@@ -1191,103 +1284,13 @@ function setupForecastTabs() {
       } else {
         // Cargar datos
         loadForecastData(currentForecastVariable).then(() => {
-          updateForecastChart();
+          if (forecastData[currentForecastVariable]) {
+            updateForecastChart();
+          }
         });
       }
     });
   });
-}
-
-// Crear datos de ejemplo
-function createSampleForecastData(variable) {
-  const now = new Date();
-  const limites = {
-    'temperature': null,
-    'humidity': null,
-    'pm2.5': 37,
-    'pm10': 75
-  };
-  
-  // AIC base con variación por variable
-  let baseAic = 1200;
-  if (variable === 'humidity') baseAic += 50;
-  if (variable === 'pm2.5') baseAic += 100;
-  if (variable === 'pm10') baseAic += 150;
-  
-  const historico = [];
-  const pronosticos = [];
-  
-  // Datos históricos (últimas 48 horas)
-  for (let i = 48; i > 0; i--) {
-    const date = new Date(now.getTime() - i * 3600000);
-    let valor;
-    
-    if (variable === 'temperature') {
-      valor = 20 + Math.sin(i/12) * 5 + Math.random() * 2;
-    } else if (variable === 'humidity') {
-      valor = 50 + Math.sin(i/8) * 15 + Math.random() * 5;
-    } else if (variable === 'pm2.5') {
-      valor = 20 + Math.sin(i/6) * 10 + Math.random() * 3;
-    } else if (variable === 'pm10') {
-      valor = 40 + Math.sin(i/6) * 15 + Math.random() * 5;
-    }
-    
-    historico.push({
-      fecha: date.toISOString(),
-      valor: parseFloat(valor.toFixed(2))
-    });
-  }
-  
-  // Pronósticos (próximas 72 horas)
-  for (let i = 1; i <= 72; i++) {
-    const date = new Date(now.getTime() + i * 3600000);
-    let pronostico;
-    
-    if (variable === 'temperature') {
-      pronostico = 22 + Math.sin((i+48)/12) * 4;
-    } else if (variable === 'humidity') {
-      pronostico = 55 + Math.sin((i+48)/8) * 12;
-    } else if (variable === 'pm2.5') {
-      pronostico = 25 + Math.sin((i+48)/6) * 8;
-    } else if (variable === 'pm10') {
-      pronostico = 45 + Math.sin((i+48)/6) * 12;
-    }
-    
-    pronosticos.push({
-      fecha: date.toISOString(),
-      pronostico: parseFloat(pronostico.toFixed(2)),
-      confianza_80_min: parseFloat((pronostico * 0.9).toFixed(2)),
-      confianza_80_max: parseFloat((pronostico * 1.1).toFixed(2)),
-      confianza_95_min: parseFloat((pronostico * 0.85).toFixed(2)),
-      confianza_95_max: parseFloat((pronostico * 1.15).toFixed(2))
-    });
-  }
-  
-  return {
-    variable: variable,
-    modelo: `SARIMA(${variable === 'temperature' ? '1,0,1' : '1,1,1'})(${variable.includes('pm') ? '0,1,1,12' : '0,1,1,24'})`,
-    aic: baseAic + Math.random() * 50,
-    horas_pronostico: 72,
-    fecha_generacion: now.toISOString(),
-    limite_permitido: limites[variable],
-    observaciones_historicas: 48,
-    historico: historico,
-    pronosticos: pronosticos
-  };
-}
-
-// Mostrar datos de ejemplo
-function showSampleForecast() {
-  // Cargar datos de ejemplo para todas las variables
-  ['temperature', 'humidity', 'pm2.5', 'pm10'].forEach(variable => {
-    forecastData[variable] = createSampleForecastData(variable);
-    updateTabStatus(variable, 'loaded');
-  });
-  
-  document.getElementById('forecastInfo').innerHTML = 
-    `⚠️ Usando datos de ejemplo. Verifica que los archivos JSON estén en: ${FORECAST_BASE_URL}`;
-  
-  updateForecastChart();
 }
 
 /* ---------- polling (cada 30s) ---------- */
