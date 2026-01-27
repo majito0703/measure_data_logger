@@ -191,11 +191,14 @@ body.dark .kpi-value{color:#7AC043}
   <!-- Controls & Charts -->
   <div class="charts-panel">
     <div class="controls">
-      <div>
-        <button class="range-btn" data-range="24h">Últimas 24h</button>
-        <button class="range-btn" data-range="7d">Última semana</button>
-        <button class="range-btn" data-range="all">Todo</button>
-      </div>
+  <div>
+    <button class="range-btn" data-range="24h">Últimas 24h</button>
+    <button class="range-btn" data-range="7d">Última semana</button>
+    <button class="range-btn" data-range="all">Todo</button>
+    <button class="range-btn" data-range="forecast" id="forecastBtn">
+      Pronósticos
+    </button>
+  </div>
 
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <label style="font-size:13px;color:#6b7280">Desde</label>
@@ -488,4 +491,5 @@ loadData();
 setInterval(loadData, 30000);
 </script>
 </body>
+
 </html>
