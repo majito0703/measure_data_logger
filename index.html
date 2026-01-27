@@ -49,1109 +49,301 @@ header{background:var(--ucc-azul);color:#fff;padding:16px 20px;display:flex;alig
 /* Middle: charts + controls */
 .charts-panel{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.range-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer}
-.range-btn.active{background:var(--ucc-azul);color:#fff;border-color:var(--ucc-azul)}
 
-/* canvas wrapper */
-.canvas-card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(11,18,32,0.06)}
-.canvas-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-/* Limitar tamaño de las gráficas */
-.canvas-card canvas {
-  max-height: 250px !important;
-  height: 250px !important;
-}
+/* Chart containers */
+.chart-container{background:#fff;border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(11,18,32,0.06)}
+.chart-title{font-size:16px;font-weight:600;color:var(--ucc-azul);margin:0 0 12px 0}
+.chart-wrapper{position:relative;height:400px;width:100%}
 
-/* Sección de parámetros del modelo */
-.model-params-card {
-  background: #fff;
-  padding: 14px;
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(11,18,32,0.06);
-  margin-bottom: 20px;
-  display: none;
-}
-.params-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
-}
-.param-group {
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 4px solid var(--ucc-azul);
-}
-.param-title {
-  font-weight: bold;
-  color: var(--ucc-azul);
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-.param-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
-  font-size: 13px;
-}
-.param-label {
-  color: #666;
-}
-.param-value {
-  font-weight: 600;
-  color: #000;
-}
-.equation-box {
-  background: #f0f7ff;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #d1e7ff;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-top: 10px;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* Table area */
-.table-card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(11,18,32,0.06);margin-bottom:40px}
-.table-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-bottom:10px}
-.table-search{display:flex;gap:8px;align-items:center}
-.input{padding:8px 10px;border-radius:8px;border:1px solid #e6e9ef}
-
-/* Table style */
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #eef2f6;text-align:center;font-size:13px}
-th{background:var(--ucc-azul);color:#fff;border-radius:6px}
-
-/* Pestañas de pronósticos */
-.forecast-tabs {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
-}
-.forecast-tab {
-  padding: 8px 15px;
-  background: #f5f5f5;
-  border: none;
-  border-radius: 6px 6px 0 0;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.3s;
-}
-.forecast-tab.active {
-  background: var(--ucc-azul);
-  color: white;
-  border-bottom: 3px solid var(--ucc-verde);
-}
-.forecast-tab.loaded {
-  background: #e8f5e8;
-  border-left: 3px solid var(--ucc-verde);
-}
-.forecast-tab.error {
-  background: #ffebee;
-  border-left: 3px solid #f44336;
-}
-
-/* Indicador de carga */
-.loading-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid var(--ucc-verde);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 8px;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* Legend */
+.legend-container{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #eee}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px}
+.legend-color{width:12px;height:12px;border-radius:50%}
 
 /* Responsive */
-@media (max-width:900px){
-  .kpi-row{grid-template-columns:repeat(2,1fr)}
-  header{padding:12px}
-  #pdfBtn{display:none} /* hide long buttons in small */
-  .params-grid {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width:560px){
+@media (max-width:768px){
   .kpi-row{grid-template-columns:1fr}
-  .controls{flex-direction:column;align-items:flex-start}
-  .charts-panel{gap:12px}
-  header{flex-direction:column;align-items:flex-start;gap:8px}
-  .forecast-tabs {
-    flex-wrap: wrap;
-  }
-}
-
-/* Dark mode */
-body.dark{background:#0b1220;color:#e6eef8}
-body.dark .kpi-card, 
-body.dark .canvas-card, 
-body.dark .table-card,
-body.dark .model-params-card {background:#0f1724;box-shadow:none}
-body.dark th{background:#001f3f}
-body.dark .kpi-value{color:#7AC043}
-body.dark .param-group {
-  background: #1a2332;
-  border-left-color: var(--ucc-verde);
-}
-body.dark .equation-box {
-  background: #1a2332;
-  border-color: #2a3a52;
-}
-body.dark .forecast-tab:not(.active) {
-  background: #1a2332;
-  color: #e6eef8;
+  .chart-wrapper{height:300px}
 }
 </style>
 </head>
 <body>
-
 <header>
-  <div class="header-title">MEASURE DATA LOGGER – DASHBOARD</div>
+  <h1 class="header-title">Measure Data Logger – Dashboard</h1>
   <div class="header-actions">
-    <button id="pdfBtn" class="btn">Exportar PDF</button>
-    <button id="xlsBtn" class="btn">Descargar Excel</button>
-    <button id="csvBtn" class="btn secondary">CSV</button>
-    <button id="modoOscuroBtn" class="icon-btn">Modo oscuro</button>
+    <button class="icon-btn">📥</button>
+    <button class="icon-btn">⚙️</button>
+    <button class="btn">Exportar</button>
   </div>
 </header>
 
-<div class="container" id="contentPDF">
+<div class="container">
   <!-- KPI Cards -->
   <div class="kpi-row">
     <div class="kpi-card">
-      <div class="kpi-icon" aria-hidden="true">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="9" y="3" width="6" height="18" rx="3" stroke="#fff" stroke-width="2" fill="none"/>
-          <circle cx="12" cy="19" r="2" fill="#fff"/>
-          <line x1="12" y1="8" x2="12" y2="16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">📊</div>
       <div class="kpi-body">
-        <div class="kpi-title">Temperatura (°C)</div>
-        <div class="kpi-value" id="card_temp">--</div>
-        <div class="kpi-meta" id="meta_temp">Última: --</div>
+        <h3 class="kpi-title">Medición Actual PM 2.5</h3>
+        <div class="kpi-value">0.0 µg/m³</div>
+        <div class="kpi-meta">Última actualización: 26 Nov</div>
       </div>
     </div>
-
     <div class="kpi-card">
-      <div class="kpi-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="#fff" stroke-width="2" fill="none"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">🔮</div>
       <div class="kpi-body">
-        <div class="kpi-title">Humedad (%)</div>
-        <div class="kpi-value" id="card_hum">--</div>
-        <div class="kpi-meta" id="meta_hum">Última: --</div>
+        <h3 class="kpi-title">Pronóstico PM 2.5</h3>
+        <div class="kpi-value">0.0 µg/m³</div>
+        <div class="kpi-meta">Próxima medición</div>
       </div>
     </div>
-
     <div class="kpi-card">
-      <div class="kpi-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="4" fill="#fff"/>
-          <line x1="12" y1="3" x2="12" y2="5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="12" y1="19" x2="12" y2="21" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="3" y1="12" x2="5" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="19" y1="12" x2="21" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">⚠️</div>
       <div class="kpi-body">
-        <div class="kpi-title">Radiación (W/m²)</div>
-        <div class="kpi-value" id="card_rad">--</div>
-        <div class="kpi-meta" id="meta_rad">Última: --</div>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="7" cy="18" r="2" fill="#fff"/>
-          <circle cx="12" cy="14" r="2" fill="#fff"/>
-          <circle cx="17" cy="10" r="2" fill="#fff"/>
-          <circle cx="9" cy="8" r="1.5" fill="#fff"/>
-          <circle cx="14" cy="17" r="1.5" fill="#fff"/>
-        </svg>
-      </div>
-      <div class="kpi-body">
-        <div class="kpi-title">PM10 (µg/m³)</div>
-        <div class="kpi-value" id="card_pm10">--</div>
-        <div class="kpi-meta" id="meta_pm10">Última: --</div>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="6" cy="17" r="1.5" fill="#fff"/>
-          <circle cx="11" cy="13" r="1.5" fill="#fff"/>
-          <circle cx="16" cy="9" r="1.5" fill="#fff"/>
-          <circle cx="8" cy="10" r="1" fill="#fff"/>
-          <circle cx="13" cy="16" r="1" fill="#fff"/>
-          <circle cx="18" cy="15" r="1" fill="#fff"/>
-          <circle cx="9" cy="19" r="1" fill="#fff"/>
-        </svg>
-      </div>
-      <div class="kpi-body">
-        <div class="kpi-title">PM2.5 (µg/m³)</div>
-        <div class="kpi-value" id="card_pm25">--</div>
-        <div class="kpi-meta" id="meta_pm25">Última: --</div>
+        <h3 class="kpi-title">Nivel Máximo Permitido</h3>
+        <div class="kpi-value">37.0 µg/m³</div>
+        <div class="kpi-meta">24H en Colombia</div>
       </div>
     </div>
   </div>
 
-  <!-- Controls & Charts -->
+  <!-- Charts Section -->
   <div class="charts-panel">
     <div class="controls">
-      <div>
-        <button class="range-btn" data-range="24h">Últimas 24h</button>
-        <button class="range-btn" data-range="7d">Última semana</button>
-        <button class="range-btn" data-range="all">Todo</button>
-        <button class="range-btn" data-range="forecast" id="forecastBtn">
-          Pronósticos
-        </button>
-      </div>
-      
-      <!-- Fechas personalizadas -->
-      <div style="margin-left: auto; display: flex; gap: 8px; align-items: center">
-        <label style="font-size: 13px; color: #6b7280">Desde</label>
-        <input type="datetime-local" id="fromInput" class="input" />
-        <label style="font-size: 13px; color: #6b7280">Hasta</label>
-        <input type="datetime-local" id="toInput" class="input" />
-        <button id="applyRange" class="range-btn">Aplicar</button>
-      </div>
+      <button class="btn">PM 2.5</button>
+      <button class="btn secondary">PM 10</button>
+      <button class="btn secondary">NO₂</button>
+      <button class="btn secondary">O₃</button>
+      <select class="btn secondary">
+        <option>Últimos 10 días</option>
+        <option>Últimos 30 días</option>
+      </select>
     </div>
 
-    <!-- Cada gráfica en su propia tarjeta -->
-    <div class="canvas-card">
-      <div class="canvas-title"><strong>Temperatura (°C)</strong><small id="temp-note"></small></div>
-      <canvas id="g_temp"></canvas>
-    </div>
-
-    <div class="canvas-card">
-      <div class="canvas-title"><strong>Humedad (%)</strong></div>
-      <canvas id="g_hum"></canvas>
-    </div>
-
-    <div class="canvas-card">
-      <div class="canvas-title"><strong>Radiación (W/m²)</strong></div>
-      <canvas id="g_rad"></canvas>
-    </div>
-
-    <div class="canvas-card">
-      <div class="canvas-title"><strong>PM10 (µg/m³)</strong></div>
-      <canvas id="g_pm10"></canvas>
-    </div>
-
-    <div class="canvas-card">
-      <div class="canvas-title"><strong>PM2.5 (µg/m³)</strong></div>
-      <canvas id="g_pm25"></canvas>
-    </div>
-    
-    <!-- Sección de Parámetros del Modelo SARIMA -->
-    <div class="model-params-card" id="modelParamsCard">
-      <div class="canvas-title">
-        <strong>Parámetros del Modelo SARIMA</strong>
-        <small id="modelInfo">Selecciona una variable</small>
+    <!-- Main Chart -->
+    <div class="chart-container">
+      <h2 class="chart-title">Pronóstico de PM 2.5 con Bandas de Confianza</h2>
+      <div class="chart-wrapper">
+        <canvas id="forecastChart"></canvas>
       </div>
-      <div class="params-grid" id="paramsGrid">
-        <!-- Los parámetros se cargarán aquí dinámicamente -->
-      </div>
-    </div>
-    
-    <!-- Gráfica de Pronósticos (oculta inicialmente) -->
-    <div class="canvas-card" id="forecastChartContainer" style="display: none;">
-      <div class="canvas-title">
-        <strong id="forecastTitle">Pronósticos SARIMA</strong>
-        <div>
-          <span class="loading-spinner" id="forecastLoading" style="display: none;"></span>
-          <small id="forecastInfo">Selecciona una variable para ver el pronóstico</small>
-        </div>
-      </div>
-      
-      <!-- Pestañas de variables -->
-      <div class="forecast-tabs" id="forecastTabs">
-        <button class="forecast-tab active" data-variable="temperature" data-name="Temperatura">
-          🌡️ Temperatura
-        </button>
-        <button class="forecast-tab" data-variable="humidity" data-name="Humedad">
-          💧 Humedad
-        </button>
-        <button class="forecast-tab" data-variable="pm2.5" data-name="PM2.5">
-          ⚫ PM2.5
-        </button>
-        <button class="forecast-tab" data-variable="pm10" data-name="PM10">
-          ⚪ PM10
-        </button>
-      </div>
-      
-      <canvas id="forecastChart"></canvas>
-      
-      <div style="margin-top: 15px; font-size: 12px; color: #666;">
-        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: black; margin-right: 5px; border-radius: 50%;"></span> Datos Históricos</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: red; margin-right: 5px; border-radius: 50%;"></span> Pronóstico</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(0, 255, 0, 0.3); border: 1px solid #00c853; margin-right: 5px;"></span> Confianza 80%</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(255, 255, 0, 0.3); border: 1px solid #ffd600; margin-right: 5px;"></span> Confianza 95%</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: blue; border: 1px dashed blue; margin-right: 5px;"></span> Límite Permitido</div>
-        </div>
-      </div>
+      <div class="legend-container" id="chartLegend"></div>
     </div>
   </div>
-
-  <!-- Tabla principal con datos históricos -->
-  <div class="table-card">
-    <div class="table-controls">
-      <div class="table-search">
-        <input id="searchInput" class="input" placeholder="Buscar..." />
-        <input id="filterFrom" type="date" class="input" />
-        <input id="filterTo" type="date" class="input" />
-        <button id="clearFilters" class="range-btn">Limpiar</button>
-      </div>
-      <div>
-        <button id="exportCSV" class="range-btn">Exportar CSV</button>
-        <button id="exportXLS" class="range-btn">Exportar Excel</button>
-      </div>
-    </div>
-
-    <table id="dataTable" aria-live="polite">
-      <thead>
-        <tr><th>Fecha</th><th>Temperatura (°C)</th><th>Humedad (%)</th><th>Radiación (W/m²)</th><th>PM10 (µg/m³)</th><th>PM2.5 (µg/m³)</th></tr>
-      </thead>
-      <tbody id="dataTableBody">
-        <!-- Los datos históricos se cargarán aquí -->
-      </tbody>
-    </table>
-  </div>
-
 </div>
 
 <script>
-/* -------------------------
-  Config y variables
-------------------------- */
-const API_URL = "api/obtener_datos.php"; // tu API devuelve JSON ordenado por fecha desc
-let rawData = []; // data completa
-let filtered = []; // filtro por rango
-const charts = {};
+// Datos extraídos de la tabla proporcionada
+const forecastData = {
+  dates: ['10 Nov', '12 Nov', '14 Nov', '16 Nov', '18 Nov', '20 Nov', '22 Nov', '24 Nov', '26 Nov'],
+  measured: [0.0, 6.0, -4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  forecast: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  confidence80Upper: [0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0],
+  confidence80Lower: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  confidence95Upper: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  confidence95Lower: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  maxAllowed: [0.1, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+};
 
-/* ---------- util: parse fecha ---------- */
-function parseDate(s){ // acepta 'YYYY-MM-DD HH:MM:SS' o ISO
-  if(!s) return null;
-  // intenta ISO primero
-  const d = new Date(s.replace(' ', 'T'));
-  return isNaN(d) ? new Date(s) : d;
-}
+// Colores para las bandas y líneas
+const colors = {
+  measured: '#003366',        // Azul UCC para mediciones reales
+  forecast: '#7AC043',        // Verde UCC para pronóstico
+  confidence80: 'rgba(122, 192, 67, 0.2)',  // Verde claro para confianza 80%
+  confidence95: 'rgba(122, 192, 67, 0.1)',  // Verde más claro para confianza 95%
+  maxAllowed: '#FF6B6B',      // Rojo para límite máximo
+  grid: 'rgba(0, 0, 0, 0.05)'
+};
 
-/* ---------- fetch data ---------- */
-async function loadData(){
-  try{
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    // normalizar: asegurar campos: fecha_hora, temperatura, humedad, radiacion, pm10, pm25
-    rawData = data.map(r => ({
-      fecha: r.fecha_hora || r.fecha || r.fecha_hora,
-      temperatura: r.temperatura !== undefined ? Number(r.temperatura) : null,
-      humedad: r.humedad !== undefined ? Number(r.humedad) : null,
-      radiacion: r.radiacion !== undefined ? Number(r.radiacion) : null,
-      pm10: r.pm10 !== undefined ? Number(r.pm10) : null,
-      pm25: r.pm25 !== undefined ? Number(r.pm25) : null
-    })).filter(x=>x.fecha).sort((a,b)=> new Date(a.fecha) - new Date(b.fecha)); // asc
-    applyRange('24h'); // default
-    updateKPI();
-    
-    // Actualizar tabla principal con datos históricos
-    updateHistoricalTable();
-  }catch(e){
-    console.error("API error",e);
-  }
-}
-
-/* ---------- Actualizar tabla con datos históricos ---------- */
-function updateHistoricalTable() {
-  const tbody = document.getElementById('dataTableBody');
-  if (!tbody) return;
-  
-  tbody.innerHTML = '';
-  
-  if (!rawData.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No hay datos disponibles</td></tr>';
-    return;
-  }
-  
-  // Mostrar últimos 200 registros en orden descendente (más recientes primero)
-  const rows = [...rawData].slice(-200).reverse();
-  
-  rows.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${new Date(r.fecha).toLocaleString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}</td>
-      <td>${r.temperatura !== null ? r.temperatura.toFixed(2) : '--'}</td>
-      <td>${r.humedad !== null ? r.humedad.toFixed(2) : '--'}</td>
-      <td>${r.radiacion !== null ? r.radiacion.toFixed(2) : '--'}</td>
-      <td>${r.pm10 !== null ? r.pm10.toFixed(2) : '--'}</td>
-      <td>${r.pm25 !== null ? r.pm25.toFixed(2) : '--'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-/* ---------- range helpers ---------- */
-function applyRange(range, from=null, to=null){
-  const now = new Date();
-  let start;
-  if(range==='24h') start = new Date(now.getTime() - 24*3600*1000);
-  else if(range==='7d') start = new Date(now.getTime() - 7*24*3600*1000);
-  else if(range==='all') start = new Date(0);
-  else if(range==='custom'){ start = from; }
-
-  const end = to || new Date();
-  filtered = rawData.filter(r => {
-    const d = parseDate(r.fecha);
-    return d >= start && d <= end;
-  });
-  renderAll();
-}
-
-/* ---------- render KPIs ---------- */
-function updateKPI(){
-  if(!rawData.length) return;
-  const last = rawData[rawData.length-1];
-  document.getElementById('card_temp').innerText = last.temperatura !== null ? last.temperatura.toFixed(2) : '--';
-  document.getElementById('card_hum').innerText = last.humedad !== null ? last.humedad.toFixed(2) : '--';
-  document.getElementById('card_rad').innerText = last.radiacion !== null ? last.radiacion.toFixed(2) : '--';
-  document.getElementById('card_pm10').innerText = last.pm10 !== null ? last.pm10.toFixed(2) : '--';
-  document.getElementById('card_pm25').innerText = last.pm25 !== null ? last.pm25.toFixed(2) : '--';
-
-  const timeStr = new Date(last.fecha).toLocaleString('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-  document.getElementById('meta_temp').innerText = 'Última: ' + timeStr;
-  document.getElementById('meta_hum').innerText = 'Última: ' + timeStr;
-  document.getElementById('meta_rad').innerText = 'Última: ' + timeStr;
-  document.getElementById('meta_pm10').innerText = 'Última: ' + timeStr;
-  document.getElementById('meta_pm25').innerText = 'Última: ' + timeStr;
-}
-
-/* ---------- render charts & table ---------- */
-function renderAll(){
-  const times = filtered.map(r=> r.fecha);
-  const temp = filtered.map(r=> r.temperatura);
-  const hum = filtered.map(r=> r.humedad);
-  const rad = filtered.map(r=> r.radiacion);
-  const pm10 = filtered.map(r=> r.pm10);
-  const pm25 = filtered.map(r=> r.pm25);
-
-  renderChart('g_temp','Temperatura (°C)',times,temp,'#003366');
-  renderChart('g_hum','Humedad (%)',times,hum,'#7AC043');
-  renderChart('g_rad','Radiación (W/m²)',times,rad,'#003366');
-  renderChart('g_pm10','PM10 (µg/m³)',times,pm10,'#7AC043');
-  renderChart('g_pm25','PM2.5 (µg/m³)',times,pm25,'#003366');
-}
-
-/* ---------- Chart render (single function) ---------- */
-function renderChart(id,label,labels,data,color){
-  const ctx = document.getElementById(id).getContext('2d');
-  if(charts[id]) charts[id].destroy();
-  charts[id] = new Chart(ctx,{
-    type:'line',
-    data:{
-      labels: labels,
-      datasets:[{
-        label:label,
-        data:data,
-        borderColor: color,
-        backgroundColor: color + '33',
-        fill:true,
-        tension:0.2,
-        pointRadius:0
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      scales:{
-        x:{display:false},
-        y:{beginAtZero:false}
-      },
-      plugins:{
-        legend:{display:false},
-        tooltip:{mode:'index',intersect:false}
-      }
-    }
-  });
-  document.getElementById(id).style.height = '220px';
-}
-
-/* ---------- range buttons ---------- */
-document.querySelectorAll('.range-btn[data-range]').forEach(btn=>{
-  btn.addEventListener('click', (e)=>{
-    document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    
-    if(btn.dataset.range === 'forecast') {
-      showForecastMode();
-    } else {
-      hideForecastMode();
-      applyRange(btn.dataset.range);
-    }
-  });
-});
-
-/* ---------- apply custom ---------- */
-document.getElementById('applyRange').addEventListener('click', ()=>{
-  const from = document.getElementById('fromInput').value;
-  const to = document.getElementById('toInput').value;
-  if(!from || !to) return alert('Seleccione ambas fechas');
-  applyRange('custom', new Date(from), new Date(to));
-});
-
-/* ---------- search & filter ---------- */
-document.getElementById('searchInput').addEventListener('input', (e)=>{
-  const q = e.target.value.toLowerCase();
-  const tbody = document.querySelector('#dataTableBody');
-  Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
-    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
-  });
-});
-
-document.getElementById('filterFrom').addEventListener('change', applyDateFilter);
-document.getElementById('filterTo').addEventListener('change', applyDateFilter);
-document.getElementById('clearFilters').addEventListener('click', ()=>{
-  document.getElementById('filterFrom').value='';
-  document.getElementById('filterTo').value='';
-  renderAll();
-});
-
-function applyDateFilter(){
-  const f=document.getElementById('filterFrom').value;
-  const t=document.getElementById('filterTo').value;
-  if(!f && !t) return renderAll();
-  const from = f ? new Date(f) : new Date(0);
-  const to = t ? new Date(t + 'T23:59:59') : new Date();
-  filtered = rawData.filter(r=>{ const d=parseDate(r.fecha); return d>=from && d<=to; });
-  renderAll();
-}
-
-/* ---------- CSV / XLS / PDF export ---------- */
-function exportToCSV(filename){
-  const rows = document.querySelectorAll('#dataTable tr');
-  let csv = [];
-  rows.forEach(r=>{
-    const cols = Array.from(r.querySelectorAll('th,td')).map(c=> '"' + c.innerText.replace(/"/g,'""') + '"');
-    csv.push(cols.join(','));
-  });
-  const blob = new Blob([csv.join('\n')],{type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-}
-
-function exportToXLSX(filename){
-  const table = document.getElementById('dataTable');
-  const wb = XLSX.utils.table_to_book(table, {sheet:"Lecturas"});
-  XLSX.writeFile(wb, filename);
-}
-
-document.getElementById('exportCSV').addEventListener('click', ()=> exportToCSV('datos_mediciones.csv'));
-document.getElementById('exportXLS').addEventListener('click', ()=> exportToXLSX('datos_mediciones.xlsx'));
-document.getElementById('csvBtn').addEventListener('click', ()=> exportToCSV('datos_mediciones.csv'));
-document.getElementById('xlsBtn').addEventListener('click', ()=> exportToXLSX('datos_mediciones.xlsx'));
-
-/* ---------- PDF & dark ---------- */
-document.getElementById('pdfBtn').addEventListener('click', ()=>{
-  html2canvas(document.querySelector('#contentPDF'), {scale:1.8}).then(canvas=>{
-    const img=canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p','mm','a4');
-    const pdfWidth = 210;
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(img,'PNG',0,0,pdfWidth,pdfHeight);
-    pdf.save('Reporte_MeasureDataLogger.pdf');
-  });
-});
-
-document.getElementById('modoOscuroBtn').addEventListener('click', ()=>{
-  document.body.classList.toggle('dark');
-  document.getElementById('modoOscuroBtn').innerText = document.body.classList.contains('dark') ? 'Modo claro' : 'Modo oscuro';
-});
-
-/* ============================
-   MÓDULO DE PRONÓSTICOS SARIMA
-   ============================ */
-
-const FORECAST_BASE_URL = "pronosticos/";
-let forecastData = {};
-let forecastChart = null;
-let currentForecastVariable = 'temperature';
-
-// Función para obtener nombre de archivo correcto
-function getForecastFileName(variable) {
-  const fileMap = {
-    'temperature': 'pronostico_temperature.json',
-    'humidity': 'pronostico_humidity.json',
-    'pm2.5': 'pronostico_pm_2.5.json',
-    'pm10': 'pronostico_pm_10.json'
-  };
-  
-  return fileMap[variable] || `pronostico_${variable}.json`;
-}
-
-// Mostrar modo pronósticos
-function showForecastMode() {
-  document.getElementById('forecastChartContainer').style.display = 'block';
-  document.getElementById('modelParamsCard').style.display = 'block';
-  
-  document.querySelectorAll('.canvas-card:not(#forecastChartContainer):not(.model-params-card)').forEach(card => {
-    card.style.display = 'none';
-  });
-  
-  loadAllForecasts();
-}
-
-// Ocultar modo pronósticos
-function hideForecastMode() {
-  document.getElementById('forecastChartContainer').style.display = 'none';
-  document.getElementById('modelParamsCard').style.display = 'none';
-  
-  document.querySelectorAll('.canvas-card:not(#forecastChartContainer):not(.model-params-card)').forEach(card => {
-    card.style.display = 'block';
-  });
-}
-
-// Mostrar mensaje de éxito
-function showSuccessMessage() {
-  const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
-  if (loadedCount > 0) {
-    document.getElementById('forecastInfo').innerHTML = 
-      `<span style="color: var(--ucc-verde); font-weight: bold;">
-        ✓ ${loadedCount} de 4 pronósticos cargados
-      </span>`;
-  }
-}
-
-// Cargar todos los pronósticos
-async function loadAllForecasts() {
-  try {
-    // Mostrar loading
-    document.getElementById('forecastLoading').style.display = 'inline-block';
-    document.getElementById('forecastInfo').textContent = 'Cargando pronósticos...';
-    
-    forecastData = {};
-    
-    const variables = ['temperature', 'humidity', 'pm2.5', 'pm10'];
-    const promises = variables.map(variable => loadForecastData(variable));
-    
-    await Promise.allSettled(promises);
-    
-    document.getElementById('forecastLoading').style.display = 'none';
-    showSuccessMessage();
-    
-    if (forecastData['temperature']) {
-      updateForecastChart();
-      updateModelParams();
-    }
-    
-  } catch (error) {
-    console.error('Error cargando pronósticos:', error);
-    document.getElementById('forecastLoading').style.display = 'none';
-    document.getElementById('forecastInfo').textContent = 'Error al cargar pronósticos';
-  }
-}
-
-// Cargar datos de pronóstico específico
-async function loadForecastData(variable) {
-  try {
-    const fileName = getForecastFileName(variable);
-    console.log(`Cargando pronóstico: ${FORECAST_BASE_URL}${fileName}`);
-    
-    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    const processedData = processForecastData(data, variable);
-    
-    forecastData[variable] = processedData;
-    updateTabStatus(variable, 'loaded');
-    
-    console.log(`✓ Pronóstico cargado: ${variable}`);
-    
-    return processedData;
-    
-  } catch (error) {
-    console.error(`Error cargando pronóstico para ${variable}:`, error);
-    updateTabStatus(variable, 'error');
-    return null;
-  }
-}
-
-// Procesar datos del pronóstico
-function processForecastData(data, variable) {
-  let varName = data.variable || variable;
-  
-  // Normalizar nombre de variable
-  if (varName === 'pm_2.5' || varName === 'pm2.5' || varName === 'pm25') {
-    varName = 'pm2.5';
-  } else if (varName === 'pm_10' || varName === 'pm10') {
-    varName = 'pm10';
-  }
-  
-  // Ajustar AIC para diferenciar
-  let aic = data.aic || 0;
-  if (variable === 'humidity') {
-    aic = aic + 50;
-  } else if (variable === 'pm2.5') {
-    aic = aic + 100;
-  } else if (variable === 'pm10') {
-    aic = aic + 150;
-  }
-  
-  // Limpiar espacios del modelo
-  let modeloStr = data.modelo || '';
-  modeloStr = modeloStr.replace(/\s+/g, '');
-  
-  // Límites permitidos
-  const limites = {
-    'temperature': null,
-    'humidity': null,
-    'pm2.5': 37,
-    'pm10': 75
-  };
-  
-  // Validar y limpiar datos
-  const historico = Array.isArray(data.historico) ? data.historico : [];
-  const pronosticos = Array.isArray(data.pronosticos) ? data.pronosticos : [];
-  
-  return {
-    ...data,
-    variable: varName,
-    modelo: modeloStr,
-    aic: aic,
-    limite_permitido: limites[variable],
-    historico: historico,
-    pronosticos: pronosticos
-  };
-}
-
-// Actualizar estado de la pestaña
-function updateTabStatus(variable, status) {
-  const tab = document.querySelector(`.forecast-tab[data-variable="${variable}"]`);
-  if (!tab) return;
-  
-  tab.classList.remove('loaded', 'error', 'active');
-  
-  if (status === 'loaded') {
-    tab.classList.add('loaded');
-  } else if (status === 'error') {
-    tab.classList.add('error');
-  }
-  
-  if (variable === currentForecastVariable) {
-    tab.classList.add('active');
-  }
-}
-
-// Actualizar gráfica de pronóstico
-function updateForecastChart() {
-  const data = forecastData[currentForecastVariable];
-  if (!data) {
-    document.getElementById('forecastInfo').textContent = 'Error: No hay datos para esta variable';
-    return;
-  }
-  
+// Función para crear la gráfica
+function createForecastChart() {
   const ctx = document.getElementById('forecastChart').getContext('2d');
   
-  if (forecastChart) {
-    forecastChart.destroy();
-  }
-  
-  // Verificar que haya datos suficientes
-  if (!data.historico || !data.pronosticos || data.historico.length === 0 || data.pronosticos.length === 0) {
-    document.getElementById('forecastInfo').textContent = 'Error: Datos insuficientes';
-    return;
-  }
-  
-  // Preparar datos históricos
-  const historicalLabels = data.historico.map(d => {
-    try {
-      const dateStr = d.fecha.replace(' ', 'T');
-      const date = new Date(dateStr);
-      return !isNaN(date.getTime()) ? date : new Date();
-    } catch (e) {
-      return new Date();
-    }
-  });
-  
-  const historicalData = data.historico.map(d => parseFloat(d.valor) || 0);
-  
-  // Preparar pronósticos
-  const forecastLabels = data.pronosticos.map(d => {
-    try {
-      const dateStr = d.fecha.replace(' ', 'T');
-      const date = new Date(dateStr);
-      return !isNaN(date.getTime()) ? date : new Date();
-    } catch (e) {
-      return new Date();
-    }
-  });
-  
-  const forecastDataValues = data.pronosticos.map(d => parseFloat(d.pronostico) || 0);
-  
-  // Crear datasets
-  const datasets = [
-    {
-      label: 'Datos Históricos',
-      data: historicalLabels.map((date, i) => ({x: date, y: historicalData[i]})),
-      borderColor: 'black',
-      backgroundColor: 'black',
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-      borderWidth: 2
-    },
-    {
-      label: 'Pronóstico',
-      data: forecastLabels.map((date, i) => ({x: date, y: forecastDataValues[i]})),
-      borderColor: 'red',
-      backgroundColor: 'red',
-      fill: false,
-      tension: 0.2,
-      pointRadius: 2,
-      borderWidth: 2,
-      borderDash: [5, 5]
-    }
-  ];
-  
-  // Añadir línea de límite permitido si existe
-  if (data.limite_permitido !== null) {
-    datasets.push({
-      label: 'Límite Permitido',
-      data: [
-        {x: historicalLabels[0], y: data.limite_permitido},
-        {x: forecastLabels[forecastLabels.length - 1], y: data.limite_permitido}
-      ],
-      borderColor: 'blue',
-      backgroundColor: 'blue',
-      fill: false,
-      borderWidth: 1,
-      borderDash: [5, 5],
-      pointRadius: 0
-    });
-  }
-  
-  // Crear gráfica
-  forecastChart = new Chart(ctx, {
+  // Configuración de la gráfica
+  const chart = new Chart(ctx, {
     type: 'line',
-    data: { datasets },
+    data: {
+      labels: forecastData.dates,
+      datasets: [
+        // Banda de confianza del 95%
+        {
+          label: 'Confianza 95%',
+          data: forecastData.confidence95Upper,
+          backgroundColor: colors.confidence95,
+          borderWidth: 0,
+          fill: '+1', // Rellenar hasta el siguiente dataset (confidence95Lower)
+          pointRadius: 0,
+          tension: 0.3
+        },
+        {
+          label: '',
+          data: forecastData.confidence95Lower,
+          backgroundColor: colors.confidence95,
+          borderWidth: 0,
+          fill: '-1', // Rellenar hasta el dataset anterior (confidence95Upper)
+          pointRadius: 0,
+          tension: 0.3
+        },
+        
+        // Banda de confianza del 80%
+        {
+          label: 'Confianza 80%',
+          data: forecastData.confidence80Upper,
+          backgroundColor: colors.confidence80,
+          borderWidth: 0,
+          fill: '+1', // Rellenar hasta el siguiente dataset (confidence80Lower)
+          pointRadius: 0,
+          tension: 0.3
+        },
+        {
+          label: '',
+          data: forecastData.confidence80Lower,
+          backgroundColor: colors.confidence80,
+          borderWidth: 0,
+          fill: '-1', // Rellenar hasta el dataset anterior (confidence80Upper)
+          pointRadius: 0,
+          tension: 0.3
+        },
+        
+        // Línea de pronóstico
+        {
+          label: 'Pronóstico PM 2.5',
+          data: forecastData.forecast,
+          borderColor: colors.forecast,
+          backgroundColor: 'transparent',
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: colors.forecast,
+          tension: 0.3
+        },
+        
+        // Línea de mediciones reales
+        {
+          label: 'Medido PM 2.5',
+          data: forecastData.measured,
+          borderColor: colors.measured,
+          backgroundColor: 'transparent',
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: colors.measured,
+          borderDash: [5, 5],
+          tension: 0.3
+        },
+        
+        // Línea de nivel máximo permitido
+        {
+          label: 'Nivel máximo permitido (24H)',
+          data: forecastData.maxAllowed,
+          borderColor: colors.maxAllowed,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+          borderDash: [10, 5],
+          tension: 0
+        }
+      ]
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }
+        legend: {
+          display: false // Ocultamos la leyenda por defecto, crearemos una personalizada
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += context.parsed.y.toFixed(1) + ' µg/m³';
+              return label;
+            }
+          }
+        }
       },
       scales: {
         x: {
-          type: 'time',
-          time: { unit: 'day' },
-          title: { display: true, text: 'Fecha y Hora' }
-        },
-        y: {
-          beginAtZero: currentForecastVariable.includes('pm'),
+          grid: {
+            color: colors.grid
+          },
           title: {
             display: true,
-            text: getVariableDisplayName(currentForecastVariable)
+            text: 'Fecha',
+            font: {
+              weight: 'bold'
+            }
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: colors.grid
+          },
+          title: {
+            display: true,
+            text: 'Concentración (µg/m³)',
+            font: {
+              weight: 'bold'
+            }
           }
         }
       }
     }
   });
   
-  document.getElementById('forecastTitle').textContent = 
-    `Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`;
+  // Crear leyenda personalizada
+  createLegend();
   
-  document.getElementById('forecastInfo').innerHTML = `
-    <strong>${data.modelo}</strong> | 
-    AIC: ${data.aic.toFixed(2)} | 
-    Pronóstico: ${data.pronosticos.length} horas | 
-    Actualizado: ${new Date(data.fecha_generacion).toLocaleString()}
-  `;
-  
-  document.getElementById('forecastChart').style.height = '300px';
-  updateModelParams();
+  return chart;
 }
 
-// Actualizar parámetros del modelo
-function updateModelParams() {
-  const data = forecastData[currentForecastVariable];
-  if (!data) return;
+// Función para crear la leyenda personalizada
+function createLegend() {
+  const legendContainer = document.getElementById('chartLegend');
+  const legendItems = [
+    { label: 'Medido PM 2.5', color: colors.measured, dashed: true },
+    { label: 'Pronóstico PM 2.5', color: colors.forecast, dashed: false },
+    { label: 'Confianza 80%', color: colors.confidence80, dashed: false },
+    { label: 'Confianza 95%', color: colors.confidence95, dashed: false },
+    { label: 'Nivel máximo permitido (24H)', color: colors.maxAllowed, dashed: true }
+  ];
   
-  const paramsGrid = document.getElementById('paramsGrid');
-  const modelInfo = document.getElementById('modelInfo');
-  
-  if (!paramsGrid || !modelInfo) return;
-  
-  modelInfo.innerHTML = `
-    <strong>${getVariableDisplayName(currentForecastVariable)}</strong> | 
-    Modelo: ${data.modelo} | 
-    AIC: ${data.aic.toFixed(2)} | 
-    Observaciones: ${data.historico.length}
-  `;
-  
-  let paramsHTML = `
-    <div class="param-group">
-      <div class="param-title">Información del Modelo</div>
-      <div class="param-item">
-        <span class="param-label">Variable:</span>
-        <span class="param-value">${getVariableDisplayName(currentForecastVariable)}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Modelo SARIMA:</span>
-        <span class="param-value">${data.modelo}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Criterio de Akaike (AIC):</span>
-        <span class="param-value">${data.aic.toFixed(2)}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Horas de pronóstico:</span>
-        <span class="param-value">${data.pronosticos.length}</span>
-      </div>
-    </div>
+  legendItems.forEach(item => {
+    const legendItem = document.createElement('div');
+    legendItem.className = 'legend-item';
     
-    <div class="param-group">
-      <div class="param-title">Parámetros Estadísticos</div>
-      <div class="param-item">
-        <span class="param-label">Fecha de generación:</span>
-        <span class="param-value">${new Date(data.fecha_generacion).toLocaleString()}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Observaciones históricas:</span>
-        <span class="param-value">${data.historico.length}</span>
-      </div>
-      ${data.limite_permitido ? `
-      <div class="param-item">
-        <span class="param-label">Límite permitido (24h):</span>
-        <span class="param-value">${data.limite_permitido} ${getUnit(currentForecastVariable)}</span>
-      </div>
-      ` : ''}
-    </div>
+    const colorBox = document.createElement('div');
+    colorBox.className = 'legend-color';
+    colorBox.style.backgroundColor = item.color;
+    if (item.dashed) {
+      colorBox.style.backgroundImage = 'linear-gradient(45deg, transparent 45%, #ccc 45%, #ccc 55%, transparent 55%)';
+    }
     
-    <div class="param-group" style="grid-column: 1 / -1;">
-      <div class="param-title">Ecuación del Modelo SARIMA</div>
-      <div class="equation-box" id="equationBox">
-        ${generateEquation(data)}
-      </div>
-    </div>
-  `;
-  
-  paramsGrid.innerHTML = paramsHTML;
-}
-
-// Generar ecuación del modelo
-function generateEquation(data) {
-  const modeloStr = data.modelo;
-  const matches = modeloStr.match(/SARIMA\((\d+),(\d+),(\d+)\)\((\d+),(\d+),(\d+),(\d+)\)/);
-  
-  if (matches) {
-    const [_, p, d, q, P, D, Q, s] = matches;
+    const labelText = document.createElement('span');
+    labelText.textContent = item.label;
     
-    let equation = `Modelo SARIMA(${p},${d},${q})(${P},${D},${Q},${s})\n\n`;
-    equation += `(1 - φ₁B - ... - φ${p}B^${p})(1 - Φ₁B^${s} - ... - Φ${P}B^{${P}*${s}})\n`;
-    equation += `(1 - B)^${d}(1 - B^${s})^{${D}} y_t = \n`;
-    equation += `(1 + θ₁B + ... + θ${q}B^${q})(1 + Θ₁B^${s} + ... + Θ${Q}B^{${Q}*${s}}) ε_t\n\n`;
-    equation += `Donde:\n`;
-    equation += `• B es el operador de retardo\n`;
-    equation += `• y_t es la serie temporal en tiempo t\n`;
-    equation += `• ε_t es el término de error en tiempo t\n`;
-    equation += `• φ son parámetros AR, θ son parámetros MA\n`;
-    equation += `• Φ son parámetros SAR, Θ son parámetros SMA\n`;
-    equation += `• s = ${s} (estacionalidad en horas)`;
-    
-    return equation;
-  } else {
-    return `Ecuación para modelo: ${modeloStr}\n\nLa ecuación representa la estructura del modelo SARIMA con componentes autorregresivos (AR), de media móvil (MA), diferenciación y componentes estacionales.`;
-  }
-}
-
-// Funciones auxiliares
-function getVariableDisplayName(variable) {
-  const names = {
-    'temperature': 'Temperatura (°C)',
-    'humidity': 'Humedad (%)',
-    'pm2.5': 'PM2.5 (µg/m³)',
-    'pm10': 'PM10 (µg/m³)'
-  };
-  return names[variable] || variable;
-}
-
-function getUnit(variable) {
-  const units = {
-    'temperature': '°C',
-    'humidity': '%',
-    'pm2.5': 'µg/m³',
-    'pm10': 'µg/m³'
-  };
-  return units[variable] || '';
-}
-
-// Configurar pestañas de pronóstico
-function setupForecastTabs() {
-  document.querySelectorAll('.forecast-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.forecast-tab').forEach(t => {
-        t.classList.remove('active');
-      });
-      
-      this.classList.add('active');
-      currentForecastVariable = this.dataset.variable;
-      
-      if (forecastData[currentForecastVariable]) {
-        updateForecastChart();
-      } else {
-        loadForecastData(currentForecastVariable).then(() => {
-          if (forecastData[currentForecastVariable]) {
-            updateForecastChart();
-          }
-        });
-      }
-    });
+    legendItem.appendChild(colorBox);
+    legendItem.appendChild(labelText);
+    legendContainer.appendChild(legendItem);
   });
 }
 
-/* ---------- polling (cada 30s) ---------- */
-loadData();
-setInterval(loadData, 30000);
-
-/* ---------- inicializar pestañas de pronóstico ---------- */
-setupForecastTabs();
+// Inicializar la gráfica cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+  createForecastChart();
+  
+  // Actualizar el KPI con el último valor medido
+  const lastMeasured = forecastData.measured[forecastData.measured.length - 1];
+  document.querySelector('.kpi-card:nth-child(1) .kpi-value').textContent = 
+    lastMeasured.toFixed(1) + ' µg/m³';
+  
+  // Actualizar el KPI con el último pronóstico
+  const lastForecast = forecastData.forecast[forecastData.forecast.length - 1];
+  document.querySelector('.kpi-card:nth-child(2) .kpi-value').textContent = 
+    lastForecast.toFixed(1) + ' µg/m³';
+});
 </script>
 </body>
 </html>
-
