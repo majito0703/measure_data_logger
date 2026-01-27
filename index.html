@@ -825,16 +825,6 @@ function processForecastData(data, variable) {
     varName = 'pm10';
   }
   
-  // Ajustar AIC para diferenciar
-  let aic = data.aic || 0;
-  if (variable === 'humidity') {
-    aic = aic + 50;
-  } else if (variable === 'pm2.5') {
-    aic = aic + 100;
-  } else if (variable === 'pm10') {
-    aic = aic + 150;
-  }
-  
   // Limpiar espacios del modelo
   let modeloStr = data.modelo || '';
   modeloStr = modeloStr.replace(/\s+/g, '');
@@ -855,30 +845,10 @@ function processForecastData(data, variable) {
     ...data,
     variable: varName,
     modelo: modeloStr,
-    aic: aic,
     limite_permitido: limites[variable],
     historico: historico,
-    pronosticos: pronosticos,
-    // Asegurarse de que existen intervalos de confianza
-    confianza_80: data.confianza_80 || generateConfidenceIntervals(pronosticos, 0.8),
-    confianza_95: data.confianza_95 || generateConfidenceIntervals(pronosticos, 0.95)
+    pronosticos: pronosticos
   };
-}
-
-// Generar intervalos de confianza si no existen
-function generateConfidenceIntervals(pronosticos, confidenceLevel) {
-  if (!pronosticos || pronosticos.length === 0) return [];
-  
-  const multiplier = confidenceLevel === 0.8 ? 1.28 : 1.96;
-  return pronosticos.map((p, i) => {
-    const baseValue = parseFloat(p.pronostico) || 0;
-    const error = baseValue * 0.05 * (i + 1); // Error aumenta con el tiempo
-    return {
-      fecha: p.fecha,
-      lower: baseValue - error * multiplier,
-      upper: baseValue + error * multiplier
-    };
-  });
 }
 
 // Actualizar estado de la pestaña
@@ -899,7 +869,7 @@ function updateTabStatus(variable, status) {
   }
 }
 
-// Actualizar gráfica de pronóstico CON BANDAS DE CONFIANZA
+// Función CORREGIDA para actualizar gráfica de pronóstico
 function updateForecastChart() {
   const data = forecastData[currentForecastVariable];
   if (!data) {
@@ -945,6 +915,37 @@ function updateForecastChart() {
   
   const forecastDataValues = data.pronosticos.map(d => parseFloat(d.pronostico) || 0);
   
+  // Determinar rango para el eje Y
+  const allValues = [...historicalData, ...forecastDataValues];
+  const minValue = Math.min(...allValues);
+  const maxValue = Math.max(...allValues);
+  const range = maxValue - minValue;
+  
+  // Crear escalas para el eje Y
+  let yMin, yMax, yStep;
+  
+  if (currentForecastVariable === 'temperature') {
+    // Para temperatura, usar rango más pequeño
+    yMin = Math.floor(minValue / 5) * 5;
+    yMax = Math.ceil(maxValue / 5) * 5;
+    yStep = 5;
+  } else if (currentForecastVariable === 'humidity') {
+    // Para humedad, 0-100%
+    yMin = 0;
+    yMax = 100;
+    yStep = 20;
+  } else if (currentForecastVariable === 'pm2.5' || currentForecastVariable === 'pm10') {
+    // Para PM, usar valores como en la imagen
+    yMin = 0;
+    yMax = Math.ceil(maxValue / 50) * 50;
+    yStep = 50;
+  } else {
+    // Rango general
+    yMin = Math.floor(minValue / 10) * 10;
+    yMax = Math.ceil(maxValue / 10) * 10;
+    yStep = 10;
+  }
+  
   // Crear datasets
   const datasets = [
     {
@@ -954,8 +955,9 @@ function updateForecastChart() {
       backgroundColor: 'black',
       fill: false,
       tension: 0.2,
-      pointRadius: 0,
-      borderWidth: 2
+      pointRadius: 2,
+      borderWidth: 2,
+      pointHoverRadius: 4
     },
     {
       label: 'Pronóstico',
@@ -966,66 +968,55 @@ function updateForecastChart() {
       tension: 0.2,
       pointRadius: 2,
       borderWidth: 2,
-      borderDash: [5, 5]
+      borderDash: [5, 5],
+      pointHoverRadius: 4
     }
   ];
   
-  // Añadir banda de confianza 95% (amarillo/naranja)
+  // Añadir banda de confianza 95% (amarillo/naranja) - CORREGIDO
   if (data.confianza_95 && data.confianza_95.length > 0) {
-    const conf95Lower = data.confianza_95.map(c => parseFloat(c.lower) || 0);
-    const conf95Upper = data.confianza_95.map(c => parseFloat(c.upper) || 0);
+    const conf95Lower = data.confianza_95.map(c => ({x: forecastLabels[0], y: parseFloat(c.lower) || 0}));
+    const conf95Upper = data.confianza_95.map(c => ({x: forecastLabels[0], y: parseFloat(c.upper) || 0}));
     
-    datasets.push({
+    // Crear área para confianza 95%
+    const conf95Area = {
       label: 'Confianza 95%',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf95Upper[i]})),
-      borderColor: 'rgba(255, 193, 7, 0)',
+      data: [
+        ...conf95Lower,
+        ...conf95Upper.reverse()
+      ],
       backgroundColor: 'rgba(255, 193, 7, 0.3)',
-      fill: '-1',
-      tension: 0,
+      borderColor: 'rgba(255, 193, 7, 0.5)',
+      borderWidth: 1,
+      fill: true,
       pointRadius: 0,
-      borderWidth: 0
-    });
+      tension: 0
+    };
     
-    datasets.push({
-      label: 'Confianza 95% Lower',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf95Lower[i]})),
-      borderColor: 'rgba(255, 193, 7, 0)',
-      backgroundColor: 'rgba(255, 193, 7, 0.3)',
-      fill: false,
-      tension: 0,
-      pointRadius: 0,
-      borderWidth: 0,
-      showLine: false
-    });
+    datasets.splice(2, 0, conf95Area); // Insertar antes de otras capas
   }
   
-  // Añadir banda de confianza 80% (verde claro)
+  // Añadir banda de confianza 80% (verde claro) - CORREGIDO
   if (data.confianza_80 && data.confianza_80.length > 0) {
-    const conf80Lower = data.confianza_80.map(c => parseFloat(c.lower) || 0);
-    const conf80Upper = data.confianza_80.map(c => parseFloat(c.upper) || 0);
+    const conf80Lower = data.confianza_80.map(c => ({x: forecastLabels[0], y: parseFloat(c.lower) || 0}));
+    const conf80Upper = data.confianza_80.map(c => ({x: forecastLabels[0], y: parseFloat(c.upper) || 0}));
     
-    datasets.push({
+    // Crear área para confianza 80%
+    const conf80Area = {
       label: 'Confianza 80%',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf80Upper[i]})),
-      borderColor: 'rgba(0, 200, 83, 0)',
+      data: [
+        ...conf80Lower,
+        ...conf80Upper.reverse()
+      ],
       backgroundColor: 'rgba(0, 200, 83, 0.3)',
-      fill: '-1',
-      tension: 0,
+      borderColor: 'rgba(0, 200, 83, 0.5)',
+      borderWidth: 1,
+      fill: true,
       pointRadius: 0,
-      borderWidth: 0
-    });
+      tension: 0
+    };
     
-    datasets.push({
-      label: 'Confianza 80% Lower',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf80Lower[i]})),
-      borderColor: 'rgba(0, 200, 83, 0)',
-      backgroundColor: 'rgba(0, 200, 83, 0.3)',
-      fill: false,
-      tension: 0,
-      pointRadius: 0,
-      borderWidth: 0,
-      showLine: false
-    });
+    datasets.splice(2, 0, conf80Area); // Insertar antes de otras capas
   }
   
   // Añadir línea de límite permitido si existe
@@ -1045,7 +1036,7 @@ function updateForecastChart() {
     });
   }
   
-  // Crear gráfica
+  // Crear gráfica con configuración CORREGIDA
   forecastChart = new Chart(ctx, {
     type: 'line',
     data: { datasets },
@@ -1083,41 +1074,80 @@ function updateForecastChart() {
           title: { 
             display: true, 
             text: 'Fecha y Hora',
-            font: { size: 12 }
+            font: { 
+              size: 12,
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: 10,
+            font: {
+              size: 11
+            }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0,0,0,0.05)'
           }
         },
         y: {
           beginAtZero: currentForecastVariable.includes('pm'),
+          min: yMin,
+          max: yMax,
+          ticks: {
+            stepSize: yStep,
+            font: {
+              size: 11
+            },
+            callback: function(value) {
+              return value.toFixed(0);
+            }
+          },
           title: {
             display: true,
             text: getVariableDisplayName(currentForecastVariable),
-            font: { size: 12 }
-          },
-          ticks: {
-            callback: function(value) {
-              return value.toFixed(1);
+            font: { 
+              size: 12,
+              weight: 'bold'
             }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0,0,0,0.05)'
           }
         }
       },
       interaction: {
         intersect: false,
         mode: 'index'
+      },
+      elements: {
+        line: {
+          tension: 0.2
+        }
       }
     }
   });
   
-  document.getElementById('forecastTitle').textContent = 
-    `Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`;
+  // Actualizar título e información
+  const displayName = getVariableDisplayName(currentForecastVariable);
+  document.getElementById('forecastTitle').textContent = `Pronóstico - ${displayName}`;
+  
+  const aicValue = data.aic ? data.aic.toFixed(2) : 'N/A';
+  const forecastHours = data.pronosticos ? data.pronosticos.length : 0;
+  const updatedDate = data.fecha_generacion ? new Date(data.fecha_generacion).toLocaleString('es-ES') : 'N/A';
   
   document.getElementById('forecastInfo').innerHTML = `
-    <strong>${data.modelo}</strong> | 
-    AIC: ${data.aic.toFixed(2)} | 
-    Pronóstico: ${data.pronosticos.length} horas | 
-    Actualizado: ${new Date(data.fecha_generacion).toLocaleString()}
+    <strong>Modelo: ${data.modelo || 'N/A'}</strong> | 
+    AIC: ${aicValue} | 
+    Pronóstico: ${forecastHours} horas | 
+    Actualizado: ${updatedDate}
   `;
   
-  document.getElementById('forecastChart').style.height = '300px';
+  // Ajustar altura del canvas
+  document.getElementById('forecastChart').style.height = '350px';
+  
   updateModelParams();
 }
 
@@ -1131,11 +1161,14 @@ function updateModelParams() {
   
   if (!paramsGrid || !modelInfo) return;
   
+  const aicValue = data.aic ? data.aic.toFixed(2) : 'N/A';
+  const forecastHours = data.pronosticos ? data.pronosticos.length : 0;
+  
   modelInfo.innerHTML = `
     <strong>${getVariableDisplayName(currentForecastVariable)}</strong> | 
-    Modelo: ${data.modelo} | 
-    AIC: ${data.aic.toFixed(2)} | 
-    Observaciones: ${data.historico.length}
+    Modelo: ${data.modelo || 'N/A'} | 
+    AIC: ${aicValue} | 
+    Pronóstico: ${forecastHours} horas
   `;
   
   let paramsHTML = `
@@ -1147,36 +1180,40 @@ function updateModelParams() {
       </div>
       <div class="param-item">
         <span class="param-label">Modelo SARIMA:</span>
-        <span class="param-value">${data.modelo}</span>
+        <span class="param-value">${data.modelo || 'N/A'}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Criterio de Akaike (AIC):</span>
-        <span class="param-value">${data.aic.toFixed(2)}</span>
+        <span class="param-value">${aicValue}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Horas de pronóstico:</span>
-        <span class="param-value">${data.pronosticos.length}</span>
+        <span class="param-value">${forecastHours}</span>
       </div>
     </div>
     
     <div class="param-group">
-      <div class="param-title">Intervalos de Confianza</div>
+      <div class="param-title">Estadísticas del Modelo</div>
       <div class="param-item">
-        <span class="param-label">Confianza 95%:</span>
-        <span class="param-value">Disponible</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Confianza 80%:</span>
-        <span class="param-value">Disponible</span>
+        <span class="param-label">Observaciones históricas:</span>
+        <span class="param-value">${data.historico ? data.historico.length : 0}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Fecha de generación:</span>
-        <span class="param-value">${new Date(data.fecha_generacion).toLocaleString()}</span>
+        <span class="param-value">${data.fecha_generacion ? new Date(data.fecha_generacion).toLocaleString('es-ES') : 'N/A'}</span>
       </div>
+      ${data.confianza_80 ? `
       <div class="param-item">
-        <span class="param-label">Observaciones históricas:</span>
-        <span class="param-value">${data.historico.length}</span>
+        <span class="param-label">Intervalo confianza 80%:</span>
+        <span class="param-value">Disponible</span>
       </div>
+      ` : ''}
+      ${data.confianza_95 ? `
+      <div class="param-item">
+        <span class="param-label">Intervalo confianza 95%:</span>
+        <span class="param-value">Disponible</span>
+      </div>
+      ` : ''}
       ${data.limite_permitido ? `
       <div class="param-item">
         <span class="param-label">Límite permitido (24h):</span>
@@ -1198,28 +1235,31 @@ function updateModelParams() {
 
 // Generar ecuación del modelo
 function generateEquation(data) {
-  const modeloStr = data.modelo;
-  const matches = modeloStr.match(/SARIMA\((\d+),(\d+),(\d+)\)\((\d+),(\d+),(\d+),(\d+)\)/);
+  const modeloStr = data.modelo || '';
   
-  if (matches) {
-    const [_, p, d, q, P, D, Q, s] = matches;
+  if (modeloStr.includes('SARIMA')) {
+    const matches = modeloStr.match(/SARIMA\((\d+),(\d+),(\d+)\)\((\d+),(\d+),(\d+),(\d+)\)/);
     
-    let equation = `Modelo SARIMA(${p},${d},${q})(${P},${D},${Q},${s})\n\n`;
-    equation += `(1 - φ₁B - ... - φ${p}B^${p})(1 - Φ₁B^${s} - ... - Φ${P}B^{${P}*${s}})\n`;
-    equation += `(1 - B)^${d}(1 - B^${s})^{${D}} y_t = \n`;
-    equation += `(1 + θ₁B + ... + θ${q}B^${q})(1 + Θ₁B^${s} + ... + Θ${Q}B^{${Q}*${s}}) ε_t\n\n`;
-    equation += `Donde:\n`;
-    equation += `• B es el operador de retardo\n`;
-    equation += `• y_t es la serie temporal en tiempo t\n`;
-    equation += `• ε_t es el término de error en tiempo t\n`;
-    equation += `• φ son parámetros AR, θ son parámetros MA\n`;
-    equation += `• Φ son parámetros SAR, Θ son parámetros SMA\n`;
-    equation += `• s = ${s} (estacionalidad en horas)`;
-    
-    return equation;
-  } else {
-    return `Ecuación para modelo: ${modeloStr}\n\nLa ecuación representa la estructura del modelo SARIMA con componentes autorregresivos (AR), de media móvil (MA), diferenciación y componentes estacionales.`;
+    if (matches) {
+      const [_, p, d, q, P, D, Q, s] = matches;
+      
+      let equation = `Modelo SARIMA(${p},${d},${q})(${P},${D},${Q},${s})\n\n`;
+      equation += `(1 - φ₁B - ... - φ${p}B^${p})(1 - Φ₁B^${s} - ... - Φ${P}B^{${P}*${s}})\n`;
+      equation += `(1 - B)^${d}(1 - B^${s})^{${D}} y_t = \n`;
+      equation += `(1 + θ₁B + ... + θ${q}B^${q})(1 + Θ₁B^${s} + ... + Θ${Q}B^{${Q}*${s}}) ε_t\n\n`;
+      equation += `Donde:\n`;
+      equation += `• B es el operador de retardo\n`;
+      equation += `• y_t es la serie temporal en tiempo t\n`;
+      equation += `• ε_t es el término de error en tiempo t\n`;
+      equation += `• φ son parámetros AR, θ son parámetros MA\n`;
+      equation += `• Φ son parámetros SAR, Θ son parámetros SMA\n`;
+      equation += `• s = ${s} (estacionalidad en horas)`;
+      
+      return equation;
+    }
   }
+  
+  return `Modelo: ${modeloStr || 'No especificado'}\n\nLa ecuación representa la estructura del modelo SARIMA con componentes autorregresivos (AR), de media móvil (MA), diferenciación y componentes estacionales.`;
 }
 
 // Funciones auxiliares
