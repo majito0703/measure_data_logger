@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Measure Data Logger – Dashboard</title>
+
+<!-- Librerías -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --ucc-azul:#003366;
+  --ucc-verde:#7AC043;
+  --gris:#F2F2F2;
+  --text:#0b1220;
+}
+
+/* Base */
+body{font-family:Inter,Arial,Helvetica,sans-serif;margin:0;background:var(--gris);color:var(--text);transition:0.3s}
+header{background:var(--ucc-azul);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.header-title{font-weight:700;letter-spacing:.6px}
+.header-actions{display:flex;gap:10px;align-items:center}
+
+/* Buttons */
+.btn{background:var(--ucc-verde);border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn.secondary{background:#ffffff;color:var(--ucc-azul);border:1px solid rgba(0,0,0,0.06)}
+.icon-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer}
+
+/* Container */
+.container{max-width:1200px;margin:22px auto;padding:0 16px}
+
+/* KPI Cards row */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.kpi-card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 6px 18px rgba(11,18,32,0.06);display:flex;align-items:center;gap:12px}
+.kpi-icon{width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--ucc-azul),#0a2b5a);color:#fff}
+.kpi-body{flex:1}
+.kpi-title{font-size:13px;color:#334155;margin:0 0 6px 0}
+.kpi-value{font-size:22px;font-weight:700;color:var(--ucc-azul)}
+.kpi-meta{font-size:12px;color:#6b7280;margin-top:6px}
+
+/* Middle: charts + controls */
+.charts-panel{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:18px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.range-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer}
+.range-btn.active{background:var(--ucc-azul);color:#fff;border-color:var(--ucc-azul)}
+
+/* canvas wrapper */
+.canvas-card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(11,18,32,0.06)}
+.canvas-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+/* Limitar tamaño de las gráficas */
+.canvas-card canvas {
+  max-height: 250px !important;
+  height: 250px !important;
+}
+/* Table area */
+.table-card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(11,18,32,0.06);margin-bottom:40px}
+.table-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-bottom:10px}
+.table-search{display:flex;gap:8px;align-items:center}
+.input{padding:8px 10px;border-radius:8px;border:1px solid #e6e9ef}
+
+/* Table style */
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #eef2f6;text-align:center;font-size:13px}
+th{background:var(--ucc-azul);color:#fff;border-radius:6px}
+
+/* Responsive */
+@media (max-width:900px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  header{padding:12px}
+  #pdfBtn{display:none} /* hide long buttons in small */
+}
+@media (max-width:560px){
+  .kpi-row{grid-template-columns:1fr}
+  .controls{flex-direction:column;align-items:flex-start}
+  .charts-panel{gap:12px}
+  header{flex-direction:column;align-items:flex-start;gap:8px}
+}
+
+/* Dark mode */
+body.dark{background:#0b1220;color:#e6eef8}
+body.dark .kpi-card, body.dark .canvas-card, body.dark .table-card{background:#0f1724;box-shadow:none}
+body.dark th{background:#001f3f}
+body.dark .kpi-value{color:#7AC043}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">MEASURE DATA LOGGER – DASHBOARD</div>
+  <div class="header-actions">
+    <button id="pdfBtn" class="btn">Exportar PDF</button>
+    <button id="xlsBtn" class="btn">Descargar Excel</button>
+    <button id="csvBtn" class="btn secondary">CSV</button>
+    <button id="modoOscuroBtn" class="icon-btn">Modo oscuro</button>
+  </div>
+</header>
+
+<div class="container" id="contentPDF">
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="3" width="6" height="18" rx="3" stroke="#fff" stroke-width="2" fill="none"/>
+          <circle cx="12" cy="19" r="2" fill="#fff"/>
+          <line x1="12" y1="8" x2="12" y2="16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">Temperatura (°C)</div>
+        <div class="kpi-value" id="card_temp">--</div>
+        <div class="kpi-meta" id="meta_temp">Última: --</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="#fff" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">Humedad (%)</div>
+        <div class="kpi-value" id="card_hum">--</div>
+        <div class="kpi-meta" id="meta_hum">Última: --</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="4" fill="#fff"/>
+          <line x1="12" y1="3" x2="12" y2="5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="19" x2="12" y2="21" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="3" y1="12" x2="5" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="19" y1="12" x2="21" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">Radiación (W/m²)</div>
+        <div class="kpi-value" id="card_rad">--</div>
+        <div class="kpi-meta" id="meta_rad">Última: --</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="7" cy="18" r="2" fill="#fff"/>
+          <circle cx="12" cy="14" r="2" fill="#fff"/>
+          <circle cx="17" cy="10" r="2" fill="#fff"/>
+          <circle cx="9" cy="8" r="1.5" fill="#fff"/>
+          <circle cx="14" cy="17" r="1.5" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">PM10 (µg/m³)</div>
+        <div class="kpi-value" id="card_pm10">--</div>
+        <div class="kpi-meta" id="meta_pm10">Última: --</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="6" cy="17" r="1.5" fill="#fff"/>
+          <circle cx="11" cy="13" r="1.5" fill="#fff"/>
+          <circle cx="16" cy="9" r="1.5" fill="#fff"/>
+          <circle cx="8" cy="10" r="1" fill="#fff"/>
+          <circle cx="13" cy="16" r="1" fill="#fff"/>
+          <circle cx="18" cy="15" r="1" fill="#fff"/>
+          <circle cx="9" cy="19" r="1" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">PM2.5 (µg/m³)</div>
+        <div class="kpi-value" id="card_pm25">--</div>
+        <div class="kpi-meta" id="meta_pm25">Última: --</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls & Charts -->
+  <div class="charts-panel">
+    <div class="controls">
+      <div>
+        <button class="range-btn" data-range="24h">Últimas 24h</button>
+        <button class="range-btn" data-range="7d">Última semana</button>
+        <button class="range-btn" data-range="all">Todo</button>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <label style="font-size:13px;color:#6b7280">Desde</label>
+        <input type="datetime-local" id="fromInput" class="input" />
+        <label style="font-size:13px;color:#6b7280">Hasta</label>
+        <input type="datetime-local" id="toInput" class="input" />
+        <button id="applyRange" class="range-btn">Aplicar</button>
+      </div>
+    </div>
+
+    <!-- Each chart in its own card -->
+    <div class="canvas-card">
+      <div class="canvas-title"><strong>Temperatura (°C)</strong><small id="temp-note"></small></div>
+      <canvas id="g_temp"></canvas>
+    </div>
+
+    <div class="canvas-card">
+      <div class="canvas-title"><strong>Humedad (%)</strong></div>
+      <canvas id="g_hum"></canvas>
+    </div>
+
+    <div class="canvas-card">
+      <div class="canvas-title"><strong>Radiación (W/m²)</strong></div>
+      <canvas id="g_rad"></canvas>
+    </div>
+
+    <div class="canvas-card">
+      <div class="canvas-title"><strong>PM10 (µg/m³)</strong></div>
+      <canvas id="g_pm10"></canvas>
+    </div>
+
+    <div class="canvas-card">
+      <div class="canvas-title"><strong>PM2.5 (µg/m³)</strong></div>
+      <canvas id="g_pm25"></canvas>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-controls">
+      <div class="table-search">
+        <input id="searchInput" class="input" placeholder="Buscar..." />
+        <input id="filterFrom" type="date" class="input" />
+        <input id="filterTo" type="date" class="input" />
+        <button id="clearFilters" class="range-btn">Limpiar</button>
+      </div>
+      <div>
+        <button id="exportCSV" class="range-btn">Exportar CSV</button>
+        <button id="exportXLS" class="range-btn">Exportar Excel</button>
+      </div>
+    </div>
+
+    <table id="dataTable" aria-live="polite">
+      <thead>
+        <tr><th>Fecha</th><th>Temp</th><th>Humedad</th><th>Radiación</th><th>PM10</th><th>PM2.5</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+/* -------------------------
+  Config y variables
+------------------------- */
+const API_URL = "api/obtener_datos.php"; // tu API devuelve JSON ordenado por fecha desc
+let rawData = []; // data completa
+let filtered = []; // filtro por rango
+const charts = {};
+
+/* ---------- util: parse fecha ---------- */
+function parseDate(s){ // acepta 'YYYY-MM-DD HH:MM:SS' o ISO
+  if(!s) return null;
+  // intenta ISO primero
+  const d = new Date(s.replace(' ', 'T'));
+  return isNaN(d) ? new Date(s) : d;
+}
+
+/* ---------- fetch data ---------- */
+async function loadData(){
+  try{
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    // normalizar: asegurar campos: fecha_hora, temperatura, humedad, radiacion, pm10, pm25
+    rawData = data.map(r => ({
+      fecha: r.fecha_hora || r.fecha || r.fecha_hora,
+      temperatura: r.temperatura !== undefined ? Number(r.temperatura) : null,
+      humedad: r.humedad !== undefined ? Number(r.humedad) : null,
+      radiacion: r.radiacion !== undefined ? Number(r.radiacion) : null,
+      pm10: r.pm10 !== undefined ? Number(r.pm10) : null,
+      pm25: r.pm25 !== undefined ? Number(r.pm25) : null
+    })).filter(x=>x.fecha).sort((a,b)=> new Date(a.fecha) - new Date(b.fecha)); // asc
+    applyRange('24h'); // default
+    updateKPI();
+  }catch(e){
+    console.error("API error",e);
+  }
+}
+
+/* ---------- range helpers ---------- */
+function applyRange(range, from=null, to=null){
+  const now = new Date();
+  let start;
+  if(range==='24h') start = new Date(now.getTime() - 24*3600*1000);
+  else if(range==='7d') start = new Date(now.getTime() - 7*24*3600*1000);
+  else if(range==='all') start = new Date(0);
+  else if(range==='custom'){ start = from; }
+
+  const end = to || new Date();
+  filtered = rawData.filter(r => {
+    const d = parseDate(r.fecha);
+    return d >= start && d <= end;
+  });
+  renderAll();
+}
+
+/* ---------- render KPIs ---------- */
+function updateKPI(){
+  if(!rawData.length) return;
+  const last = rawData[rawData.length-1];
+  document.getElementById('card_temp').innerText = last.temperatura ?? '--';
+  document.getElementById('card_hum').innerText = last.humedad ?? '--';
+  document.getElementById('card_rad').innerText = last.radiacion ?? '--';
+  document.getElementById('card_pm10').innerText = last.pm10 ?? '--';
+  document.getElementById('card_pm25').innerText = last.pm25 ?? '--';
+
+  const timeStr = new Date(last.fecha).toLocaleString();
+  document.getElementById('meta_temp').innerText = 'Última: ' + timeStr;
+  document.getElementById('meta_hum').innerText = 'Última: ' + timeStr;
+  document.getElementById('meta_rad').innerText = 'Última: ' + timeStr;
+  document.getElementById('meta_pm10').innerText = 'Última: ' + timeStr;
+  document.getElementById('meta_pm25').innerText = 'Última: ' + timeStr;
+}
+
+/* ---------- render charts & table ---------- */
+function renderAll(){
+  const times = filtered.map(r=> r.fecha);
+  const temp = filtered.map(r=> r.temperatura);
+  const hum = filtered.map(r=> r.humedad);
+  const rad = filtered.map(r=> r.radiacion);
+  const pm10 = filtered.map(r=> r.pm10);
+  const pm25 = filtered.map(r=> r.pm25);
+
+  renderChart('g_temp','Temperatura (°C)',times,temp,'#003366');
+  renderChart('g_hum','Humedad (%)',times,hum,'#7AC043');
+  renderChart('g_rad','Radiación',times,rad,'#003366');
+  renderChart('g_pm10','PM10',times,pm10,'#7AC043');
+  renderChart('g_pm25','PM2.5',times,pm25,'#003366');
+
+  // tabla
+  const tbody = document.querySelector('#dataTable tbody');
+  tbody.innerHTML = '';
+  // mostrar últimos 200
+  const rows = [...filtered].slice(-200).reverse();
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${new Date(r.fecha).toLocaleString()}</td>
+                    <td>${r.temperatura ?? ''}</td>
+                    <td>${r.humedad ?? ''}</td>
+                    <td>${r.radiacion ?? ''}</td>
+                    <td>${r.pm10 ?? ''}</td>
+                    <td>${r.pm25 ?? ''}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ---------- Chart render (single function) ---------- */
+function renderChart(id,label,labels,data,color){
+  const ctx = document.getElementById(id).getContext('2d');
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels: labels,
+      datasets:[{
+        label:label,
+        data:data,
+        borderColor: color,
+        backgroundColor: color + '33',
+        fill:true,
+        tension:0.2,
+        pointRadius:0
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        x:{display:false},
+        y:{beginAtZero:false}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{mode:'index',intersect:false}
+      }
+    }
+  });
+  // set canvas height for nice layout
+  document.getElementById(id).style.height = '220px';
+}
+
+/* ---------- range buttons ---------- */
+document.querySelectorAll('.range-btn[data-range]').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    applyRange(btn.dataset.range);
+  });
+});
+
+/* ---------- apply custom ---------- */
+document.getElementById('applyRange').addEventListener('click', ()=>{
+  const from = document.getElementById('fromInput').value;
+  const to = document.getElementById('toInput').value;
+  if(!from || !to) return alert('Seleccione ambas fechas');
+  applyRange('custom', new Date(from), new Date(to));
+});
+
+/* ---------- search & filter ---------- */
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase();
+  const tbody = document.querySelector('#dataTable tbody');
+  Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+document.getElementById('filterFrom').addEventListener('change', applyDateFilter);
+document.getElementById('filterTo').addEventListener('change', applyDateFilter);
+document.getElementById('clearFilters').addEventListener('click', ()=>{
+  document.getElementById('filterFrom').value='';
+  document.getElementById('filterTo').value='';
+  renderAll();
+});
+
+function applyDateFilter(){
+  const f=document.getElementById('filterFrom').value;
+  const t=document.getElementById('filterTo').value;
+  if(!f && !t) return renderAll();
+  const from = f ? new Date(f) : new Date(0);
+  const to = t ? new Date(t + 'T23:59:59') : new Date();
+  filtered = rawData.filter(r=>{ const d=parseDate(r.fecha); return d>=from && d<=to; });
+  renderAll();
+}
+
+/* ---------- CSV / XLS / PDF export ---------- */
+function exportToCSV(filename){
+  const rows = document.querySelectorAll('#dataTable tr');
+  let csv = [];
+  rows.forEach(r=>{
+    const cols = Array.from(r.querySelectorAll('th,td')).map(c=> '"' + c.innerText.replace(/"/g,'""') + '"');
+    csv.push(cols.join(','));
+  });
+  const blob = new Blob([csv.join('\n')],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+
+function exportToXLSX(filename){
+  const table = document.getElementById('dataTable');
+  const wb = XLSX.utils.table_to_book(table, {sheet:"Lecturas"});
+  XLSX.writeFile(wb, filename);
+}
+
+document.getElementById('exportCSV').addEventListener('click', ()=> exportToCSV('datos_mediciones.csv'));
+document.getElementById('exportXLS').addEventListener('click', ()=> exportToXLSX('datos_mediciones.xlsx'));
+document.getElementById('csvBtn').addEventListener('click', ()=> exportToCSV('datos_mediciones.csv'));
+document.getElementById('xlsBtn').addEventListener('click', ()=> exportToXLSX('datos_mediciones.xlsx'));
+
+/* ---------- PDF & dark ---------- */
+document.getElementById('pdfBtn').addEventListener('click', ()=>{
+  html2canvas(document.querySelector('#contentPDF'), {scale:1.8}).then(canvas=>{
+    const img=canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const pdfWidth = 210;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(img,'PNG',0,0,pdfWidth,pdfHeight);
+    pdf.save('Reporte_MeasureDataLogger.pdf');
+  });
+});
+document.getElementById('modoOscuroBtn').addEventListener('click', ()=>{
+  document.body.classList.toggle('dark');
+  document.getElementById('modoOscuroBtn').innerText = document.body.classList.contains('dark') ? 'Modo claro' : 'Modo oscuro';
+});
+
+/* ---------- polling (cada 30s) ---------- */
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>
