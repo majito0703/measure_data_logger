@@ -298,6 +298,29 @@ body.dark .forecast-table th {
 body.dark .forecast-table tr:nth-child(even) {
   background: #1a2332;
 }
+
+/* Leyenda mejorada */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 10px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend-color {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+}
 </style>
 </head>
 <body>
@@ -493,6 +516,30 @@ body.dark .forecast-table tr:nth-child(even) {
       
       <canvas id="forecastChart"></canvas>
       
+      <!-- Leyenda mejorada -->
+      <div class="chart-legend" id="chartLegend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: black; border: 2px solid black;"></div>
+          <span>Datos Históricos</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: red; border: 2px solid red;"></div>
+          <span>Pronóstico</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(0, 255, 0, 0.3); border: 1px solid #00c853;"></div>
+          <span>Confianza 80%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(255, 255, 0, 0.3); border: 1px solid #ffd600;"></div>
+          <span>Confianza 95%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: transparent; border: 1px dashed blue;"></div>
+          <span>Límite Permitido</span>
+        </div>
+      </div>
+      
       <!-- Tabla de pronósticos -->
       <div class="forecast-table-container" id="forecastTableContainer" style="display: none; margin-top: 20px;">
         <table class="forecast-table" id="forecastTable">
@@ -510,16 +557,6 @@ body.dark .forecast-table tr:nth-child(even) {
             <!-- Los datos de pronóstico se cargarán aquí -->
           </tbody>
         </table>
-      </div>
-      
-      <div style="margin-top: 15px; font-size: 12px; color: #666;">
-        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: black; margin-right: 5px; border-radius: 50%;"></span> Datos Históricos</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: red; margin-right: 5px; border-radius: 50%;"></span> Pronóstico</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(0, 255, 0, 0.3); border: 1px solid #00c853; margin-right: 5px;"></span> Confianza 80%</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: rgba(255, 255, 0, 0.3); border: 1px solid #ffd600; margin-right: 5px;"></span> Confianza 95%</div>
-          <div><span style="display: inline-block; width: 12px; height: 12px; background: blue; border: 1px dashed blue; margin-right: 5px;"></span> Límite Permitido</div>
-        </div>
       </div>
     </div>
   </div>
@@ -828,7 +865,7 @@ document.getElementById('modoOscuroBtn').addEventListener('click', ()=>{
 });
 
 /* ============================
-   MÓDULO DE PRONÓSTICOS SARIMA - MEJORADO
+   MÓDULO DE PRONÓSTICOS SARIMA - CORREGIDO
    ============================ */
 
 const FORECAST_BASE_URL = "pronosticos/";
@@ -836,11 +873,6 @@ let forecastData = {};
 let forecastChart = null;
 let currentForecastVariable = 'temperature';
 let forecastUpdateInterval = null;
-
-// Función para normalizar nombres de variables
-function normalizeVariableName(variable) {
-  return variable.replace(/\s+/g, '').toLowerCase();
-}
 
 // Función para obtener nombre de archivo correcto
 function getForecastFileName(variable) {
@@ -888,17 +920,6 @@ function hideForecastMode() {
   }
 }
 
-// Mostrar mensaje de éxito
-function showSuccessMessage() {
-  const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
-  if (loadedCount > 0) {
-    document.getElementById('forecastInfo').innerHTML = 
-      `<span style="color: var(--ucc-verde); font-weight: bold;">
-        ✓ ${loadedCount} de 4 pronósticos cargados correctamente
-      </span>`;
-  }
-}
-
 // Cargar todos los pronósticos
 async function loadAllForecasts() {
   try {
@@ -919,8 +940,10 @@ async function loadAllForecasts() {
     // Ocultar loading
     document.getElementById('forecastLoading').style.display = 'none';
     
-    // Mostrar mensaje de éxito
-    showSuccessMessage();
+    // Mostrar mensaje
+    const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
+    document.getElementById('forecastInfo').textContent = 
+      `Cargados ${loadedCount} de 4 pronósticos`;
     
     // Si se cargó temperatura, mostrarla
     if (forecastData['temperature']) {
@@ -940,7 +963,6 @@ async function loadAllForecasts() {
 async function loadForecastData(variable) {
   try {
     const fileName = getForecastFileName(variable);
-    console.log(`Cargando pronóstico: ${FORECAST_BASE_URL}${fileName}`);
     
     const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
     
@@ -949,18 +971,21 @@ async function loadForecastData(variable) {
     }
     
     const data = await response.json();
-    const processedData = processForecastData(data, variable);
+    
+    // Procesar datos
+    const processedData = {
+      ...data,
+      variable: variable,
+      // Asegurar arrays
+      historico: Array.isArray(data.historico) ? data.historico : [],
+      pronosticos: Array.isArray(data.pronosticos) ? data.pronosticos : []
+    };
     
     // Guardar datos
     forecastData[variable] = processedData;
     
     // Marcar pestaña como cargada
     updateTabStatus(variable, 'loaded');
-    
-    // Actualizar badge con estadísticas (pero no mostrar el número 72)
-    updateTabBadge(variable, processedData);
-    
-    console.log(`✓ Pronóstico cargado: ${variable}, históricos: ${data.historico?.length || 0}, pronósticos: ${data.pronosticos?.length || 0}`);
     
     return processedData;
     
@@ -969,104 +994,6 @@ async function loadForecastData(variable) {
     updateTabStatus(variable, 'error');
     return null;
   }
-}
-
-// Actualizar badge en la pestaña (MODIFICADO: no mostrar el número 72)
-function updateTabBadge(variable, data) {
-  const tab = document.querySelector(`.forecast-tab[data-variable="${variable}"]`);
-  if (!tab || !data) return;
-  
-  // Crear o actualizar badge - pero lo dejamos vacío para no mostrar números
-  let badge = tab.querySelector('.tab-badge');
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.className = 'tab-badge';
-    tab.appendChild(badge);
-  }
-  
-  // MODIFICACIÓN: Mostrar un checkmark en lugar del número 72
-  const forecastCount = data.pronosticos?.length || 0;
-  badge.textContent = '✓'; // Solo mostrar checkmark
-  badge.title = `${forecastCount} pronósticos disponibles`;
-  badge.style.backgroundColor = 'var(--ucc-verde)';
-  badge.style.width = '18px';
-  badge.style.height = '18px';
-  
-  // Si no hay datos, ocultar el badge
-  if (forecastCount === 0) {
-    badge.style.display = 'none';
-  }
-}
-
-// Procesar datos del pronóstico
-function processForecastData(data, variable) {
-  let varName = normalizeVariableName(data.variable || variable);
-  
-  // Manejar nombres específicos
-  if (varName === 'pm_2.5' || varName === 'pm2.5' || varName === 'pm25') {
-    varName = 'pm2.5';
-  } else if (varName === 'pm_10' || varName === 'pm10') {
-    varName = 'pm10';
-  }
-  
-  // Ajustar AIC para diferenciar
-  let aic = data.aic || 0;
-  if (variable === 'humidity') {
-    aic = aic + 50;
-  } else if (variable === 'pm2.5') {
-    aic = aic + 100;
-  } else if (variable === 'pm10') {
-    aic = aic + 150;
-  }
-  
-  // Limpiar espacios del modelo
-  let modeloStr = data.modelo || '';
-  modeloStr = modeloStr.replace(/\s+/g, '');
-  
-  // Límites permitidos
-  const limites = {
-    'temperature': null,
-    'humidity': null,
-    'pm2.5': 37,
-    'pm10': 75
-  };
-  
-  // Validar y limpiar datos
-  const historico = Array.isArray(data.historico) ? data.historico : [];
-  const pronosticos = Array.isArray(data.pronosticos) ? data.pronosticos : [];
-  
-  // Validar fechas
-  const historicoValidado = historico.filter(item => {
-    if (!item.fecha || !item.valor) return false;
-    const date = new Date(item.fecha);
-    return !isNaN(date.getTime());
-  });
-  
-  const pronosticosValidados = pronosticos.filter(item => {
-    if (!item.fecha || item.pronostico === undefined) return false;
-    const date = new Date(item.fecha);
-    return !isNaN(date.getTime());
-  });
-  
-  // Calcular estadísticas
-  const valoresPronostico = pronosticosValidados.map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
-  const stats = {
-    min: valoresPronostico.length > 0 ? Math.min(...valoresPronostico) : 0,
-    max: valoresPronostico.length > 0 ? Math.max(...valoresPronostico) : 0,
-    avg: valoresPronostico.length > 0 ? valoresPronostico.reduce((a, b) => a + b, 0) / valoresPronostico.length : 0,
-    count: valoresPronostico.length
-  };
-  
-  return {
-    ...data,
-    variable: varName,
-    modelo: modeloStr,
-    aic: aic,
-    limite_permitido: limites[variable],
-    historico: historicoValidado,
-    pronosticos: pronosticosValidados,
-    stats: stats
-  };
 }
 
 // Actualizar estado de la pestaña
@@ -1078,10 +1005,8 @@ function updateTabStatus(variable, status) {
   
   if (status === 'loaded') {
     tab.classList.add('loaded');
-    tab.title = 'Datos cargados correctamente';
   } else if (status === 'error') {
     tab.classList.add('error');
-    tab.title = 'Error al cargar datos';
   }
   
   if (variable === currentForecastVariable) {
@@ -1089,7 +1014,7 @@ function updateTabStatus(variable, status) {
   }
 }
 
-// Actualizar gráfica de pronóstico (CORREGIDO: problema del cursor)
+// FUNCIÓN MEJORADA: Actualizar gráfica de pronóstico
 function updateForecastChart() {
   const data = forecastData[currentForecastVariable];
   if (!data) {
@@ -1112,162 +1037,163 @@ function updateForecastChart() {
     return;
   }
   
-  // Preparar datos históricos
-  const historicalLabels = data.historico.map(d => {
+  // Preparar datos combinados para una línea continua
+  const allDates = [];
+  const allData = [];
+  const datasetTypes = []; // Para identificar tipo de dato
+  
+  // Agregar datos históricos
+  data.historico.forEach((item, index) => {
     try {
-      const dateStr = d.fecha.replace(' ', 'T');
-      const date = new Date(dateStr);
-      return !isNaN(date.getTime()) ? date : new Date();
+      const date = new Date(item.fecha);
+      if (!isNaN(date.getTime())) {
+        allDates.push(date);
+        allData.push(parseFloat(item.valor) || 0);
+        datasetTypes.push('historical');
+      }
     } catch (e) {
-      return new Date();
+      console.warn('Fecha histórica inválida:', item.fecha);
     }
   });
   
-  const historicalData = data.historico.map(d => {
-    const val = parseFloat(d.valor);
-    return isNaN(val) ? 0 : val;
-  });
+  // Agregar datos de pronóstico
+  const forecastStartDate = new Date(data.pronosticos[0].fecha);
+  const lastHistoricalDate = allDates[allDates.length - 1];
   
-  // Preparar pronósticos
-  const forecastLabels = data.pronosticos.map(d => {
+  // Asegurar continuidad entre histórico y pronóstico
+  if (lastHistoricalDate && forecastStartDate) {
+    // Agregar un punto de transición
+    allDates.push(forecastStartDate);
+    allData.push(allData[allData.length - 1]); // Último valor histórico
+    datasetTypes.push('transition');
+  }
+  
+  data.pronosticos.forEach((item, index) => {
     try {
-      const dateStr = d.fecha.replace(' ', 'T');
-      const date = new Date(dateStr);
-      return !isNaN(date.getTime()) ? date : new Date();
+      const date = new Date(item.fecha);
+      if (!isNaN(date.getTime())) {
+        allDates.push(date);
+        allData.push(parseFloat(item.pronostico) || 0);
+        datasetTypes.push('forecast');
+      }
     } catch (e) {
-      return new Date();
+      console.warn('Fecha de pronóstico inválida:', item.fecha);
     }
   });
   
-  const forecastDataValues = data.pronosticos.map(d => {
-    const val = parseFloat(d.pronostico);
-    return isNaN(val) ? 0 : val;
+  // Preparar intervalos de confianza
+  const conf80Lower = [];
+  const conf80Upper = [];
+  const conf95Lower = [];
+  const conf95Upper = [];
+  
+  data.pronosticos.forEach(item => {
+    conf80Lower.push(parseFloat(item.confianza_80_min) || 0);
+    conf80Upper.push(parseFloat(item.confianza_80_max) || 0);
+    conf95Lower.push(parseFloat(item.confianza_95_min) || 0);
+    conf95Upper.push(parseFloat(item.confianza_95_max) || 0);
   });
   
-  const conf80Lower = data.pronosticos.map(d => {
-    const val = parseFloat(d.confianza_80_min);
-    return isNaN(val) ? 0 : val;
-  });
-  
-  const conf80Upper = data.pronosticos.map(d => {
-    const val = parseFloat(d.confianza_80_max);
-    return isNaN(val) ? 0 : val;
-  });
-  
-  const conf95Lower = data.pronosticos.map(d => {
-    const val = parseFloat(d.confianza_95_min);
-    return isNaN(val) ? 0 : val;
-  });
-  
-  const conf95Upper = data.pronosticos.map(d => {
-    const val = parseFloat(d.confianza_95_max);
-    return isNaN(val) ? 0 : val;
+  // Obtener fechas de pronóstico
+  const forecastDates = data.pronosticos.map(item => {
+    try {
+      return new Date(item.fecha);
+    } catch (e) {
+      return new Date();
+    }
   });
   
   // Crear datasets
-  const datasets = [
-    {
-      label: 'Datos Históricos',
-      data: historicalLabels.map((date, i) => ({x: date, y: historicalData[i]})),
-      borderColor: 'black',
-      backgroundColor: 'black',
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0,
-      borderWidth: 2,
-      hoverRadius: 0, // No mostrar punto en hover
-      pointHoverRadius: 0
+  const datasets = [];
+  
+  // 1. Línea principal combinada (histórico + pronóstico)
+  datasets.push({
+    label: 'Datos',
+    data: allDates.map((date, i) => ({x: date, y: allData[i]})),
+    borderColor: (context) => {
+      const index = context.dataIndex;
+      return datasetTypes[index] === 'historical' ? 'black' : 'red';
     },
-    {
-      label: 'Pronóstico',
-      data: forecastLabels.map((date, i) => ({x: date, y: forecastDataValues[i]})),
-      borderColor: 'red',
-      backgroundColor: 'red',
-      fill: false,
-      tension: 0.2,
-      pointRadius: 0, // Cambiado de 2 a 0 para quitar puntos
-      borderWidth: 2,
-      borderDash: [5, 5],
-      hoverRadius: 0,
-      pointHoverRadius: 0
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    tension: 0.2,
+    pointRadius: 0,
+    segment: {
+      borderColor: ctx => {
+        const index = ctx.p0DataIndex;
+        return datasetTypes[index] === 'historical' ? 'black' : 'red';
+      }
     }
-  ];
+  });
   
-  // Añadir intervalos de confianza si están disponibles
-  if (conf80Lower.length > 0 && conf80Upper.length > 0) {
-    datasets.push({
-      label: 'Confianza 80%',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf80Upper[i]})),
-      borderColor: 'transparent',
-      backgroundColor: 'rgba(0, 255, 0, 0.3)',
-      fill: {
-        target: '-1',
-        above: 'rgba(0, 255, 0, 0.3)'
-      },
-      pointRadius: 0,
-      hoverRadius: 0,
-      pointHoverRadius: 0
-    });
-    
-    datasets.push({
-      label: '_conf80_lower',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf80Lower[i]})),
-      borderColor: 'transparent',
-      backgroundColor: 'rgba(0, 255, 0, 0.3)',
-      fill: false,
-      pointRadius: 0,
-      hoverRadius: 0,
-      pointHoverRadius: 0
-    });
-  }
-  
+  // 2. Intervalo de confianza 95%
   if (conf95Lower.length > 0 && conf95Upper.length > 0) {
     datasets.push({
       label: 'Confianza 95%',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf95Upper[i]})),
+      data: forecastDates.map((date, i) => ({x: date, y: conf95Upper[i]})),
       borderColor: 'transparent',
-      backgroundColor: 'rgba(255, 255, 0, 0.3)',
+      backgroundColor: 'rgba(255, 255, 0, 0.2)',
       fill: {
         target: '-1',
-        above: 'rgba(255, 255, 0, 0.3)'
+        above: 'rgba(255, 255, 0, 0.2)'
       },
       pointRadius: 0,
-      hoverRadius: 0,
-      pointHoverRadius: 0
+      borderWidth: 0
     });
     
     datasets.push({
       label: '_conf95_lower',
-      data: forecastLabels.map((date, i) => ({x: date, y: conf95Lower[i]})),
+      data: forecastDates.map((date, i) => ({x: date, y: conf95Lower[i]})),
       borderColor: 'transparent',
-      backgroundColor: 'rgba(255, 255, 0, 0.3)',
-      fill: false,
+      backgroundColor: 'rgba(255, 255, 0, 0.2)',
       pointRadius: 0,
-      hoverRadius: 0,
-      pointHoverRadius: 0
+      borderWidth: 0
     });
   }
   
-  // Añadir línea de límite permitido si existe
-  if (data.limite_permitido !== null) {
+  // 3. Intervalo de confianza 80%
+  if (conf80Lower.length > 0 && conf80Upper.length > 0) {
+    datasets.push({
+      label: 'Confianza 80%',
+      data: forecastDates.map((date, i) => ({x: date, y: conf80Upper[i]})),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+      fill: {
+        target: '-1',
+        above: 'rgba(0, 255, 0, 0.2)'
+      },
+      pointRadius: 0,
+      borderWidth: 0
+    });
+    
+    datasets.push({
+      label: '_conf80_lower',
+      data: forecastDates.map((date, i) => ({x: date, y: conf80Lower[i]})),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+      pointRadius: 0,
+      borderWidth: 0
+    });
+  }
+  
+  // 4. Línea de límite permitido si existe
+  if (data.limite_permitido !== null && data.limite_permitido > 0) {
     datasets.push({
       label: 'Límite Permitido',
       data: [
-        {x: historicalLabels[0], y: data.limite_permitido},
-        {x: forecastLabels[forecastLabels.length - 1], y: data.limite_permitido}
+        {x: allDates[0], y: data.limite_permitido},
+        {x: allDates[allDates.length - 1], y: data.limite_permitido}
       ],
       borderColor: 'blue',
       backgroundColor: 'blue',
-      fill: false,
       borderWidth: 1,
       borderDash: [5, 5],
       pointRadius: 0,
-      hoverRadius: 0,
-      pointHoverRadius: 0
+      fill: false
     });
   }
   
-  // CORRECCIÓN: Configurar opciones del tooltip para mostrar solo el valor y no etiquetas confusas
+  // Configurar tooltip mejorado
   const tooltipCallbacks = {
     title: function(tooltipItems) {
       if (tooltipItems.length > 0) {
@@ -1284,34 +1210,62 @@ function updateForecastChart() {
     },
     label: function(context) {
       const datasetLabel = context.dataset.label || '';
-      // Solo mostrar etiquetas para datos históricos y pronóstico
-      if (datasetLabel.includes('Históricos') || datasetLabel.includes('Pronóstico')) {
-        let label = datasetLabel.replace('Datos Históricos', 'Histórico').replace('Pronóstico', 'Pronóstico');
-        label += ': ' + context.parsed.y.toFixed(2);
-        return label;
+      const value = context.parsed.y;
+      
+      // Para la línea principal
+      if (datasetLabel === 'Datos') {
+        const index = context.dataIndex;
+        const dataType = datasetTypes[index];
+        const labelText = dataType === 'historical' ? 'Histórico' : 'Pronóstico';
+        return `${labelText}: ${value.toFixed(2)}`;
       }
-      // Para intervalos de confianza, mostrar información más clara
-      if (datasetLabel.includes('Confianza')) {
-        return null; // No mostrar en tooltip
+      
+      // Para límite permitido
+      if (datasetLabel === 'Límite Permitido') {
+        return `Límite: ${value.toFixed(2)}`;
       }
-      if (datasetLabel.includes('Límite')) {
-        return 'Límite Permitido: ' + context.parsed.y.toFixed(2);
+      
+      // No mostrar etiquetas para intervalos de confianza
+      if (datasetLabel.includes('Confianza') || datasetLabel.startsWith('_')) {
+        return null;
+      }
+      
+      return `${datasetLabel}: ${value.toFixed(2)}`;
+    },
+    afterLabel: function(context) {
+      const datasetLabel = context.dataset.label || '';
+      
+      // Mostrar información de confianza en tooltip
+      if (datasetLabel === 'Datos') {
+        const index = context.dataIndex;
+        if (datasetTypes[index] === 'forecast') {
+          const forecastIndex = index - data.historico.length - 1;
+          if (forecastIndex >= 0 && forecastIndex < data.pronosticos.length) {
+            const item = data.pronosticos[forecastIndex];
+            const lines = [];
+            
+            if (item.confianza_80_min && item.confianza_80_max) {
+              lines.push(`80%: [${parseFloat(item.confianza_80_min).toFixed(2)}, ${parseFloat(item.confianza_80_max).toFixed(2)}]`);
+            }
+            
+            if (item.confianza_95_min && item.confianza_95_max) {
+              lines.push(`95%: [${parseFloat(item.confianza_95_min).toFixed(2)}, ${parseFloat(item.confianza_95_max).toFixed(2)}]`);
+            }
+            
+            return lines.join('\n');
+          }
+        }
       }
       return null;
     },
     // Filtrar qué datasets se muestran en el tooltip
     filter: function(tooltipItem) {
       const label = tooltipItem.dataset.label || '';
-      // Mostrar solo históricos, pronóstico y límite
-      return label.includes('Históricos') || 
-             label.includes('Pronóstico') || 
-             label.includes('Límite') ||
-             label === '_conf80_lower' || 
-             label === '_conf95_lower';
+      return label === 'Datos' || label === 'Límite Permitido';
     }
   };
   
-  // Crear gráfica con mejor configuración de interacción
+  // Crear gráfica
   forecastChart = new Chart(ctx, {
     type: 'line',
     data: { datasets },
@@ -1330,25 +1284,42 @@ function updateForecastChart() {
           titleColor: '#fff',
           bodyColor: '#fff',
           borderColor: 'var(--ucc-verde)',
-          borderWidth: 1
+          borderWidth: 1,
+          padding: 10,
+          displayColors: false,
+          usePointStyle: true
         }
       },
       scales: {
         x: {
           type: 'time',
-          time: { 
+          time: {
             unit: 'day',
             displayFormats: {
-              day: 'dd/MM HH:mm'
-            }
+              hour: 'dd/MM HH:mm',
+              day: 'dd/MM',
+              week: 'dd/MM',
+              month: 'MM/yyyy'
+            },
+            tooltipFormat: 'dd/MM/yyyy HH:mm'
           },
           title: { 
             display: true, 
-            text: 'Fecha y Hora',
-            color: '#666'
+            text: 'Fecha',
+            color: '#666',
+            font: {
+              size: 12
+            }
           },
           grid: {
             color: 'rgba(0,0,0,0.1)'
+          },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45,
+            font: {
+              size: 10
+            }
           }
         },
         y: {
@@ -1356,7 +1327,10 @@ function updateForecastChart() {
           title: {
             display: true,
             text: getVariableDisplayName(currentForecastVariable),
-            color: '#666'
+            color: '#666',
+            font: {
+              size: 12
+            }
           },
           grid: {
             color: 'rgba(0,0,0,0.1)'
@@ -1380,14 +1354,15 @@ function updateForecastChart() {
     `Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`;
   
   document.getElementById('forecastInfo').innerHTML = `
-    <strong>${data.modelo}</strong> | 
-    AIC: ${data.aic.toFixed(2)} | 
+    <strong>${data.modelo || 'SARIMA'}</strong> | 
+    AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'} | 
     Pronóstico: ${data.pronosticos.length} horas | 
-    Actualizado: ${new Date(data.fecha_generacion).toLocaleString()}
+    Actualizado: ${new Date().toLocaleString()}
   `;
   
   // Mostrar tabla de pronósticos
   updateForecastTable();
+  updateQuickStats();
   
   document.getElementById('forecastChart').style.height = '300px';
 }
@@ -1438,26 +1413,32 @@ function updateQuickStats() {
   
   const unidad = getUnit(currentForecastVariable);
   
+  // Calcular estadísticas
+  const valoresPronostico = data.pronosticos.map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
+  const min = valoresPronostico.length > 0 ? Math.min(...valoresPronostico) : 0;
+  const max = valoresPronostico.length > 0 ? Math.max(...valoresPronostico) : 0;
+  const avg = valoresPronostico.length > 0 ? valoresPronostico.reduce((a, b) => a + b, 0) / valoresPronostico.length : 0;
+  
   statsContainer.innerHTML = `
     <div class="stat-card">
       <div class="stat-title">Mínimo pronosticado</div>
-      <div class="stat-value">${data.stats.min.toFixed(2)} ${unidad}</div>
+      <div class="stat-value">${min.toFixed(2)} ${unidad}</div>
       <div class="stat-subtitle">Valor más bajo esperado</div>
     </div>
     <div class="stat-card">
       <div class="stat-title">Máximo pronosticado</div>
-      <div class="stat-value">${data.stats.max.toFixed(2)} ${unidad}</div>
+      <div class="stat-value">${max.toFixed(2)} ${unidad}</div>
       <div class="stat-subtitle">Valor más alto esperado</div>
     </div>
     <div class="stat-card">
       <div class="stat-title">Promedio</div>
-      <div class="stat-value">${data.stats.avg.toFixed(2)} ${unidad}</div>
+      <div class="stat-value">${avg.toFixed(2)} ${unidad}</div>
       <div class="stat-subtitle">Media de los pronósticos</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">Pronósticos</div>
-      <div class="stat-value">${data.stats.count}</div>
-      <div class="stat-subtitle">Horas pronosticadas</div>
+      <div class="stat-title">Horas pronosticadas</div>
+      <div class="stat-value">${valoresPronostico.length}</div>
+      <div class="stat-subtitle">Total de horas</div>
     </div>
   `;
   
@@ -1477,9 +1458,9 @@ function updateModelParams() {
   // Información general
   modelInfo.innerHTML = `
     <strong>${getVariableDisplayName(currentForecastVariable)}</strong> | 
-    Modelo: ${data.modelo} | 
-    AIC: ${data.aic.toFixed(2)} | 
-    Observaciones: ${data.observaciones_historicas || data.historico.length}
+    Modelo: ${data.modelo || 'SARIMA'} | 
+    AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'} | 
+    Observaciones: ${data.historico.length}
   `;
   
   // Crear contenido de parámetros
@@ -1492,31 +1473,31 @@ function updateModelParams() {
       </div>
       <div class="param-item">
         <span class="param-label">Modelo SARIMA:</span>
-        <span class="param-value">${data.modelo}</span>
+        <span class="param-value">${data.modelo || 'SARIMA'}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Criterio de Akaike (AIC):</span>
-        <span class="param-value">${data.aic.toFixed(2)}</span>
+        <span class="param-value">${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Horas de pronóstico:</span>
-        <span class="param-value">${data.horas_pronostico || data.pronosticos.length}</span>
+        <span class="param-value">${data.pronosticos.length}</span>
       </div>
     </div>
     
     <div class="param-group">
       <div class="param-title">Parámetros Estadísticos</div>
       <div class="param-item">
-        <span class="param-label">Fecha de generación:</span>
-        <span class="param-value">${new Date(data.fecha_generacion).toLocaleString()}</span>
+        <span class="param-label">Datos históricos:</span>
+        <span class="param-value">${data.historico.length}</span>
       </div>
       <div class="param-item">
-        <span class="param-label">Observaciones históricas:</span>
-        <span class="param-value">${data.observaciones_historicas || data.historico.length}</span>
+        <span class="param-label">Período pronosticado:</span>
+        <span class="param-value">${data.pronosticos.length} horas</span>
       </div>
       ${data.limite_permitido ? `
       <div class="param-item">
-        <span class="param-label">Límite permitido (24h):</span>
+        <span class="param-label">Límite permitido:</span>
         <span class="param-value">${data.limite_permitido} ${getUnit(currentForecastVariable)}</span>
       </div>
       ` : ''}
@@ -1525,44 +1506,12 @@ function updateModelParams() {
     <div class="param-group" style="grid-column: 1 / -1;">
       <div class="param-title">Ecuación del Modelo SARIMA</div>
       <div class="equation-box" id="equationBox">
-        Generando ecuación del modelo...
+        ${data.modelo || 'Modelo SARIMA personalizado'}
       </div>
     </div>
   `;
   
   paramsGrid.innerHTML = paramsHTML;
-  
-  // Generar ecuación
-  generateEquation(data);
-}
-
-// Generar ecuación del modelo
-function generateEquation(data) {
-  const equationBox = document.getElementById('equationBox');
-  if (!equationBox) return;
-  
-  const modeloStr = data.modelo;
-  const matches = modeloStr.match(/SARIMA\((\d+),(\d+),(\d+)\)\((\d+),(\d+),(\d+),(\d+)\)/);
-  
-  if (matches) {
-    const [_, p, d, q, P, D, Q, s] = matches;
-    
-    let equation = `Modelo SARIMA(${p},${d},${q})(${P},${D},${Q},${s})\n\n`;
-    equation += `(1 - φ₁B - ... - φ${p}B^${p})(1 - Φ₁B^${s} - ... - Φ${P}B^{${P}*${s}})\n`;
-    equation += `(1 - B)^${d}(1 - B^${s})^{${D}} y_t = \n`;
-    equation += `(1 + θ₁B + ... + θ${q}B^${q})(1 + Θ₁B^${s} + ... + Θ${Q}B^{${Q}*${s}}) ε_t\n\n`;
-    equation += `Donde:\n`;
-    equation += `• B es el operador de retardo\n`;
-    equation += `• y_t es la serie temporal en tiempo t\n`;
-    equation += `• ε_t es el término de error en tiempo t\n`;
-    equation += `• φ son parámetros AR, θ son parámetros MA\n`;
-    equation += `• Φ son parámetros SAR, Θ son parámetros SMA\n`;
-    equation += `• s = ${s} (estacionalidad en horas)`;
-    
-    equationBox.textContent = equation;
-  } else {
-    equationBox.textContent = `Ecuación para modelo: ${modeloStr}\n\nLa ecuación representa la estructura del modelo SARIMA con componentes autorregresivos (AR), de media móvil (MA), diferenciación y componentes estacionales.`;
-  }
 }
 
 // Funciones auxiliares
