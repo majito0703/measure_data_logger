@@ -1,0 +1,47 @@
+{
+  "fecha_actualizacion": "2026-02-02 18:31:22",
+  "pronosticos_disponibles": [
+    {
+      "variable": "Temperature",
+      "archivo": "pronostico_temperature.json",
+      "unidad": "°C",
+      "limite": null
+    },
+    {
+      "variable": "Humidity",
+      "archivo": "pronostico_humidity.json",
+      "unidad": "%",
+      "limite": null
+    },
+    {
+      "variable": "PM 2.5",
+      "archivo": "pronostico_pm_2_5.json",
+      "unidad": "µg/m³",
+      "limite": 37
+    },
+    {
+      "variable": "PM 10",
+      "archivo": "pronostico_pm_10.json",
+      "unidad": "µg/m³",
+      "limite": 75
+    }
+  ],
+  "endpoints": {
+    "temperature": {
+      "url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_temperature.json",
+      "raw_url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_temperature.json"
+    },
+    "humidity": {
+      "url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_humidity.json",
+      "raw_url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_humidity.json"
+    },
+    "pm_2_5": {
+      "url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_2_5.json",
+      "raw_url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_2_5.json"
+    },
+    "pm_10": {
+      "url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_10.json",
+      "raw_url": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_10.json"
+    }
+  }
+}
