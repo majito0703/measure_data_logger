@@ -573,7 +573,7 @@ header {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: linear-gradient(135deg, var(--ucc-verde), var(--ucc-verde-claro));
+  background: linear-gradient(135deg, var(--ucc-verde), var(--ucc-verde-claro);
   color: white;
   font-size: 10px;
   padding: 4px 8px;
@@ -1864,7 +1864,7 @@ function renderChart(id, label, labels, data, color) {
 }
 
 /* ============================
-   PRONÓSTICOS POR HORA
+   PRONÓSTICOS POR HORA - CORREGIDO
    ============================ */
 async function loadHourlyForecast() {
   const container = document.getElementById('hourlyForecastContainer');
@@ -1895,14 +1895,26 @@ async function loadHourlyForecast() {
       </div>
     `;
     
+    // CORREGIDO: Usar nombre de archivo consistente
     const fileName = getForecastFileName(forecastVariable);
-    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    console.log(`🌐 Cargando pronóstico por hora: ${fileName}`);
     
-    if (!response.ok) throw new Error(`Error ${response.status}`);
+    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`, {
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
     
     const data = await response.json();
     
-    if (!data.pronosticos || data.pronosticos.length === 0) {
+    // CORREGIDO: Buscar datos históricos en "historico" (no "historial_completo")
+    const historico = data.historico || data.historial_completo || [];
+    const pronosticos = data.pronosticos || [];
+    
+    if (pronosticos.length === 0) {
       forecastDiv.innerHTML = `
         <div style="padding: 40px; text-align: center; color: #64748b;">
           📊 No hay pronósticos disponibles
@@ -1911,12 +1923,12 @@ async function loadHourlyForecast() {
       return;
     }
     
-    const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
-    const hoursToShow = Math.min(12, data.pronosticos.length);
+    const lastHistorical = historico.length > 0 ? historico[historico.length - 1] : null;
+    const hoursToShow = Math.min(12, pronosticos.length);
     let cardsHTML = '';
     
     if (lastHistorical) {
-      const currentValue = getCurrentValue(lastHistorical);
+      const currentValue = parseFloat(lastHistorical.valor);
       const now = new Date(lastHistorical.fecha);
       
       cardsHTML += `
@@ -1924,7 +1936,7 @@ async function loadHourlyForecast() {
           <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
           <div class="hour-day">${getDayName(now)}</div>
           <div class="hour-icon">${getVariableIcon(currentVariable, currentValue)}</div>
-          <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
+          <div class="hour-value">${!isNaN(currentValue) ? currentValue.toFixed(1) : '--'}</div>
           <div class="hour-label">${getUnit(forecastVariable)}</div>
           <div class="hour-label" style="margin-top: 6px; font-weight: 700;">ACTUAL</div>
         </div>
@@ -1932,11 +1944,13 @@ async function loadHourlyForecast() {
     }
     
     for (let i = 0; i < hoursToShow; i++) {
-      const forecast = data.pronosticos[i];
+      const forecast = pronosticos[i];
       const date = new Date(forecast.fecha);
       const value = parseFloat(forecast.pronostico);
       const conf80Min = parseFloat(forecast.confianza_80_min);
       const conf80Max = parseFloat(forecast.confianza_80_max);
+      
+      if (isNaN(value)) continue;
       
       cardsHTML += `
         <div class="hour-card">
@@ -1946,32 +1960,28 @@ async function loadHourlyForecast() {
           <div class="hour-icon">${getVariableIcon(currentVariable, value)}</div>
           <div class="hour-value">${value.toFixed(1)}</div>
           <div class="hour-label">${getUnit(forecastVariable)}</div>
-          ${conf80Min && conf80Max ? `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : ''}
+          ${!isNaN(conf80Min) && !isNaN(conf80Max) ? 
+            `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : 
+            ''}
         </div>
       `;
     }
     
-    forecastDiv.innerHTML = cardsHTML;
+    forecastDiv.innerHTML = cardsHTML || `
+      <div style="padding: 40px; text-align: center; color: #64748b;">
+        📊 No se pudieron cargar pronósticos
+      </div>
+    `;
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error cargando pronósticos por hora:', error);
     forecastDiv.innerHTML = `
       <div style="padding: 40px; text-align: center; color: #ef4444;">
         ❌ Error al cargar pronósticos
+        <br><small style="font-size: 12px;">${error.message}</small>
       </div>
     `;
   }
-}
-
-function getCurrentValue(data) {
-  const values = {
-    'temp': data.temperatura,
-    'hum': data.humedad,
-    'rad': data.radiacion,
-    'pm10': data.pm10,
-    'pm25': data.pm25
-  };
-  return values[currentVariable];
 }
 
 function getDayName(date) {
@@ -2041,12 +2051,27 @@ function getUnit(variable) {
 }
 
 /* ============================
+   CORREGIDO: FUNCIÓN PARA OBTENER NOMBRE DE ARCHIVO
+   ============================ */
+function getForecastFileName(variable) {
+  // CORREGIDO: Nombres consistentes con Python actualizado
+  const fileMap = {
+    'temperature': 'pronostico_temperature.json',
+    'humidity': 'pronostico_humidity.json',
+    'pm2.5': 'pronostico_pm2.5.json',
+    'pm10': 'pronostico_pm10.json'
+  };
+  
+  const fileName = fileMap[variable] || `pronostico_${variable}.json`;
+  console.log(`📄 Mapeando variable "${variable}" a archivo: ${fileName}`);
+  return fileName;
+}
+
+/* ============================
    MODO PRONÓSTICOS
    ============================ */
 function showForecastMode() {
   document.getElementById('forecastChartContainer').style.display = 'block';
-  // Parámetros del modelo OCULTOS permanentemente
-  // document.getElementById('modelParamsCard').style.display = 'block';
   document.getElementById('mainChartCard').style.display = 'none';
   document.getElementById('variableSelector').style.display = 'none';
   document.getElementById('hourlyForecastContainer').style.display = 'none';
@@ -2071,8 +2096,12 @@ function hideForecastMode() {
   }
 }
 
+/* ============================
+   CORREGIDO: CARGAR TODOS LOS PRONÓSTICOS
+   ============================ */
 async function loadAllForecasts() {
   try {
+    console.log('🔄 Cargando todos los pronósticos...');
     document.getElementById('forecastLoading').style.display = 'inline-block';
     document.getElementById('forecastInfo').textContent = 'Cargando...';
     
@@ -2085,58 +2114,109 @@ async function loadAllForecasts() {
     
     document.getElementById('forecastLoading').style.display = 'none';
     
-    const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
+    // DEBUG: Mostrar estado de carga
+    debugForecastData();
+    
+    const loadedCount = Object.keys(forecastData).filter(key => 
+      forecastData[key] && forecastData[key].historico && forecastData[key].historico.length > 0
+    ).length;
+    
     document.getElementById('forecastInfo').innerHTML = `
-      <span class="badge success">${loadedCount}/4 cargados</span>
+      <span class="badge ${loadedCount === 4 ? 'success' : 'warning'}">
+        ${loadedCount}/4 cargados
+      </span>
     `;
     
-    if (forecastData['temperature']) {
+    if (loadedCount === 0) {
+      showNotification('No se pudieron cargar pronósticos. Verifica la conexión.', 'error');
+      return;
+    }
+    
+    // Intentar actualizar la gráfica con la primera variable disponible
+    const firstValid = variables.find(v => 
+      forecastData[v] && forecastData[v].historico && forecastData[v].historico.length > 0
+    );
+    
+    if (firstValid) {
+      currentForecastVariable = firstValid;
       updateForecastChart();
       updateModelParams();
       updateQuickStats();
     }
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Error general cargando pronósticos:', error);
     document.getElementById('forecastLoading').style.display = 'none';
     document.getElementById('forecastInfo').innerHTML = `
-      <span class="badge error">Error</span>
+      <span class="badge error">Error de carga</span>
     `;
+    showNotification('Error al cargar pronósticos: ' + error.message, 'error');
   }
 }
 
-function getForecastFileName(variable) {
-  const fileMap = {
-    'temperature': 'pronostico_temperature.json',
-    'humidity': 'pronostico_humidity.json',
-    'pm2.5': 'pronostico_pm_2_5.json',    
-    'pm10': 'pronostico_pm_10.json'       
-  };
-  return fileMap[variable] || `pronostico_${variable}.json`;
-}
-
+/* ============================
+   CORREGIDO: CARGAR DATOS DE PRONÓSTICO
+   ============================ */
 async function loadForecastData(variable) {
   try {
     const fileName = getForecastFileName(variable);
-    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    const url = `${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`;
+    console.log(`🌐 Intentando cargar: ${url}`);
     
-    if (!response.ok) throw new Error(`Error ${response.status}`);
+    const response = await fetch(url, {
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ Error HTTP ${response.status} para ${variable}`);
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
     
     const data = await response.json();
     
-    forecastData[variable] = {
+    // CORREGIDO: Verificar estructura de datos
+    const historico = data.historico || data.historial_completo || [];
+    const pronosticos = data.pronosticos || [];
+    
+    if (!Array.isArray(historico) || !Array.isArray(pronosticos)) {
+      console.warn(`⚠️ Estructura inesperada para ${variable}:`, data);
+      throw new Error('Estructura de datos inválida');
+    }
+    
+    // Normalizar nombres de propiedades
+    const normalizedData = {
       ...data,
       variable: variable,
-      historico: Array.isArray(data.historico) ? data.historico : [],
-      pronosticos: Array.isArray(data.pronosticos) ? data.pronosticos : []
+      historico: historico,
+      pronosticos: pronosticos,
+      // Mantener compatibilidad con nombres antiguos
+      historial_completo: historico
     };
     
+    console.log(`✅ ${variable} cargado:`, {
+      historicos: normalizedData.historico.length,
+      pronosticos: normalizedData.pronosticos.length,
+      modelo: normalizedData.modelo || 'N/A'
+    });
+    
+    forecastData[variable] = normalizedData;
     updateTabStatus(variable, 'loaded');
-    return forecastData[variable];
+    
+    return normalizedData;
     
   } catch (error) {
-    console.error(`Error ${variable}:`, error);
+    console.error(`❌ Error cargando ${variable}:`, error);
     updateTabStatus(variable, 'error');
+    
+    // Datos de ejemplo para debug
+    forecastData[variable] = {
+      variable: variable,
+      historico: [],
+      pronosticos: [],
+      error: error.message
+    };
+    
     return null;
   }
 }
@@ -2151,12 +2231,57 @@ function updateTabStatus(variable, status) {
   if (variable === currentForecastVariable) tab.classList.add('active');
 }
 
+/* ============================
+   CORREGIDO: ACTUALIZAR GRÁFICA DE PRONÓSTICO
+   ============================ */
 function updateForecastChart() {
   const data = forecastData[currentForecastVariable];
-  if (!data || data.historico.length === 0 || data.pronosticos.length === 0) {
-    showNotification('Datos insuficientes para pronóstico', 'warning');
+  
+  if (!data) {
+    console.error('❌ No hay datos para:', currentForecastVariable);
+    showNotification('No se cargaron datos para pronóstico', 'warning');
     return;
   }
+  
+  // CORREGIDO: Usar "historico" en lugar de "historial_completo"
+  const historico = data.historico || [];
+  const pronosticos = data.pronosticos || [];
+  
+  if (historico.length === 0 || pronosticos.length === 0) {
+    console.warn('⚠️ Datos insuficientes:', {
+      variable: currentForecastVariable,
+      historicos: historico.length,
+      pronosticos: pronosticos.length
+    });
+    
+    showNotification('Datos insuficientes para generar pronóstico', 'warning');
+    
+    // Mostrar mensaje en el canvas
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    if (forecastChart) forecastChart.destroy();
+    
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    ctx.fillText('📊 Datos insuficientes para pronóstico', 
+                  ctx.canvas.width / 2, 
+                  ctx.canvas.height / 2);
+    ctx.font = '12px Arial';
+    ctx.fillText(`Históricos: ${historico.length}, Pronósticos: ${pronosticos.length}`, 
+                  ctx.canvas.width / 2, 
+                  ctx.canvas.height / 2 + 20);
+    
+    document.getElementById('forecastInfo').innerHTML = `
+      <span class="badge warning">Datos insuficientes</span>
+    `;
+    
+    return;
+  }
+  
+  console.log(`📊 Actualizando gráfico para ${currentForecastVariable}:`, {
+    historicos: historico.length,
+    pronosticos: pronosticos.length
+  });
   
   const ctx = document.getElementById('forecastChart').getContext('2d');
   if (forecastChart) forecastChart.destroy();
@@ -2165,7 +2290,8 @@ function updateForecastChart() {
   const allData = [];
   const datasetTypes = [];
   
-  data.historico.forEach(item => {
+  // Datos históricos
+  historico.forEach(item => {
     const date = new Date(item.fecha);
     if (!isNaN(date.getTime())) {
       allDates.push(date);
@@ -2174,14 +2300,18 @@ function updateForecastChart() {
     }
   });
   
-  const forecastStartDate = new Date(data.pronosticos[0].fecha);
-  if (allDates.length > 0) {
-    allDates.push(forecastStartDate);
-    allData.push(allData[allData.length - 1]);
-    datasetTypes.push('transition');
+  // Transición entre histórico y pronóstico
+  if (allDates.length > 0 && pronosticos.length > 0) {
+    const forecastStartDate = new Date(pronosticos[0].fecha);
+    if (!isNaN(forecastStartDate.getTime())) {
+      allDates.push(forecastStartDate);
+      allData.push(allData[allData.length - 1]);
+      datasetTypes.push('transition');
+    }
   }
   
-  data.pronosticos.forEach(item => {
+  // Datos de pronóstico
+  pronosticos.forEach(item => {
     const date = new Date(item.fecha);
     if (!isNaN(date.getTime())) {
       allDates.push(date);
@@ -2209,16 +2339,31 @@ function updateForecastChart() {
     }
   }];
   
-  const forecastDates = data.pronosticos.map(i => new Date(i.fecha));
-  const conf80Upper = data.pronosticos.map(i => parseFloat(i.confianza_80_max) || 0);
-  const conf80Lower = data.pronosticos.map(i => parseFloat(i.confianza_80_min) || 0);
-  const conf95Upper = data.pronosticos.map(i => parseFloat(i.confianza_95_max) || 0);
-  const conf95Lower = data.pronosticos.map(i => parseFloat(i.confianza_95_min) || 0);
+  // Bandas de confianza
+  const forecastDates = pronosticos
+    .map(i => new Date(i.fecha))
+    .filter(date => !isNaN(date.getTime()));
   
-  if (conf95Upper.length > 0) {
+  const conf80Upper = pronosticos
+    .map(i => parseFloat(i.confianza_80_max) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  const conf80Lower = pronosticos
+    .map(i => parseFloat(i.confianza_80_min) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  const conf95Upper = pronosticos
+    .map(i => parseFloat(i.confianza_95_max) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  const conf95Lower = pronosticos
+    .map(i => parseFloat(i.confianza_95_min) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  if (conf95Upper.length > 0 && conf95Lower.length > 0) {
     datasets.push({
       label: 'Conf 95%',
-      data: forecastDates.map((date, i) => ({ x: date, y: conf95Upper[i] })),
+      data: forecastDates.slice(0, conf95Upper.length).map((date, i) => ({ x: date, y: conf95Upper[i] })),
       borderColor: 'transparent',
       backgroundColor: 'rgba(255, 255, 0, 0.2)',
       fill: { target: '-1', above: 'rgba(255, 255, 0, 0.2)' },
@@ -2228,17 +2373,17 @@ function updateForecastChart() {
     
     datasets.push({
       label: '_conf95_lower',
-      data: forecastDates.map((date, i) => ({ x: date, y: conf95Lower[i] })),
+      data: forecastDates.slice(0, conf95Lower.length).map((date, i) => ({ x: date, y: conf95Lower[i] })),
       borderColor: 'transparent',
       pointRadius: 0,
       borderWidth: 0
     });
   }
   
-  if (conf80Upper.length > 0) {
+  if (conf80Upper.length > 0 && conf80Lower.length > 0) {
     datasets.push({
       label: 'Conf 80%',
-      data: forecastDates.map((date, i) => ({ x: date, y: conf80Upper[i] })),
+      data: forecastDates.slice(0, conf80Upper.length).map((date, i) => ({ x: date, y: conf80Upper[i] })),
       borderColor: 'transparent',
       backgroundColor: 'rgba(0, 255, 0, 0.2)',
       fill: { target: '-1', above: 'rgba(0, 255, 0, 0.2)' },
@@ -2248,13 +2393,14 @@ function updateForecastChart() {
     
     datasets.push({
       label: '_conf80_lower',
-      data: forecastDates.map((date, i) => ({ x: date, y: conf80Lower[i] })),
+      data: forecastDates.slice(0, conf80Lower.length).map((date, i) => ({ x: date, y: conf80Lower[i] })),
       borderColor: 'transparent',
       pointRadius: 0,
       borderWidth: 0
     });
   }
   
+  // Límite permitido
   if (data.limite_permitido && data.limite_permitido > 0) {
     datasets.push({
       label: 'Límite',
@@ -2371,7 +2517,7 @@ function updateQuickStats() {
   const statsContainer = document.getElementById('quickStats');
   if (!statsContainer) return;
   
-  const valores = data.pronosticos.map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
+  const valores = (data.pronosticos || []).map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
   const min = valores.length > 0 ? Math.min(...valores) : 0;
   const max = valores.length > 0 ? Math.max(...valores) : 0;
   const avg = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : 0;
@@ -2439,11 +2585,11 @@ function updateModelParams() {
       <div class="param-title">📈 Datos</div>
       <div class="param-item">
         <span class="param-label">Históricos:</span>
-        <span class="param-value">${data.historico.length}</span>
+        <span class="param-value">${data.historico ? data.historico.length : 0}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Pronósticos:</span>
-        <span class="param-value">${data.pronosticos.length} horas</span>
+        <span class="param-value">${data.pronosticos ? data.pronosticos.length : 0} horas</span>
       </div>
       ${data.limite_permitido ? `
       <div class="param-item">
@@ -2455,7 +2601,7 @@ function updateModelParams() {
     
     <div class="param-group" style="grid-column: 1 / -1;">
       <div class="param-title">🔬 Ecuación</div>
-      <div class="equation-box">${data.modelo || 'Modelo SARIMA'}</div>
+      <div class="equation-box">${data.ecuacion || data.modelo || 'Modelo SARIMA'}</div>
     </div>
   `;
 }
@@ -2468,6 +2614,23 @@ function getVariableDisplayName(variable) {
     'pm10': 'PM10 (µg/m³)'
   };
   return names[variable] || variable;
+}
+
+/* ============================
+   NUEVA: FUNCIÓN PARA DEBUG
+   ============================ */
+function debugForecastData() {
+  console.group('🔍 DEBUG - Datos de Pronóstico');
+  Object.keys(forecastData).forEach(key => {
+    const data = forecastData[key];
+    console.log(`📊 ${key}:`, {
+      historicos: data?.historico?.length || 0,
+      pronosticos: data?.pronosticos?.length || 0,
+      error: data?.error || 'OK',
+      modelo: data?.modelo || 'N/A'
+    });
+  });
+  console.groupEnd();
 }
 
 /* ============================
