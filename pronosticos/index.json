@@ -1,5 +1,5 @@
 {
-  "fecha_actualizacion": "2026-02-02 18:40:15",
+  "fecha_actualizacion": "2026-02-02 19:15:21",
   "total_variables": 4,
   "pronosticos_disponibles": [
     {
@@ -37,8 +37,8 @@
     {
       "variable": "PM 2.5",
       "nombre_mostrar": "PM2.5",
-      "archivo_json": "pronostico_pm_2_5.json",
-      "archivo_csv": "datos_pm_2_5.csv",
+      "archivo_json": "pronostico_pm2.5.json",
+      "archivo_csv": "datos_pm2.5.csv",
       "unidad": "µg/m³",
       "limite": 37,
       "estadisticas": {
@@ -53,8 +53,8 @@
     {
       "variable": "PM 10",
       "nombre_mostrar": "PM10",
-      "archivo_json": "pronostico_pm_10.json",
-      "archivo_csv": "datos_pm_10.csv",
+      "archivo_json": "pronostico_pm10.json",
+      "archivo_csv": "datos_pm10.csv",
       "unidad": "µg/m³",
       "limite": 75,
       "estadisticas": {
@@ -74,7 +74,7 @@
       "total_dias": 14
     },
     "total_registros_por_hora": 338,
-    "fecha_ultima_actualizacion": "2026-02-02T18:40:15.500893"
+    "fecha_ultima_actualizacion": "2026-02-02T19:15:21.705197"
   },
   "endpoints": {
     "temperature": {
@@ -87,15 +87,15 @@
       "csv": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/datos_humidity.csv",
       "raw_json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_humidity.json"
     },
-    "pm_2_5": {
-      "json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_2_5.json",
-      "csv": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/datos_pm_2_5.csv",
-      "raw_json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_2_5.json"
+    "pm2.5": {
+      "json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm2.5.json",
+      "csv": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/datos_pm2.5.csv",
+      "raw_json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm2.5.json"
     },
-    "pm_10": {
-      "json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_10.json",
-      "csv": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/datos_pm_10.csv",
-      "raw_json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm_10.json"
+    "pm10": {
+      "json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm10.json",
+      "csv": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/datos_pm10.csv",
+      "raw_json": "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/pronostico_pm10.json"
     }
   }
 }
