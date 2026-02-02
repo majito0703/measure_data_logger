@@ -1,5 +1,5 @@
 {
-  "fecha_actualizacion": "2026-02-02 19:15:21",
+  "fecha_actualizacion": "2026-02-02 19:15:41",
   "total_variables": 4,
   "pronosticos_disponibles": [
     {
@@ -74,7 +74,7 @@
       "total_dias": 14
     },
     "total_registros_por_hora": 338,
-    "fecha_ultima_actualizacion": "2026-02-02T19:15:21.705197"
+    "fecha_ultima_actualizacion": "2026-02-02T19:15:41.451158"
   },
   "endpoints": {
     "temperature": {
