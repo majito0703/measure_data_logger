@@ -2109,8 +2109,8 @@ function getForecastFileName(variable) {
   const fileMap = {
     'temperature': 'pronostico_temperature.json',
     'humidity': 'pronostico_humidity.json',
-    'pm2.5': 'pronostico_pm_2.5.json',
-    'pm10': 'pronostico_pm_10.json'
+    'pm2.5': 'pronostico_pm2.5.json',
+    'pm10': 'pronostico_pm10.json'
   };
   return fileMap[variable] || `pronostico_${variable}.json`;
 }
