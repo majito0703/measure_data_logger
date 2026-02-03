@@ -1,1158 +1,2865 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pronóstico Ambiental</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --bg-card: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --border-color: #e0e0e0;
-            --primary-color: #7AC043;
-            --secondary-color: #2196F3;
-            --warning-color: #FF9800;
-            --danger-color: #F44336;
-            --success-color: #4CAF50;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-            --card-radius: 12px;
-        }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Dashboard Pro - Measure Data Logger</title>
 
-        .dark {
-            --bg-primary: #121212;
-            --bg-secondary: #1e1e1e;
-            --bg-card: #2d2d2d;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --border-color: #404040;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
-        }
+<!-- Librerías -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@3.0.0/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.min.js"></script>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+/* ========== VARIABLES Y BASE ========== */
+:root {
+  --ucc-azul: #003366;
+  --ucc-verde: #7AC043;
+  --ucc-verde-claro: #9FD66D;
+  --gris: #F2F2F2;
+  --gris-oscuro: #E5E7EB;
+  --text: #0b1220;
+  --card-bg: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            transition: background 0.3s, color 0.3s;
-            min-height: 100vh;
-        }
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+@keyframes slideIn {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
 
-        .logo h1 {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-        }
+/* Base */
+* { box-sizing: border-box; }
 
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  margin: 0;
+  background: var(--gris);
+  color: var(--text);
+  transition: var(--transition);
+  line-height: 1.6;
+}
 
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
+/* ========== HEADER ========== */
+header {
+  background: linear-gradient(135deg, var(--ucc-azul) 0%, #002347 100%);
+  color: #fff;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-lg);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-        }
+.header-title {
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-        }
+.header-logo {
+  width: 40px;
+  height: 40px;
+  background: var(--ucc-verde);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--shadow);
+}
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
-        .card {
-            background: var(--bg-card);
-            border-radius: var(--card-radius);
-            padding: 25px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s;
-        }
+/* ========== BOTONES ========== */
+.btn {
+  background: linear-gradient(135deg, var(--ucc-verde) 0%, var(--ucc-verde-claro) 100%);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  font-size: 14px;
+}
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+.btn:active {
+  transform: translateY(0);
+}
 
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+.btn.secondary {
+  background: #ffffff;
+  color: var(--ucc-azul);
+  border: 2px solid var(--gris-oscuro);
+}
 
-        .value-display {
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
+.btn.secondary:hover {
+  border-color: var(--ucc-azul);
+  background: #f9fafb;
+}
 
-        .value-unit {
-            font-size: 20px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
+.icon-btn {
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
 
-        .chart-container {
-            height: 300px;
-            margin-top: 20px;
-        }
+.icon-btn:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.3);
+}
 
-        .forecast-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-        }
+/* ========== CONTAINER ========== */
+.container {
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 20px;
+  animation: fadeIn 0.5s ease-out;
+}
 
-        .forecast-tab {
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
+/* ========== KPI CARDS ========== */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
 
-        .forecast-tab:hover {
-            border-color: var(--primary-color);
-        }
+.kpi-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
+}
 
-        .forecast-tab.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
 
-        .model-info {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--ucc-verde), var(--ucc-azul));
+}
 
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+.kpi-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ucc-azul), #0a2b5a);
+  color: #fff;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
 
-        .info-label {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
+.kpi-body {
+  flex: 1;
+  min-width: 0;
+}
 
-        .info-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+.kpi-title {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            background: var(--bg-card);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transform: translateX(120%);
-            transition: transform 0.3s;
-            z-index: 1000;
-            border-left: 4px solid var(--primary-color);
-        }
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ucc-azul);
+  margin: 4px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
 
-        .notification.show {
-            transform: translateX(0);
-        }
+.kpi-trend {
+  font-size: 14px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
 
-        .notification.success {
-            border-left-color: var(--success-color);
-        }
+.kpi-trend.up {
+  color: #10b981;
+  background: #d1fae5;
+}
 
-        .notification.warning {
-            border-left-color: var(--warning-color);
-        }
+.kpi-trend.down {
+  color: #ef4444;
+  background: #fee2e2;
+}
 
-        .notification.error {
-            border-left-color: var(--danger-color);
-        }
+.kpi-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
 
-        .hourly-forecast {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 20px 0;
-        }
+/* ========== NOTIFICACIONES ========== */
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1001;
+  animation: slideIn 0.3s ease-out;
+  max-width: 400px;
+  border-left: 4px solid var(--ucc-verde);
+}
 
-        .hour-card {
-            min-width: 100px;
-            padding: 15px;
-            background: var(--bg-card);
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-        }
+.notification.error {
+  border-left-color: #ef4444;
+}
 
-        .hour-time {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-        }
+.notification.warning {
+  border-left-color: #f59e0b;
+}
 
-        .hour-value {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
+/* ========== CONTROLES ========== */
+.charts-panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
 
-        .hour-unit {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
+.controls {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+}
 
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-            flex-direction: column;
-            gap: 15px;
-        }
+.controls-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+.range-btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 2px solid var(--gris-oscuro);
+  background: #fff;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  font-size: 14px;
+}
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+.range-btn:hover {
+  border-color: var(--ucc-azul);
+  background: #f9fafb;
+}
 
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-            
-            .controls {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+.range-btn.active {
+  background: var(--ucc-azul);
+  color: #fff;
+  border-color: var(--ucc-azul);
+  box-shadow: var(--shadow);
+}
+
+/* ========== SELECTOR DE VARIABLES ========== */
+.variable-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.variable-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 2px solid var(--gris-oscuro);
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: var(--transition);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.variable-btn:hover {
+  border-color: var(--ucc-azul);
+  background: #f9fafb;
+}
+
+.variable-btn.active {
+  background: linear-gradient(135deg, var(--ucc-azul), #0a2b5a);
+  color: #fff;
+  border-color: var(--ucc-azul);
+  box-shadow: var(--shadow);
+}
+
+/* ========== CANVAS CARDS ========== */
+.canvas-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: var(--transition);
+}
+
+.canvas-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.canvas-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--gris);
+}
+
+.canvas-title strong {
+  font-size: 18px;
+  color: var(--ucc-azul);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-card canvas {
+  max-height: 300px !important;
+  height: 300px !important;
+}
+
+/* ========== PRONÓSTICOS POR HORA ========== */
+.hourly-forecast-container {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-top: 20px;
+  display: none;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.hourly-forecast-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ucc-azul);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--gris);
+}
+
+.hourly-forecast-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ucc-verde) #f0f0f0;
+  padding: 10px 0;
+}
+
+.hourly-forecast-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.hourly-forecast-scroll::-webkit-scrollbar-track {
+  background: var(--gris);
+  border-radius: 10px;
+}
+
+.hourly-forecast-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, var(--ucc-verde), var(--ucc-verde-claro));
+  border-radius: 10px;
+}
+
+.hourly-forecast {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 10px;
+  min-width: min-content;
+}
+
+.hour-card {
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 16px;
+  padding: 16px 20px;
+  min-width: 110px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+
+.hour-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--ucc-verde);
+  box-shadow: var(--shadow-lg);
+}
+
+.hour-card.current {
+  background: linear-gradient(135deg, var(--ucc-azul) 0%, #002347 100%);
+  color: white;
+  border-color: var(--ucc-verde);
+  box-shadow: var(--shadow-lg);
+}
+
+.hour-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hour-card.current .hour-time {
+  color: rgba(255,255,255,0.9);
+}
+
+.hour-day {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ucc-azul);
+}
+
+.hour-card.current .hour-day {
+  color: white;
+}
+
+.hour-icon {
+  width: 56px;
+  height: 56px;
+  margin: 12px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+}
+
+.hour-card.current .hour-icon {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+}
+
+.hour-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ucc-azul);
+  margin: 10px 0;
+}
+
+.hour-card.current .hour-value {
+  color: white;
+}
+
+.hour-range {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.hour-card.current .hour-range {
+  color: rgba(255,255,255,0.7);
+}
+
+.hour-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.hour-card.current .hour-label {
+  color: rgba(255,255,255,0.8);
+}
+
+.forecast-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, var(--ucc-verde), var(--ucc-verde-claro));
+  background: linear-gradient(135deg, var(--ucc-verde), var(--ucc-verde-claro);
+  color: white;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+/* ========== TABS DE PRONÓSTICO ========== */
+.forecast-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--gris);
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.forecast-tab {
+  padding: 10px 18px;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.forecast-tab:hover {
+  background: var(--gris-oscuro);
+}
+
+.forecast-tab.active {
+  background: var(--ucc-azul);
+  color: white;
+  border-bottom: 3px solid var(--ucc-verde);
+  box-shadow: var(--shadow);
+}
+
+.forecast-tab.loaded {
+  background: #d1fae5;
+  color: #059669;
+  border-left: 3px solid var(--ucc-verde);
+}
+
+.forecast-tab.error {
+  background: #fee2e2;
+  color: #dc2626;
+  border-left: 3px solid #ef4444;
+}
+
+/* ========== ESTADÍSTICAS RÁPIDAS ========== */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 4px solid var(--ucc-azul);
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card .stat-title {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card .stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ucc-azul);
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-subtitle {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ========== TABLA ========== */
+.table-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 40px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.table-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--gris);
+}
+
+.table-search {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--gris-oscuro);
+  transition: var(--transition);
+  font-size: 14px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ucc-azul);
+  box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+/* Tabla responsive mejorada para móviles */
+@media (max-width: 560px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tbody {
+    display: table-row-group;
+  }
+
+  tr {
+    display: table-row;
+  }
+
+  th, td {
+    display: table-cell;
+    min-width: 80px;
+  }
+
+  /* Hacer primera columna sticky en móviles */
+  th:first-child,
+  td:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 10;
+    min-width: 120px;
+  }
+
+  th:first-child {
+    background: linear-gradient(135deg, var(--ucc-azul), #0a2b5a);
+    z-index: 11;
+  }
+
+  body.dark th:first-child {
+    background: linear-gradient(135deg, #1e3a5f, #0f2744);
+  }
+
+  body.dark td:first-child {
+    background: #1a1f2e;
+  }
+}
+
+th, td {
+  padding: 14px;
+  border-bottom: 1px solid var(--gris);
+  text-align: center;
+  font-size: 13px;
+}
+
+th {
+  background: linear-gradient(135deg, var(--ucc-azul), #0a2b5a);
+  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+}
+
+tbody tr {
+  transition: var(--transition);
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ========== LOADING ========== */
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(0,0,0,0.1);
+  border-top: 3px solid var(--ucc-verde);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+}
+
+/* ========== LEYENDA ========== */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--gris);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.legend-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+}
+
+/* ========== PARÁMETROS DEL MODELO ========== */
+.model-params-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  display: none;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.params-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.param-group {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 4px solid var(--ucc-azul);
+  box-shadow: var(--shadow);
+}
+
+.param-title {
+  font-weight: 700;
+  color: var(--ucc-azul);
+  margin-bottom: 12px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.param-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.param-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.param-value {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.equation-box {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid #bae6fd;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  box-shadow: var(--shadow);
+}
+
+/* ========== BADGES ========== */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.success {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.badge.error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badge.info {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.badge.warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width:900px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  header { padding: 16px; }
+  #pdfBtn { display: none; }
+  .params-grid { grid-template-columns: 1fr; }
+  .quick-stats { grid-template-columns: 1fr; }
+  .header-title { font-size: 16px; }
+  .container { padding: 0 16px; }
+
+  /* Mejorar controles en tablet */
+  .controls-group {
+    width: 100%;
+  }
+
+  .controls-group input[type="datetime-local"] {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+@media (max-width:560px) {
+  /* Header móvil optimizado */
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .header-title {
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .header-logo {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* KPI Cards en móvil */
+  .kpi-row { 
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .kpi-card {
+    padding: 16px;
+  }
+
+  .kpi-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .kpi-value {
+    font-size: 24px;
+  }
+
+  /* Controles móvil */
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .controls-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .controls-group label {
+    font-size: 12px !important;
+  }
+
+  .controls-group input[type="datetime-local"] {
+    width: 100%;
+  }
+
+  .range-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  /* Variable selector móvil */
+  .variable-selector {
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .variable-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  /* Charts móvil */
+  .charts-panel { 
+    gap: 12px;
+  }
+
+  .canvas-card {
+    padding: 12px;
+  }
+
+  .canvas-card canvas {
+    max-height: 250px !important;
+    height: 250px !important;
+  }
+
+  /* Forecast tabs móvil */
+  .forecast-tabs {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .forecast-tab {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  /* Quick stats móvil */
+  .quick-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Hourly forecast móvil */
+  .hourly-forecast-container {
+    padding: 12px;
+  }
+
+  .hour-card {
+    min-width: 95px;
+    padding: 12px 16px;
+  }
+
+  .hour-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .hour-value {
+    font-size: 22px;
+  }
+
+  /* Tabla móvil */
+  .table-card {
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .table-search {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .table-search input,
+  .table-search button {
+    width: 100%;
+  }
+
+  .input {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Tabla responsive */
+  table {
+    font-size: 11px;
+  }
+
+  th, td {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  th {
+    font-size: 10px;
+  }
+
+  /* Botones móvil */
+  .btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .icon-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Container móvil */
+  .container { 
+    padding: 0 10px;
+    margin: 16px auto;
+  }
+
+  /* Canvas title móvil */
+  .canvas-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .canvas-title strong {
+    font-size: 16px;
+  }
+
+  /* Notificaciones móvil */
+  .notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    font-size: 13px;
+  }
+
+  /* Legend móvil */
+  .chart-legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width:380px) {
+  .header-title {
+    font-size: 12px;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+  }
+
+  .kpi-title {
+    font-size: 11px;
+  }
+
+  .hour-card {
+    min-width: 85px;
+    padding: 10px 12px;
+  }
+
+  table {
+    font-size: 10px;
+  }
+
+  th, td {
+    padding: 6px 2px;
+    font-size: 10px;
+  }
+}
+
+/* ========== DARK MODE ========== */
+body.dark {
+  --card-bg: #1a1f2e;
+  --gris: #0b1220;
+  --gris-oscuro: #1e293b;
+  --text: #e2e8f0;
+  background: #0b1220;
+  color: #e2e8f0;
+}
+
+body.dark .kpi-card,
+body.dark .canvas-card,
+body.dark .table-card,
+body.dark .model-params-card,
+body.dark .controls,
+body.dark .variable-selector,
+body.dark .hourly-forecast-container {
+  background: #1a1f2e;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+  border-color: rgba(255,255,255,0.1);
+}
+
+body.dark th {
+  background: linear-gradient(135deg, #1e3a5f, #0f2744);
+}
+
+body.dark .kpi-value {
+  color: var(--ucc-verde-claro);
+}
+
+body.dark .param-group,
+body.dark .stat-card,
+body.dark .hour-card {
+  background: linear-gradient(135deg, #1e293b 0%, #1a1f2e 100%);
+  border-left-color: var(--ucc-verde);
+}
+
+body.dark .equation-box {
+  background: linear-gradient(135deg, #1e293b 0%, #1a1f2e 100%);
+  border-color: #334155;
+}
+
+body.dark .forecast-tab:not(.active) {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+body.dark .variable-btn {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+body.dark .input {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+body.dark tbody tr:hover {
+  background: #1e293b;
+}
+
+body.dark .range-btn {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+body.dark .chart-legend {
+  background: #1e293b;
+}
+
+body.dark .canvas-title,
+body.dark .hourly-forecast-title,
+body.dark .forecast-tabs,
+body.dark .table-controls {
+  border-color: #334155;
+}
+
+body.dark .notification {
+  background: #1a1f2e;
+  color: #e2e8f0;
+}
+
+/* ========== UTILIDADES ========== */
+html { scroll-behavior: smooth; }
+
+:focus-visible {
+  outline: 3px solid var(--ucc-verde);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border-width: 0;
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">
-                <div class="logo-icon">🌱</div>
-                <h1>Pronóstico Ambiental</h1>
-            </div>
-            <div class="controls">
-                <button class="btn" id="refreshBtn">
-                    <span>🔄</span> Actualizar
-                </button>
-                <button class="btn" id="modoOscuroBtn">
-                    <span>🌙</span> Modo oscuro
-                </button>
-            </div>
+
+<header>
+  <div class="header-title">
+    <div class="header-logo">📊</div>
+    MEASURE DATA LOGGER – DASHBOARD PRO
+  </div>
+  <div class="header-actions">
+    <button id="pdfBtn" class="btn">📄 Exportar PDF</button>
+    <button id="csvBtn" class="btn secondary">📋 Descargar CSV</button>
+    <button id="modoOscuroBtn" class="icon-btn">🌙 Modo oscuro</button>
+  </div>
+</header>
+
+<div class="container" id="contentPDF">
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="3" width="6" height="18" rx="3" stroke="#fff" stroke-width="2" fill="none"/>
+          <circle cx="12" cy="19" r="2" fill="#fff"/>
+          <line x1="12" y1="8" x2="12" y2="16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">Temperatura</div>
+        <div class="kpi-value">
+          <span id="card_temp">--</span>
+          <span style="font-size: 18px; color: #64748b;">°C</span>
         </div>
-
-        <div class="dashboard-grid">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Calidad del Aire - PM2.5</div>
-                    <div id="pm25Icon"></div>
-                </div>
-                <div class="value-display">
-                    <span id="pm25Value">--</span>
-                    <span class="value-unit" id="pm25Unit">µg/m³</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="pm25Chart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Calidad del Aire - PM10</div>
-                    <div id="pm10Icon"></div>
-                </div>
-                <div class="value-display">
-                    <span id="pm10Value">--</span>
-                    <span class="value-unit" id="pm10Unit">µg/m³</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="pm10Chart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Temperatura</div>
-                    <div id="tempIcon"></div>
-                </div>
-                <div class="value-display">
-                    <span id="tempValue">--</span>
-                    <span class="value-unit" id="tempUnit">°C</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="tempChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Humedad</div>
-                    <div id="humIcon"></div>
-                </div>
-                <div class="value-display">
-                    <span id="humValue">--</span>
-                    <span class="value-unit" id="humUnit">%</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="humChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">Pronóstico 24 Horas</div>
-            </div>
-            
-            <div class="forecast-tabs">
-                <div class="forecast-tab active" data-variable="pm2.5">PM2.5</div>
-                <div class="forecast-tab" data-variable="pm10">PM10</div>
-                <div class="forecast-tab" data-variable="temperature">Temperatura</div>
-                <div class="forecast-tab" data-variable="humidity">Humedad</div>
-            </div>
-
-            <div class="model-info">
-                <div class="info-item">
-                    <div class="info-label">Modelo</div>
-                    <div class="info-value" id="modelName">--</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Precisión</div>
-                    <div class="info-value" id="modelAccuracy">--</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Última actualización</div>
-                    <div class="info-value" id="lastUpdate">--</div>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <canvas id="forecastChart"></canvas>
-            </div>
-
-            <div id="hourlyForecastContainer">
-                <h3 style="margin: 20px 0 10px 0;">Pronóstico Horario</h3>
-                <div class="hourly-forecast" id="hourlyForecast">
-                    <!-- Contenido dinámico -->
-                </div>
-            </div>
-        </div>
+        <div class="kpi-meta" id="meta_temp">Cargando...</div>
+      </div>
     </div>
 
-    <div class="notification" id="notification">
-        <span id="notificationIcon">ℹ️</span>
-        <span id="notificationText">Mensaje de notificación</span>
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="#fff" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">Humedad</div>
+        <div class="kpi-value">
+          <span id="card_hum">--</span>
+          <span style="font-size: 18px; color: #64748b;">%</span>
+        </div>
+        <div class="kpi-meta" id="meta_hum">Cargando...</div>
+      </div>
     </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="4" fill="#fff"/>
+          <line x1="12" y1="3" x2="12" y2="5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="12" y1="19" x2="12" y2="21" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="3" y1="12" x2="5" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="19" y1="12" x2="21" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">Radiación</div>
+        <div class="kpi-value">
+          <span id="card_rad">--</span>
+          <span style="font-size: 16px; color: #64748b;">W/m²</span>
+        </div>
+        <div class="kpi-meta" id="meta_rad">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="7" cy="18" r="2" fill="#fff"/>
+          <circle cx="12" cy="14" r="2" fill="#fff"/>
+          <circle cx="17" cy="10" r="2" fill="#fff"/>
+          <circle cx="9" cy="8" r="1.5" fill="#fff"/>
+          <circle cx="14" cy="17" r="1.5" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">PM10</div>
+        <div class="kpi-value">
+          <span id="card_pm10">--</span>
+          <span style="font-size: 16px; color: #64748b;">µg/m³</span>
+        </div>
+        <div class="kpi-meta" id="meta_pm10">Cargando...</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="6" cy="17" r="1.5" fill="#fff"/>
+          <circle cx="11" cy="13" r="1.5" fill="#fff"/>
+          <circle cx="16" cy="9" r="1.5" fill="#fff"/>
+          <circle cx="8" cy="10" r="1" fill="#fff"/>
+          <circle cx="13" cy="16" r="1" fill="#fff"/>
+          <circle cx="18" cy="15" r="1" fill="#fff"/>
+          <circle cx="9" cy="19" r="1" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-title">PM2.5</div>
+        <div class="kpi-value">
+          <span id="card_pm25">--</span>
+          <span style="font-size: 16px; color: #64748b;">µg/m³</span>
+        </div>
+        <div class="kpi-meta" id="meta_pm25">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls & Charts -->
+  <div class="charts-panel">
+    <div class="controls">
+      <div class="controls-group">
+        <button class="range-btn active" data-range="24h">⏱️ Últimas 24h</button>
+        <button class="range-btn" data-range="7d">📅 Última semana</button>
+        <button class="range-btn" data-range="all">📊 Todo</button>
+        <button class="range-btn" data-range="forecast" id="forecastBtn">🔮 Pronósticos</button>
+      </div>
+
+      <div class="controls-group" style="margin-left: auto;">
+        <label style="font-size: 13px; color: #64748b; font-weight: 500;">Desde</label>
+        <input type="datetime-local" id="fromInput" class="input" />
+        <label style="font-size: 13px; color: #64748b; font-weight: 500;">Hasta</label>
+        <input type="datetime-local" id="toInput" class="input" />
+        <button id="applyRange" class="range-btn">✓ Aplicar</button>
+      </div>
+    </div>
+
+    <!-- Selector de variables -->
+    <div class="variable-selector" id="variableSelector">
+      <button class="variable-btn active" data-variable="temp">
+        🌡️ Temperatura
+      </button>
+      <button class="variable-btn" data-variable="hum">
+        💧 Humedad
+      </button>
+      <button class="variable-btn" data-variable="rad">
+        ☀️ Radiación
+      </button>
+      <button class="variable-btn" data-variable="pm10">
+        🌫️ PM10
+      </button>
+      <button class="variable-btn" data-variable="pm25">
+        💨 PM2.5
+      </button>
+    </div>
+
+    <!-- Gráfica principal -->
+    <div class="canvas-card" id="mainChartCard">
+      <div class="canvas-title">
+        <strong id="mainChartTitle">
+          🌡️ Temperatura (°C)
+        </strong>
+        <small id="main-note" style="color: #64748b;"></small>
+      </div>
+      <canvas id="mainChart"></canvas>
+    </div>
+
+    <!-- Pronósticos por hora -->
+    <div class="hourly-forecast-container" id="hourlyForecastContainer">
+      <div class="hourly-forecast-title">
+        🔮 Pronóstico por Hora
+      </div>
+      <div class="hourly-forecast-scroll">
+        <div class="hourly-forecast" id="hourlyForecast"></div>
+      </div>
+    </div>
+
+    <!-- Parámetros del modelo OCULTOS -->
+    <div class="model-params-card" id="modelParamsCard" style="display: none !important;">
+      <div class="canvas-title">
+        <strong>⚙️ Parámetros del Modelo SARIMA</strong>
+        <small id="modelInfo">Selecciona una variable</small>
+      </div>
+      <div class="params-grid" id="paramsGrid"></div>
+    </div>
+
+    <!-- Gráfica de pronósticos -->
+    <div class="canvas-card" id="forecastChartContainer" style="display: none;">
+      <div class="canvas-title">
+        <strong id="forecastTitle">🔮 Pronósticos SARIMA</strong>
+        <div>
+          <span class="loading-spinner" id="forecastLoading" style="display: none;"></span>
+          <small id="forecastInfo" style="color: #64748b;">Selecciona una variable</small>
+        </div>
+      </div>
+
+      <div class="forecast-tabs" id="forecastTabs">
+        <button class="forecast-tab active" data-variable="temperature">
+          🌡️ Temperatura
+        </button>
+        <button class="forecast-tab" data-variable="humidity">
+          💧 Humedad
+        </button>
+        <button class="forecast-tab" data-variable="pm2.5">
+          💨 PM2.5
+        </button>
+        <button class="forecast-tab" data-variable="pm10">
+          🌫️ PM10
+        </button>
+      </div>
+
+      <div class="quick-stats" id="quickStats" style="display: none;"></div>
+
+      <canvas id="forecastChart"></canvas>
+
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: black;"></div>
+          <span>Datos Históricos</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: red;"></div>
+          <span>Pronóstico</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(0, 255, 0, 0.3); border: 1px solid #00c853;"></div>
+          <span>Confianza 80%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(255, 255, 0, 0.3); border: 1px solid #ffd600;"></div>
+          <span>Confianza 95%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: transparent; border: 1px dashed blue;"></div>
+          <span>Límite Permitido</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <div class="table-controls">
+      <div class="table-search">
+        <input id="searchInput" class="input" placeholder="🔍 Buscar en la tabla..." />
+        <input id="filterFrom" type="date" class="input" />
+        <input id="filterTo" type="date" class="input" />
+        <button id="clearFilters" class="range-btn">🗑️ Limpiar</button>
+      </div>
+      <div class="table-search">
+        <button id="exportCSV" class="range-btn">📋 Exportar CSV</button>
+      </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>📅 Fecha</th>
+            <th>🌡️ Temp (°C)</th>
+            <th>💧 Humedad (%)</th>
+            <th>☀️ Radiación (W/m²)</th>
+            <th>🌫️ PM10 (µg/m³)</th>
+            <th>💨 PM2.5 (µg/m³)</th>
+          </tr>
+        </thead>
+        <tbody id="dataTableBody">
+          <tr>
+            <td colspan="6" style="padding: 40px; text-align: center; color: #94a3b8;">
+              <div class="loading-spinner" style="margin: 0 auto 10px;"></div>
+              Cargando datos...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
 
 <script>
 /* ============================
-   VARIABLES GLOBALES Y CONFIGURACIÓN
+   CONFIGURACIÓN
    ============================ */
-let currentData = {};
+const API_URL = "api/obtener_datos.php";
+const FORECAST_BASE_URL = "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/";
+
+let rawData = [];
+let filtered = [];
+let currentVariable = 'temp';
 let forecastData = {};
-let currentForecastVariable = 'pm2.5';
-let forecastUpdateInterval;
-let charts = {};
-
-// Configuración de colores para modo claro/oscuro
-const chartColors = {
-    light: {
-        grid: '#e0e0e0',
-        text: '#666666'
-    },
-    dark: {
-        grid: '#404040',
-        text: '#b0b0b0'
-    }
-};
+let forecastChart = null;
+let currentForecastVariable = 'temperature';
+let forecastUpdateInterval = null;
+const charts = {};
 
 /* ============================
-   FUNCIONES DE UTILIDAD
+   UTILIDADES
    ============================ */
-function showNotification(message, type = 'info', duration = 3000) {
-    const notification = document.getElementById('notification');
-    const icon = document.getElementById('notificationIcon');
-    const text = document.getElementById('notificationText');
-    
-    notification.className = 'notification';
-    notification.classList.add(type);
-    
-    const icons = {
-        'info': 'ℹ️',
-        'success': '✅',
-        'warning': '⚠️',
-        'error': '❌'
-    };
-    
-    icon.textContent = icons[type] || 'ℹ️';
-    text.textContent = message;
-    
-    notification.classList.add('show');
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, duration);
+function parseDate(s) {
+  if (!s) return null;
+  const d = new Date(s.replace(' ', 'T'));
+  return isNaN(d) ? new Date(s) : d;
 }
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
+function showNotification(message, type = 'success') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <div style="font-weight: 600; font-size: 18px;">${type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✓'}</div>
+    <div>${message}</div>
+  `;
+  document.body.appendChild(notification);
 
-function normalizeVariableName(variable) {
-    // Normaliza el nombre de variable para consistencia
-    if (variable === 'pm25' || variable === 'pm2.5') {
-        return 'pm2.5';
-    }
-    return variable;
-}
-
-/* ============================
-   FUNCIONES DE GRÁFICOS
-   ============================ */
-function initializeChart(canvasId, label, color) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    const isDark = document.body.classList.contains('dark');
-    
-    return new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: label,
-                data: [],
-                borderColor: color,
-                backgroundColor: color + '20',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 3,
-                pointBackgroundColor: color
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: isDark ? '#2d2d2d' : 'white',
-                    titleColor: isDark ? '#ffffff' : '#1a1a1a',
-                    bodyColor: isDark ? '#b0b0b0' : '#666666',
-                    borderColor: isDark ? '#404040' : '#e0e0e0',
-                    borderWidth: 1
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        color: isDark ? chartColors.dark.grid : chartColors.light.grid
-                    },
-                    ticks: {
-                        color: isDark ? chartColors.dark.text : chartColors.light.text
-                    }
-                },
-                y: {
-                    grid: {
-                        color: isDark ? chartColors.dark.grid : chartColors.light.grid
-                    },
-                    ticks: {
-                        color: isDark ? chartColors.dark.text : chartColors.light.text
-                    },
-                    beginAtZero: true
-                }
-            },
-            animation: {
-                duration: 750
-            }
-        }
-    });
-}
-
-function updateChart(chart, newData, newLabels) {
-    chart.data.labels = newLabels;
-    chart.data.datasets[0].data = newData;
-    chart.update('none');
-}
-
-/* ============================
-   ICONOS DINÁMICOS
-   ============================ */
-function getVariableIcon(variable, value) {
-    let color = '#7AC043';
-    let icon = '';
-    
-    const normalizedVar = normalizeVariableName(variable);
-    
-    switch(normalizedVar) {
-        case 'temperature':
-            if (value < 10) color = '#2196F3';
-            else if (value < 25) color = '#4CAF50';
-            else if (value < 35) color = '#FF9800';
-            else color = '#F44336';
-            
-            icon = `
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22a5 5 0 0 0 5-5c0-2-2-3-2-3v-8a3 3 0 1 0-6 0v8s-2 1-2 3a5 5 0 0 0 5 5z" stroke="${color}" stroke-width="2" fill="${color}" fill-opacity="0.3"/>
-                    <circle cx="12" cy="9" r="1" fill="${color}"/>
-                </svg>
-            `;
-            break;
-            
-        case 'humidity':
-            color = '#2196F3';
-            icon = `
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="${color}" stroke-width="2" fill="${color}" fill-opacity="0.3"/>
-                </svg>
-            `;
-            break;
-            
-        case 'pm2.5':
-        case 'pm10':
-            if (value < 50) color = '#4CAF50';
-            else if (value < 100) color = '#FFEB3B';
-            else if (value < 150) color = '#FF9800';
-            else color = '#F44336';
-            
-            icon = `
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="7" cy="17" r="2" fill="${color}"/>
-                    <circle cx="12" cy="13" r="2" fill="${color}"/>
-                    <circle cx="17" cy="9" r="2" fill="${color}"/>
-                    <circle cx="9" cy="9" r="1.5" fill="${color}" opacity="0.6"/>
-                    <circle cx="14" cy="16" r="1.5" fill="${color}" opacity="0.6"/>
-                </svg>
-            `;
-            break;
-    }
-    
-    return icon;
-}
-
-function getUnit(variable) {
-    const normalizedVar = normalizeVariableName(variable);
-    const units = {
-        'temperature': '°C',
-        'humidity': '%',
-        'pm2.5': 'µg/m³',
-        'pm10': 'µg/m³'
-    };
-    return units[normalizedVar] || '';
-}
-
-/* ============================
-   CORREGIDO: FUNCIÓN PARA OBTENER NOMBRE DE ARCHIVO
-   ============================ */
-function getForecastFileName(variable) {
-    const normalizedVar = normalizeVariableName(variable);
-    
-    const fileMap = {
-        'temperature': 'pronostico_temperature.json',
-        'humidity': 'pronostico_humidity.json',
-        'pm2.5': 'pronostico_pm2.5.json',
-        'pm10': 'pronostico_pm10.json'
-    };
-    
-    const fileName = fileMap[normalizedVar];
-    console.log(`📄 Variable: "${variable}" → Normalizada: "${normalizedVar}" → Archivo: ${fileName}`);
-    return fileName;
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
 }
 
 /* ============================
    CARGA DE DATOS
    ============================ */
 async function loadData() {
-    try {
-        // Cargar datos actuales
-        const [pm10Data, pm25Data, tempData, humData] = await Promise.all([
-            fetch('datos_pm10.csv').then(r => r.text()),
-            fetch('datos_pm2.5.csv').then(r => r.text()),
-            fetch('index.json').then(r => r.json())
-        ]);
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-        // Procesar datos PM10
-        const pm10Rows = pm10Data.trim().split('\n');
-        const pm10Values = pm10Rows.map(row => {
-            const [date, value] = row.split(',');
-            return parseFloat(value) || 0;
-        }).filter(v => !isNaN(v));
-        
-        const pm10Dates = pm10Rows.map(row => row.split(',')[0]).filter(d => d);
-        
-        // Procesar datos PM2.5
-        const pm25Rows = pm25Data.trim().split('\n');
-        const pm25Values = pm25Rows.map(row => {
-            const [date, value] = row.split(',');
-            return parseFloat(value) || 0;
-        }).filter(v => !isNaN(v));
-        
-        const pm25Dates = pm25Rows.map(row => row.split(',')[0]).filter(d => d);
-        
-        // Actualizar valores actuales
-        const currentPM10 = pm10Values[pm10Values.length - 1] || 0;
-        const currentPM25 = pm25Values[pm25Values.length - 1] || 0;
-        const currentTemp = tempData.temperature?.current || 0;
-        const currentHum = tempData.humidity?.current || 0;
-        
-        document.getElementById('pm10Value').textContent = currentPM10.toFixed(1);
-        document.getElementById('pm25Value').textContent = currentPM25.toFixed(1);
-        document.getElementById('tempValue').textContent = currentTemp.toFixed(1);
-        document.getElementById('humValue').textContent = currentHum.toFixed(1);
-        
-        // Actualizar iconos
-        document.getElementById('pm10Icon').innerHTML = getVariableIcon('pm10', currentPM10);
-        document.getElementById('pm25Icon').innerHTML = getVariableIcon('pm2.5', currentPM25);
-        document.getElementById('tempIcon').innerHTML = getVariableIcon('temperature', currentTemp);
-        document.getElementById('humIcon').innerHTML = getVariableIcon('humidity', currentHum);
-        
-        // Inicializar o actualizar gráficos
-        if (!charts.pm10) {
-            charts.pm10 = initializeChart('pm10Chart', 'PM10', '#FF9800');
-        }
-        if (!charts.pm25) {
-            charts.pm25 = initializeChart('pm25Chart', 'PM2.5', '#9C27B0');
-        }
-        if (!charts.temp) {
-            charts.temp = initializeChart('tempChart', 'Temperatura', '#F44336');
-        }
-        if (!charts.hum) {
-            charts.hum = initializeChart('humChart', 'Humedad', '#2196F3');
-        }
-        
-        // Actualizar gráficos con últimos 24 puntos
-        const last24 = (arr) => arr.slice(-24);
-        
-        updateChart(charts.pm10, last24(pm10Values), last24(pm10Dates));
-        updateChart(charts.pm25, last24(pm25Values), last24(pm25Dates));
-        
-        // Para temperatura y humedad, usar datos del index.json
-        if (tempData.temperature?.history) {
-            const tempHistory = tempData.temperature.history.slice(-24);
-            updateChart(charts.temp, tempHistory, Array.from({length: tempHistory.length}, (_, i) => `-${23-i}h`));
-        }
-        
-        if (tempData.humidity?.history) {
-            const humHistory = tempData.humidity.history.slice(-24);
-            updateChart(charts.hum, humHistory, Array.from({length: humHistory.length}, (_, i) => `-${23-i}h`));
-        }
-        
-        showNotification('Datos actualizados', 'success');
-        
-    } catch (error) {
-        console.error('Error cargando datos:', error);
-        showNotification('Error cargando datos', 'error');
+    const data = await res.json();
+
+    rawData = data.map(r => ({
+      fecha: r.fecha_hora || r.fecha,
+      temperatura: r.temperatura !== undefined ? Number(r.temperatura) : null,
+      humedad: r.humedad !== undefined ? Number(r.humedad) : null,
+      radiacion: r.radiacion !== undefined ? Number(r.radiacion) : null,
+      pm10: r.pm10 !== undefined ? Number(r.pm10) : null,
+      pm25: r.pm25 !== undefined ? Number(r.pm25) : null
+    })).filter(x => x.fecha).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    if (rawData.length === 0) {
+      showNotification('No se encontraron datos', 'warning');
+      return;
     }
+
+    applyRange('24h');
+    updateKPI();
+    updateHistoricalTable();
+
+  } catch (e) {
+    console.error("Error:", e);
+    showNotification('Error al cargar los datos: ' + e.message, 'error');
+  }
 }
 
 /* ============================
-   CARGA DE PRONÓSTICOS
+   KPIs
    ============================ */
-async function loadForecastData(variable) {
-    try {
-        const normalizedVar = normalizeVariableName(variable);
-        const fileName = getForecastFileName(normalizedVar);
-        
-        if (!fileName) {
-            throw new Error(`No se encontró archivo para variable: ${variable}`);
-        }
-        
-        console.log(`📂 Cargando pronóstico para ${normalizedVar} desde: ${fileName}`);
-        
-        const response = await fetch(`pronosticos/${fileName}`);
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        // Normalizar estructura de datos
-        if (Array.isArray(data)) {
-            // Si los datos ya son un array
-            forecastData[normalizedVar] = {
-                forecasts: data,
-                metadata: {
-                    model: 'LSTM',
-                    accuracy: '0.92',
-                    last_updated: new Date().toISOString()
-                }
-            };
-        } else if (data.forecasts && Array.isArray(data.forecasts)) {
-            // Si tienen estructura con metadata
-            forecastData[normalizedVar] = data;
-        } else {
-            // Si es un objeto con otra estructura
-            const forecasts = Object.values(data);
-            forecastData[normalizedVar] = {
-                forecasts: forecasts,
-                metadata: {
-                    model: 'LSTM',
-                    accuracy: '0.92',
-                    last_updated: new Date().toISOString()
-                }
-            };
-        }
-        
-        console.log(`✅ Pronóstico cargado para ${normalizedVar}:`, forecastData[normalizedVar].forecasts.length, 'puntos');
-        return forecastData[normalizedVar];
-        
-    } catch (error) {
-        console.error(`❌ Error cargando pronóstico para ${variable}:`, error);
-        showNotification(`Error cargando pronóstico: ${variable}`, 'error');
-        return null;
-    }
-}
+function updateKPI() {
+  if (!rawData.length) return;
 
-async function loadAllForecasts() {
-    const variables = ['pm2.5', 'pm10', 'temperature', 'humidity'];
-    
-    for (const variable of variables) {
-        await loadForecastData(variable);
-    }
-    
-    // Actualizar gráfico con variable actual
-    if (forecastData[currentForecastVariable]) {
-        updateForecastChart();
-        updateModelParams();
-        updateQuickStats();
-    }
+  const last = rawData[rawData.length - 1];
+  const prevIndex = Math.max(0, rawData.length - 2);
+  const prev = rawData[prevIndex];
+
+  const updates = [
+    { id: 'temp', value: last.temperatura, prev: prev.temperatura },
+    { id: 'hum', value: last.humedad, prev: prev.humedad },
+    { id: 'rad', value: last.radiacion, prev: prev.radiacion },
+    { id: 'pm10', value: last.pm10, prev: prev.pm10 },
+    { id: 'pm25', value: last.pm25, prev: prev.pm25 }
+  ];
+
+  const timeStr = new Date(last.fecha).toLocaleString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  updates.forEach(({ id, value, prev }) => {
+    const el = document.getElementById(`card_${id}`);
+    const meta = document.getElementById(`meta_${id}`);
+
+    if (el) el.innerText = value !== null ? value.toFixed(2) : '--';
+    if (meta) meta.innerHTML = `<strong>Última:</strong> ${timeStr}`;
+  });
 }
 
 /* ============================
-   GRÁFICO DE PRONÓSTICO
+   TABLA
    ============================ */
-let forecastChart = null;
+function updateHistoricalTable() {
+  const tbody = document.getElementById('dataTableBody');
+  if (!tbody) return;
 
-function initializeForecastChart() {
-    const ctx = document.getElementById('forecastChart').getContext('2d');
-    const isDark = document.body.classList.contains('dark');
-    
-    forecastChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Pronóstico',
-                data: [],
-                borderColor: '#7AC043',
-                backgroundColor: '#7AC04320',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#7AC043'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: isDark ? chartColors.dark.text : chartColors.light.text
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function(context) {
-                            const unit = getUnit(currentForecastVariable);
-                            return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}${unit}`;
-                        }
-                    },
-                    backgroundColor: isDark ? '#2d2d2d' : 'white',
-                    titleColor: isDark ? '#ffffff' : '#1a1a1a',
-                    bodyColor: isDark ? '#b0b0b0' : '#666666',
-                    borderColor: isDark ? '#404040' : '#e0e0e0',
-                    borderWidth: 1
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Horas futuras',
-                        color: isDark ? chartColors.dark.text : chartColors.light.text
-                    },
-                    grid: {
-                        color: isDark ? chartColors.dark.grid : chartColors.light.grid
-                    },
-                    ticks: {
-                        color: isDark ? chartColors.dark.text : chartColors.light.text
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: () => {
-                            const unit = getUnit(currentForecastVariable);
-                            return `Valor (${unit})`;
-                        },
-                        color: isDark ? chartColors.dark.text : chartColors.light.text
-                    },
-                    grid: {
-                        color: isDark ? chartColors.dark.grid : chartColors.light.grid
-                    },
-                    ticks: {
-                        color: isDark ? chartColors.dark.text : chartColors.light.text,
-                        callback: function(value) {
-                            return value.toFixed(1);
-                        }
-                    },
-                    beginAtZero: true
-                }
-            },
-            animation: {
-                duration: 1000
+  tbody.innerHTML = '';
+
+  if (!rawData.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
+        📊 No hay datos disponibles
+      </td></tr>
+    `;
+    return;
+  }
+
+  const rows = [...rawData].slice(-200).reverse();
+
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(r.fecha).toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}</td>
+      <td>${r.temperatura !== null ? r.temperatura.toFixed(2) : '--'}</td>
+      <td>${r.humedad !== null ? r.humedad.toFixed(2) : '--'}</td>
+      <td>${r.radiacion !== null ? r.radiacion.toFixed(2) : '--'}</td>
+      <td>${r.pm10 !== null ? r.pm10.toFixed(2) : '--'}</td>
+      <td>${r.pm25 !== null ? r.pm25.toFixed(2) : '--'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ============================
+   RANGOS
+   ============================ */
+function applyRange(range, from = null, to = null) {
+  const now = new Date();
+  let start;
+
+  if (range === '24h') start = new Date(now.getTime() - 24 * 3600 * 1000);
+  else if (range === '7d') start = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+  else if (range === 'all') start = new Date(0);
+  else if (range === 'custom') start = from;
+
+  const end = to || new Date();
+  filtered = rawData.filter(r => {
+    const d = parseDate(r.fecha);
+    return d >= start && d <= end;
+  });
+
+  renderMainChart();
+}
+
+/* ============================
+   GRÁFICAS
+   ============================ */
+function renderMainChart() {
+  const times = filtered.map(r => r.fecha);
+  let data, label, color;
+
+  switch (currentVariable) {
+    case 'temp':
+      data = filtered.map(r => r.temperatura);
+      label = 'Temperatura (°C)';
+      color = '#003366';
+      break;
+    case 'hum':
+      data = filtered.map(r => r.humedad);
+      label = 'Humedad (%)';
+      color = '#7AC043';
+      break;
+    case 'rad':
+      data = filtered.map(r => r.radiacion);
+      label = 'Radiación (W/m²)';
+      color = '#f59e0b';
+      break;
+    case 'pm10':
+      data = filtered.map(r => r.pm10);
+      label = 'PM10 (µg/m³)';
+      color = '#ef4444';
+      break;
+    case 'pm25':
+      data = filtered.map(r => r.pm25);
+      label = 'PM2.5 (µg/m³)';
+      color = '#8b5cf6';
+      break;
+  }
+
+  const emojis = { 'temp': '🌡️', 'hum': '💧', 'rad': '☀️', 'pm10': '🌫️', 'pm25': '💨' };
+  document.getElementById('mainChartTitle').innerHTML = `${emojis[currentVariable]} ${label}`;
+
+  renderChart('mainChart', label, times, data, color);
+  loadHourlyForecast();
+}
+
+function renderChart(id, label, labels, data, color) {
+  const ctx = document.getElementById(id).getContext('2d');
+  if (charts[id]) charts[id].destroy();
+
+  charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: label,
+        data: data,
+        borderColor: color,
+        backgroundColor: color + '20',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2,
+        pointHoverRadius: 6,
+        pointBackgroundColor: color,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: color,
+          borderWidth: 2,
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            label: function(context) {
+              return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
             }
+          }
         }
-    });
-}
-
-function updateForecastChart() {
-    const data = forecastData[currentForecastVariable];
-    
-    if (!data || !data.forecasts || !forecastChart) {
-        console.warn(`No hay datos para ${currentForecastVariable} o gráfico no inicializado`);
-        return;
-    }
-    
-    const forecasts = data.forecasts;
-    
-    // Crear etiquetas de horas (ej: +1h, +2h, ...)
-    const labels = forecasts.map((_, index) => `+${index + 1}h`);
-    
-    // Obtener valores, asegurando que sean números
-    const values = forecasts.map(item => {
-        if (typeof item === 'number') return item;
-        if (typeof item === 'object' && item.value !== undefined) return item.value;
-        if (typeof item === 'object' && item.forecast !== undefined) return item.forecast;
-        return 0;
-    });
-    
-    // Actualizar datos del gráfico
-    forecastChart.data.labels = labels;
-    forecastChart.data.datasets[0].data = values;
-    forecastChart.data.datasets[0].label = `Pronóstico ${currentForecastVariable.toUpperCase()}`;
-    
-    // Actualizar unidad en el eje Y
-    forecastChart.options.scales.y.title.text = `Valor (${getUnit(currentForecastVariable)})`;
-    
-    forecastChart.update();
-    
-    // Actualizar pronóstico horario
-    updateHourlyForecast(values, labels);
-}
-
-function updateHourlyForecast(values, labels) {
-    const container = document.getElementById('hourlyForecast');
-    const unit = getUnit(currentForecastVariable);
-    
-    container.innerHTML = '';
-    
-    // Mostrar solo las primeras 12 horas
-    const displayCount = Math.min(12, values.length);
-    
-    for (let i = 0; i < displayCount; i++) {
-        const hourCard = document.createElement('div');
-        hourCard.className = 'hour-card';
-        
-        // Determinar color basado en el valor (especialmente para PM)
-        let valueColor = '#4CAF50';
-        const value = values[i];
-        
-        if (currentForecastVariable.includes('pm')) {
-            if (value < 50) valueColor = '#4CAF50';
-            else if (value < 100) valueColor = '#FFEB3B';
-            else if (value < 150) valueColor = '#FF9800';
-            else valueColor = '#F44336';
-        } else if (currentForecastVariable === 'temperature') {
-            if (value < 10) valueColor = '#2196F3';
-            else if (value < 25) valueColor = '#4CAF50';
-            else if (value < 35) valueColor = '#FF9800';
-            else valueColor = '#F44336';
-        } else if (currentForecastVariable === 'humidity') {
-            valueColor = '#2196F3';
+      },
+      scales: {
+        x: { 
+          display: true,
+          grid: { color: 'rgba(0, 0, 0, 0.05)' }
+        },
+        y: { 
+          beginAtZero: false,
+          grid: { color: 'rgba(0, 0, 0, 0.05)' }
         }
-        
-        hourCard.innerHTML = `
-            <div class="hour-time">${labels[i]}</div>
-            <div class="hour-value" style="color: ${valueColor}">${value.toFixed(1)}</div>
-            <div class="hour-unit">${unit}</div>
-        `;
-        
-        container.appendChild(hourCard);
+      },
+      interaction: {
+        mode: 'index',
+        intersect: false
+      }
     }
+  });
+
+  document.getElementById(id).style.height = '300px';
 }
 
-function updateModelParams() {
-    const data = forecastData[currentForecastVariable];
-    
-    if (!data || !data.metadata) {
-        document.getElementById('modelName').textContent = '--';
-        document.getElementById('modelAccuracy').textContent = '--';
-        document.getElementById('lastUpdate').textContent = '--';
-        return;
-    }
-    
-    document.getElementById('modelName').textContent = data.metadata.model || 'LSTM';
-    document.getElementById('modelAccuracy').textContent = data.metadata.accuracy ? 
-        `${(parseFloat(data.metadata.accuracy) * 100).toFixed(1)}%` : '--';
-    document.getElementById('lastUpdate').textContent = data.metadata.last_updated ? 
-        formatDate(data.metadata.last_updated) : '--';
-}
+/* ============================
+   PRONÓSTICOS POR HORA
+   PRONÓSTICOS POR HORA - CORREGIDO
+   ============================ */
+async function loadHourlyForecast() {
+  const container = document.getElementById('hourlyForecastContainer');
+  const forecastDiv = document.getElementById('hourlyForecast');
 
-function updateQuickStats() {
-    const data = forecastData[currentForecastVariable];
-    
-    if (!data || !data.forecasts) return;
-    
-    const values = data.forecasts.map(item => {
-        if (typeof item === 'number') return item;
-        if (typeof item === 'object' && item.value !== undefined) return item.value;
-        if (typeof item === 'object' && item.forecast !== undefined) return item.forecast;
-        return 0;
+  if (!container || !forecastDiv) return;
+
+  const variableMap = {
+    'temp': 'temperature',
+    'hum': 'humidity',
+    'pm10': 'pm10',
+    'pm25': 'pm2.5'
+  };
+
+  const forecastVariable = variableMap[currentVariable];
+
+  if (!forecastVariable || currentVariable === 'rad') {
+    container.style.display = 'none';
+    return;
+  }
+
+  try {
+    container.style.display = 'block';
+    forecastDiv.innerHTML = `
+      <div style="padding: 40px; text-align: center; color: #64748b;">
+        <div class="loading-spinner" style="margin: 0 auto 10px;"></div>
+        Cargando pronósticos...
+      </div>
+    `;
+
+    // CORREGIDO: Usar nombre de archivo consistente
+    const fileName = getForecastFileName(forecastVariable);
+    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    console.log(`🌐 Cargando pronóstico por hora: ${fileName}`);
+
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`, {
+      mode: 'cors',
+      cache: 'no-cache'
     });
     
-    if (values.length === 0) return;
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.pronosticos || data.pronosticos.length === 0) {
+    // CORREGIDO: Buscar datos históricos en "historico" (no "historial_completo")
+    const historico = data.historico || data.historial_completo || [];
+    const pronosticos = data.pronosticos || [];
     
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    const avg = values.reduce((a, b) => a + b, 0) / values.length;
-    
-    console.log(`📊 Stats para ${currentForecastVariable}: Max=${max.toFixed(1)}, Min=${min.toFixed(1)}, Avg=${avg.toFixed(1)}`);
+    if (pronosticos.length === 0) {
+      forecastDiv.innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #64748b;">
+          📊 No hay pronósticos disponibles
+        </div>
+      `;
+      return;
+    }
+
+    const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
+    const hoursToShow = Math.min(12, data.pronosticos.length);
+    const lastHistorical = historico.length > 0 ? historico[historico.length - 1] : null;
+    const hoursToShow = Math.min(12, pronosticos.length);
+    let cardsHTML = '';
+
+    if (lastHistorical) {
+      const currentValue = getCurrentValue(lastHistorical);
+      const currentValue = parseFloat(lastHistorical.valor);
+      const now = new Date(lastHistorical.fecha);
+
+      cardsHTML += `
+        <div class="hour-card current">
+          <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="hour-day">${getDayName(now)}</div>
+          <div class="hour-icon">${getVariableIcon(currentVariable, currentValue)}</div>
+          <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
+          <div class="hour-value">${!isNaN(currentValue) ? currentValue.toFixed(1) : '--'}</div>
+          <div class="hour-label">${getUnit(forecastVariable)}</div>
+          <div class="hour-label" style="margin-top: 6px; font-weight: 700;">ACTUAL</div>
+        </div>
+      `;
+    }
+
+    for (let i = 0; i < hoursToShow; i++) {
+      const forecast = data.pronosticos[i];
+      const forecast = pronosticos[i];
+      const date = new Date(forecast.fecha);
+      const value = parseFloat(forecast.pronostico);
+      const conf80Min = parseFloat(forecast.confianza_80_min);
+      const conf80Max = parseFloat(forecast.confianza_80_max);
+
+      if (isNaN(value)) continue;
+      
+      cardsHTML += `
+        <div class="hour-card">
+          <span class="forecast-badge">+${i + 1}h</span>
+          <div class="hour-time">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="hour-day">${getDayName(date)}</div>
+          <div class="hour-icon">${getVariableIcon(currentVariable, value)}</div>
+          <div class="hour-value">${value.toFixed(1)}</div>
+          <div class="hour-label">${getUnit(forecastVariable)}</div>
+          ${conf80Min && conf80Max ? `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : ''}
+          ${!isNaN(conf80Min) && !isNaN(conf80Max) ? 
+            `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : 
+            ''}
+        </div>
+      `;
+    }
+
+    forecastDiv.innerHTML = cardsHTML;
+    forecastDiv.innerHTML = cardsHTML || `
+      <div style="padding: 40px; text-align: center; color: #64748b;">
+        📊 No se pudieron cargar pronósticos
+      </div>
+    `;
+
+  } catch (error) {
+    console.error('Error:', error);
+    console.error('Error cargando pronósticos por hora:', error);
+    forecastDiv.innerHTML = `
+      <div style="padding: 40px; text-align: center; color: #ef4444;">
+        ❌ Error al cargar pronósticos
+        <br><small style="font-size: 12px;">${error.message}</small>
+      </div>
+    `;
+  }
 }
 
+function getCurrentValue(data) {
+  const values = {
+    'temp': data.temperatura,
+    'hum': data.humedad,
+    'rad': data.radiacion,
+    'pm10': data.pm10,
+    'pm25': data.pm25
+  };
+  return values[currentVariable];
+}
+function getDayName(date) {
+  const days = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+  return days[date.getDay()];
+}
+
+function getVariableIcon(variable, value) {
+  let color = '#003366';
+  let icon = '';
+
+  switch (variable) {
+    case 'temp':
+      if (value < 15) color = '#2196F3';
+      else if (value < 25) color = '#4CAF50';
+      else if (value < 30) color = '#FF9800';
+      else color = '#F44336';
+
+      icon = `
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="3" width="6" height="14" rx="3" stroke="${color}" stroke-width="2" fill="none"/>
+          <circle cx="12" cy="19" r="3" fill="${color}"/>
+          <line x1="12" y1="8" x2="12" y2="16" stroke="${color}" stroke-width="2"/>
+        </svg>
+      `;
+      break;
+
+    case 'hum':
+      color = '#2196F3';
+      icon = `
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="${color}" stroke-width="2" fill="${color}" fill-opacity="0.3"/>
+        </svg>
+      `;
+      break;
+
+    case 'pm10':
+    case 'pm25':
+      if (value < 50) color = '#4CAF50';
+      else if (value < 100) color = '#FFEB3B';
+      else if (value < 150) color = '#FF9800';
+      else color = '#F44336';
+
+      icon = `
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="7" cy="17" r="2" fill="${color}"/>
+          <circle cx="12" cy="13" r="2" fill="${color}"/>
+          <circle cx="17" cy="9" r="2" fill="${color}"/>
+          <circle cx="9" cy="9" r="1.5" fill="${color}" opacity="0.6"/>
+          <circle cx="14" cy="16" r="1.5" fill="${color}" opacity="0.6"/>
+        </svg>
+      `;
+      break;
+  }
+
+  return icon;
+}
+
+function getUnit(variable) {
+  const units = {
+    'temperature': '°C',
+    'humidity': '%',
+    'pm2.5': 'µg/m³',
+    'pm10': 'µg/m³'
+  };
+  return units[variable] || '';
+}
+
+/* ============================
+   CORREGIDO: FUNCIÓN PARA OBTENER NOMBRE DE ARCHIVO
+   ============================ */
+function getForecastFileName(variable) {
+  // CORREGIDO: Nombres consistentes con Python actualizado
+  const fileMap = {
+    'temperature': 'pronostico_temperature.json',
+    'humidity': 'pronostico_humidity.json',
+    'pm2.5': 'pronostico_pm2.5.json',
+    'pm10': 'pronostico_pm10.json'
+  };
+  
+  const fileName = fileMap[variable] || `pronostico_${variable}.json`;
+  console.log(`📄 Mapeando variable "${variable}" a archivo: ${fileName}`);
+  return fileName;
+}
 /* ============================
    MODO PRONÓSTICOS
    ============================ */
 function showForecastMode() {
-    document.getElementById('forecastChartContainer').style.display = 'block';
-    document.getElementById('mainChartCard').style.display = 'none';
-    document.getElementById('variableSelector').style.display = 'none';
-    document.getElementById('hourlyForecastContainer').style.display = 'none';
-    
-    loadAllForecasts();
-    
-    if (forecastUpdateInterval) clearInterval(forecastUpdateInterval);
+  document.getElementById('forecastChartContainer').style.display = 'block';
+  // Parámetros del modelo OCULTOS permanentemente
+  // document.getElementById('modelParamsCard').style.display = 'block';
+  document.getElementById('mainChartCard').style.display = 'none';
+  document.getElementById('variableSelector').style.display = 'none';
+  document.getElementById('hourlyForecastContainer').style.display = 'none';
+
+  loadAllForecasts();
+
+  if (forecastUpdateInterval) clearInterval(forecastUpdateInterval);
+  forecastUpdateInterval = setInterval(loadAllForecasts, 5 * 60 * 1000);
+}
+
+function hideForecastMode() {
+  document.getElementById('forecastChartContainer').style.display = 'none';
+  document.getElementById('modelParamsCard').style.display = 'none';
+  document.getElementById('mainChartCard').style.display = 'block';
+  document.getElementById('variableSelector').style.display = 'flex';
+
+  loadHourlyForecast();
+
+  if (forecastUpdateInterval) {
+    clearInterval(forecastUpdateInterval);
+    forecastUpdateInterval = null;
+  }
 }
 
 /* ============================
+   CORREGIDO: CARGAR TODOS LOS PRONÓSTICOS
+   ============================ */
+async function loadAllForecasts() {
+  try {
+    console.log('🔄 Cargando todos los pronósticos...');
+    document.getElementById('forecastLoading').style.display = 'inline-block';
+    document.getElementById('forecastInfo').textContent = 'Cargando...';
+
+    forecastData = {};
+
+    const variables = ['temperature', 'humidity', 'pm2.5', 'pm10'];
+    const promises = variables.map(variable => loadForecastData(variable));
+
+    await Promise.allSettled(promises);
+
+    document.getElementById('forecastLoading').style.display = 'none';
+
+    const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
+    // DEBUG: Mostrar estado de carga
+    debugForecastData();
+    
+    const loadedCount = Object.keys(forecastData).filter(key => 
+      forecastData[key] && forecastData[key].historico && forecastData[key].historico.length > 0
+    ).length;
+    
+    document.getElementById('forecastInfo').innerHTML = `
+      <span class="badge success">${loadedCount}/4 cargados</span>
+      <span class="badge ${loadedCount === 4 ? 'success' : 'warning'}">
+        ${loadedCount}/4 cargados
+      </span>
+    `;
+
+    if (forecastData['temperature']) {
+    if (loadedCount === 0) {
+      showNotification('No se pudieron cargar pronósticos. Verifica la conexión.', 'error');
+      return;
+    }
+    
+    // Intentar actualizar la gráfica con la primera variable disponible
+    const firstValid = variables.find(v => 
+      forecastData[v] && forecastData[v].historico && forecastData[v].historico.length > 0
+    );
+    
+    if (firstValid) {
+      currentForecastVariable = firstValid;
+      updateForecastChart();
+      updateModelParams();
+      updateQuickStats();
+    }
+
+  } catch (error) {
+    console.error('Error:', error);
+    console.error('❌ Error general cargando pronósticos:', error);
+    document.getElementById('forecastLoading').style.display = 'none';
+    document.getElementById('forecastInfo').innerHTML = `
+      <span class="badge error">Error</span>
+      <span class="badge error">Error de carga</span>
+    `;
+    showNotification('Error al cargar pronósticos: ' + error.message, 'error');
+  }
+}
+
+function getForecastFileName(variable) {
+  const fileMap = {
+    'temperature': 'pronostico_temperature.json',
+    'humidity': 'pronostico_humidity.json',
+    'pm2.5': 'pronostico_pm_2_5.json',    
+    'pm10': 'pronostico_pm_10.json'       
+  };
+  return fileMap[variable] || `pronostico_${variable}.json`;
+}
+/* ============================
+   CORREGIDO: CARGAR DATOS DE PRONÓSTICO
+   ============================ */
+async function loadForecastData(variable) {
+  try {
+    const fileName = getForecastFileName(variable);
+    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    const url = `${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`;
+    console.log(`🌐 Intentando cargar: ${url}`);
+
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    const response = await fetch(url, {
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ Error HTTP ${response.status} para ${variable}`);
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    forecastData[variable] = {
+    // CORREGIDO: Verificar estructura de datos
+    const historico = data.historico || data.historial_completo || [];
+    const pronosticos = data.pronosticos || [];
+    
+    if (!Array.isArray(historico) || !Array.isArray(pronosticos)) {
+      console.warn(`⚠️ Estructura inesperada para ${variable}:`, data);
+      throw new Error('Estructura de datos inválida');
+    }
+    
+    // Normalizar nombres de propiedades
+    const normalizedData = {
+      ...data,
+      variable: variable,
+      historico: Array.isArray(data.historico) ? data.historico : [],
+      pronosticos: Array.isArray(data.pronosticos) ? data.pronosticos : []
+      historico: historico,
+      pronosticos: pronosticos,
+      // Mantener compatibilidad con nombres antiguos
+      historial_completo: historico
+    };
+
+    console.log(`✅ ${variable} cargado:`, {
+      historicos: normalizedData.historico.length,
+      pronosticos: normalizedData.pronosticos.length,
+      modelo: normalizedData.modelo || 'N/A'
+    });
+    
+    forecastData[variable] = normalizedData;
+    updateTabStatus(variable, 'loaded');
+    return forecastData[variable];
+    
+    return normalizedData;
+
+  } catch (error) {
+    console.error(`Error ${variable}:`, error);
+    console.error(`❌ Error cargando ${variable}:`, error);
+    updateTabStatus(variable, 'error');
+    
+    // Datos de ejemplo para debug
+    forecastData[variable] = {
+      variable: variable,
+      historico: [],
+      pronosticos: [],
+      error: error.message
+    };
+    
+    return null;
+  }
+}
+
+function updateTabStatus(variable, status) {
+  const tab = document.querySelector(`.forecast-tab[data-variable="${variable}"]`);
+  if (!tab) return;
+
+  tab.classList.remove('loaded', 'error', 'active');
+  if (status === 'loaded') tab.classList.add('loaded');
+  else if (status === 'error') tab.classList.add('error');
+  if (variable === currentForecastVariable) tab.classList.add('active');
+}
+
+/* ============================
+   CORREGIDO: ACTUALIZAR GRÁFICA DE PRONÓSTICO
+   ============================ */
+function updateForecastChart() {
+  const data = forecastData[currentForecastVariable];
+  if (!data || data.historico.length === 0 || data.pronosticos.length === 0) {
+    showNotification('Datos insuficientes para pronóstico', 'warning');
+  
+  if (!data) {
+    console.error('❌ No hay datos para:', currentForecastVariable);
+    showNotification('No se cargaron datos para pronóstico', 'warning');
+    return;
+  }
+  
+  // CORREGIDO: Usar "historico" en lugar de "historial_completo"
+  const historico = data.historico || [];
+  const pronosticos = data.pronosticos || [];
+  
+  if (historico.length === 0 || pronosticos.length === 0) {
+    console.warn('⚠️ Datos insuficientes:', {
+      variable: currentForecastVariable,
+      historicos: historico.length,
+      pronosticos: pronosticos.length
+    });
+    
+    showNotification('Datos insuficientes para generar pronóstico', 'warning');
+    
+    // Mostrar mensaje en el canvas
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    if (forecastChart) forecastChart.destroy();
+    
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    ctx.fillText('📊 Datos insuficientes para pronóstico', 
+                  ctx.canvas.width / 2, 
+                  ctx.canvas.height / 2);
+    ctx.font = '12px Arial';
+    ctx.fillText(`Históricos: ${historico.length}, Pronósticos: ${pronosticos.length}`, 
+                  ctx.canvas.width / 2, 
+                  ctx.canvas.height / 2 + 20);
+    
+    document.getElementById('forecastInfo').innerHTML = `
+      <span class="badge warning">Datos insuficientes</span>
+    `;
+    
+    return;
+  }
+
+  console.log(`📊 Actualizando gráfico para ${currentForecastVariable}:`, {
+    historicos: historico.length,
+    pronosticos: pronosticos.length
+  });
+  
+  const ctx = document.getElementById('forecastChart').getContext('2d');
+  if (forecastChart) forecastChart.destroy();
+
+  const allDates = [];
+  const allData = [];
+  const datasetTypes = [];
+
+  data.historico.forEach(item => {
+  // Datos históricos
+  historico.forEach(item => {
+    const date = new Date(item.fecha);
+    if (!isNaN(date.getTime())) {
+      allDates.push(date);
+      allData.push(parseFloat(item.valor) || 0);
+      datasetTypes.push('historical');
+    }
+  });
+
+  const forecastStartDate = new Date(data.pronosticos[0].fecha);
+  if (allDates.length > 0) {
+    allDates.push(forecastStartDate);
+    allData.push(allData[allData.length - 1]);
+    datasetTypes.push('transition');
+  // Transición entre histórico y pronóstico
+  if (allDates.length > 0 && pronosticos.length > 0) {
+    const forecastStartDate = new Date(pronosticos[0].fecha);
+    if (!isNaN(forecastStartDate.getTime())) {
+      allDates.push(forecastStartDate);
+      allData.push(allData[allData.length - 1]);
+      datasetTypes.push('transition');
+    }
+  }
+
+  data.pronosticos.forEach(item => {
+  // Datos de pronóstico
+  pronosticos.forEach(item => {
+    const date = new Date(item.fecha);
+    if (!isNaN(date.getTime())) {
+      allDates.push(date);
+      allData.push(parseFloat(item.pronostico) || 0);
+      datasetTypes.push('forecast');
+    }
+  });
+
+  const datasets = [{
+    label: 'Datos',
+    data: allDates.map((date, i) => ({ x: date, y: allData[i] })),
+    borderColor: ctx => {
+      const index = ctx.dataIndex;
+      return datasetTypes[index] === 'historical' ? 'black' : 'red';
+    },
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    tension: 0.2,
+    pointRadius: 0,
+    segment: {
+      borderColor: ctx => {
+        const index = ctx.p0DataIndex;
+        return datasetTypes[index] === 'historical' ? 'black' : 'red';
+      }
+    }
+  }];
+
+  const forecastDates = data.pronosticos.map(i => new Date(i.fecha));
+  const conf80Upper = data.pronosticos.map(i => parseFloat(i.confianza_80_max) || 0);
+  const conf80Lower = data.pronosticos.map(i => parseFloat(i.confianza_80_min) || 0);
+  const conf95Upper = data.pronosticos.map(i => parseFloat(i.confianza_95_max) || 0);
+  const conf95Lower = data.pronosticos.map(i => parseFloat(i.confianza_95_min) || 0);
+  // Bandas de confianza
+  const forecastDates = pronosticos
+    .map(i => new Date(i.fecha))
+    .filter(date => !isNaN(date.getTime()));
+
+  if (conf95Upper.length > 0) {
+  const conf80Upper = pronosticos
+    .map(i => parseFloat(i.confianza_80_max) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  const conf80Lower = pronosticos
+    .map(i => parseFloat(i.confianza_80_min) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  const conf95Upper = pronosticos
+    .map(i => parseFloat(i.confianza_95_max) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  const conf95Lower = pronosticos
+    .map(i => parseFloat(i.confianza_95_min) || 0)
+    .filter((val, i) => !isNaN(val) && i < forecastDates.length);
+  
+  if (conf95Upper.length > 0 && conf95Lower.length > 0) {
+    datasets.push({
+      label: 'Conf 95%',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf95Upper[i] })),
+      data: forecastDates.slice(0, conf95Upper.length).map((date, i) => ({ x: date, y: conf95Upper[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(255, 255, 0, 0.2)',
+      fill: { target: '-1', above: 'rgba(255, 255, 0, 0.2)' },
+      pointRadius: 0,
+      borderWidth: 0
+    });
+
+    datasets.push({
+      label: '_conf95_lower',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf95Lower[i] })),
+      data: forecastDates.slice(0, conf95Lower.length).map((date, i) => ({ x: date, y: conf95Lower[i] })),
+      borderColor: 'transparent',
+      pointRadius: 0,
+      borderWidth: 0
+    });
+  }
+
+  if (conf80Upper.length > 0) {
+  if (conf80Upper.length > 0 && conf80Lower.length > 0) {
+    datasets.push({
+      label: 'Conf 80%',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf80Upper[i] })),
+      data: forecastDates.slice(0, conf80Upper.length).map((date, i) => ({ x: date, y: conf80Upper[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+      fill: { target: '-1', above: 'rgba(0, 255, 0, 0.2)' },
+      pointRadius: 0,
+      borderWidth: 0
+    });
+
+    datasets.push({
+      label: '_conf80_lower',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf80Lower[i] })),
+      data: forecastDates.slice(0, conf80Lower.length).map((date, i) => ({ x: date, y: conf80Lower[i] })),
+      borderColor: 'transparent',
+      pointRadius: 0,
+      borderWidth: 0
+    });
+  }
+
+  // Límite permitido
+  if (data.limite_permitido && data.limite_permitido > 0) {
+    datasets.push({
+      label: 'Límite',
+      data: [
+        { x: allDates[0], y: data.limite_permitido },
+        { x: allDates[allDates.length - 1], y: data.limite_permitido }
+      ],
+      borderColor: 'blue',
+      borderWidth: 1,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      fill: false
+    });
+  }
+
+  forecastChart = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#7AC043',
+          borderWidth: 2,
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            title: items => {
+              if (items.length > 0) {
+                const date = new Date(items[0].parsed.x);
+                return date.toLocaleString('es-ES', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              }
+              return '';
+            },
+            label: context => {
+              const label = context.dataset.label || '';
+              const value = context.parsed.y;
+
+              if (label === 'Datos') {
+                const index = context.dataIndex;
+                const type = datasetTypes[index];
+                return `${type === 'historical' ? '📊 Histórico' : '🔮 Pronóstico'}: ${value.toFixed(2)}`;
+              }
+
+              if (label === 'Límite') return `⚠️ Límite: ${value.toFixed(2)}`;
+              if (label.includes('Conf') || label.startsWith('_')) return null;
+
+              return `${label}: ${value.toFixed(2)}`;
+            },
+            filter: item => {
+              const label = item.dataset.label || '';
+              return label === 'Datos' || label === 'Límite';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'day',
+            displayFormats: {
+              hour: 'dd/MM HH:mm',
+              day: 'dd/MM'
+            }
+          },
+          title: {
+            display: true,
+            text: '📅 Fecha',
+            color: '#64748b'
+          },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        y: {
+          beginAtZero: currentForecastVariable.includes('pm'),
+          title: {
+            display: true,
+            text: getVariableDisplayName(currentForecastVariable),
+            color: '#64748b'
+          },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      }
+    }
+  });
+
+  document.getElementById('forecastTitle').innerHTML = `🔮 ${getVariableDisplayName(currentForecastVariable)}`;
+  document.getElementById('forecastInfo').innerHTML = `
+    <span class="badge info">${data.modelo || 'SARIMA'}</span>
+    <span class="badge success">AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
+  `;
+
+  updateQuickStats();
+  document.getElementById('forecastChart').style.height = '350px';
+}
+
+function updateQuickStats() {
+  const data = forecastData[currentForecastVariable];
+  if (!data) return;
+
+  const statsContainer = document.getElementById('quickStats');
+  if (!statsContainer) return;
+
+  const valores = data.pronosticos.map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
+  const valores = (data.pronosticos || []).map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
+  const min = valores.length > 0 ? Math.min(...valores) : 0;
+  const max = valores.length > 0 ? Math.max(...valores) : 0;
+  const avg = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : 0;
+  const unidad = getUnit(currentForecastVariable);
+
+  statsContainer.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-title">📉 Mínimo</div>
+      <div class="stat-value">${min.toFixed(2)} ${unidad}</div>
+      <div class="stat-subtitle">Valor más bajo</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">📈 Máximo</div>
+      <div class="stat-value">${max.toFixed(2)} ${unidad}</div>
+      <div class="stat-subtitle">Valor más alto</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">📊 Promedio</div>
+      <div class="stat-value">${avg.toFixed(2)} ${unidad}</div>
+      <div class="stat-subtitle">Media</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">⏰ Período</div>
+      <div class="stat-value">${valores.length}</div>
+      <div class="stat-subtitle">Horas</div>
+    </div>
+  `;
+
+  statsContainer.style.display = 'grid';
+}
+
+function updateModelParams() {
+  const data = forecastData[currentForecastVariable];
+  if (!data) return;
+
+  const paramsGrid = document.getElementById('paramsGrid');
+  const modelInfo = document.getElementById('modelInfo');
+
+  if (!paramsGrid || !modelInfo) return;
+
+  modelInfo.innerHTML = `
+    ${getVariableDisplayName(currentForecastVariable)} | 
+    ${data.modelo || 'SARIMA'} | 
+    AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}
+  `;
+
+  paramsGrid.innerHTML = `
+    <div class="param-group">
+      <div class="param-title">📊 General</div>
+      <div class="param-item">
+        <span class="param-label">Variable:</span>
+        <span class="param-value">${getVariableDisplayName(currentForecastVariable)}</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">Modelo:</span>
+        <span class="param-value">${data.modelo || 'SARIMA'}</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">AIC:</span>
+        <span class="param-value">${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
+      </div>
+    </div>
+    
+    <div class="param-group">
+      <div class="param-title">📈 Datos</div>
+      <div class="param-item">
+        <span class="param-label">Históricos:</span>
+        <span class="param-value">${data.historico.length}</span>
+        <span class="param-value">${data.historico ? data.historico.length : 0}</span>
+      </div>
+      <div class="param-item">
+        <span class="param-label">Pronósticos:</span>
+        <span class="param-value">${data.pronosticos.length} horas</span>
+        <span class="param-value">${data.pronosticos ? data.pronosticos.length : 0} horas</span>
+      </div>
+      ${data.limite_permitido ? `
+      <div class="param-item">
+        <span class="param-label">Límite:</span>
+        <span class="param-value">${data.limite_permitido} ${getUnit(currentForecastVariable)}</span>
+      </div>
+      ` : ''}
+    </div>
+    
+    <div class="param-group" style="grid-column: 1 / -1;">
+      <div class="param-title">🔬 Ecuación</div>
+      <div class="equation-box">${data.modelo || 'Modelo SARIMA'}</div>
+      <div class="equation-box">${data.ecuacion || data.modelo || 'Modelo SARIMA'}</div>
+    </div>
+  `;
+}
+
+function getVariableDisplayName(variable) {
+  const names = {
+    'temperature': 'Temperatura (°C)',
+    'humidity': 'Humedad (%)',
+    'pm2.5': 'PM2.5 (µg/m³)',
+    'pm10': 'PM10 (µg/m³)'
+  };
+  return names[variable] || variable;
+}
+
+/* ============================
+   NUEVA: FUNCIÓN PARA DEBUG
+   ============================ */
+function debugForecastData() {
+  console.group('🔍 DEBUG - Datos de Pronóstico');
+  Object.keys(forecastData).forEach(key => {
+    const data = forecastData[key];
+    console.log(`📊 ${key}:`, {
+      historicos: data?.historico?.length || 0,
+      pronosticos: data?.pronosticos?.length || 0,
+      error: data?.error || 'OK',
+      modelo: data?.modelo || 'N/A'
+    });
+  });
+  console.groupEnd();
+}
+/* ============================
    EVENT LISTENERS
    ============================ */
-document.getElementById('refreshBtn').addEventListener('click', () => {
-    loadData();
-    showNotification('Actualizando datos...', 'info');
+document.querySelectorAll('.variable-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.variable-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentVariable = btn.dataset.variable;
+    renderMainChart();
+  });
+});
+
+document.querySelectorAll('.range-btn[data-range]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (btn.dataset.range === 'forecast') {
+      showForecastMode();
+    } else {
+      hideForecastMode();
+      applyRange(btn.dataset.range);
+    }
+  });
+});
+
+document.getElementById('applyRange').addEventListener('click', () => {
+  const from = document.getElementById('fromInput').value;
+  const to = document.getElementById('toInput').value;
+  if (!from || !to) {
+    showNotification('Seleccione ambas fechas', 'warning');
+    return;
+  }
+  applyRange('custom', new Date(from), new Date(to));
+  showNotification('Rango aplicado', 'success');
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  const tbody = document.querySelector('#dataTableBody');
+  Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+document.getElementById('filterFrom').addEventListener('change', applyDateFilter);
+document.getElementById('filterTo').addEventListener('change', applyDateFilter);
+document.getElementById('clearFilters').addEventListener('click', () => {
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value = '';
+  renderMainChart();
+  showNotification('Filtros eliminados', 'success');
+});
+
+function applyDateFilter() {
+  const f = document.getElementById('filterFrom').value;
+  const t = document.getElementById('filterTo').value;
+  if (!f && !t) return renderMainChart();
+
+  const from = f ? new Date(f) : new Date(0);
+  const to = t ? new Date(t + 'T23:59:59') : new Date();
+
+  filtered = rawData.filter(r => {
+    const d = parseDate(r.fecha);
+    return d >= from && d <= to;
+  });
+
+  renderMainChart();
+  showNotification('Filtro aplicado', 'success');
+}
+
+function exportToCSV(filename) {
+  const rows = document.querySelectorAll('#dataTable tr');
+  let csv = [];
+  rows.forEach(r => {
+    const cols = Array.from(r.querySelectorAll('th,td')).map(c => '"' + c.innerText.replace(/"/g, '""') + '"');
+    csv.push(cols.join(','));
+  });
+  const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotification('CSV descargado', 'success');
+}
+
+function exportToXLSX(filename) {
+  const table = document.getElementById('dataTable');
+  const wb = XLSX.utils.table_to_book(table, { sheet: "Lecturas" });
+  XLSX.writeFile(wb, filename);
+  showNotification('Excel descargado', 'success');
+}
+
+document.getElementById('exportCSV').addEventListener('click', () => exportToCSV('datos.csv'));
+document.getElementById('csvBtn').addEventListener('click', () => exportToCSV('datos.csv'));
+
+document.getElementById('pdfBtn').addEventListener('click', () => {
+  showNotification('Generando PDF...', 'info');
+  html2canvas(document.querySelector('#contentPDF'), { scale: 2 }).then(canvas => {
+    const img = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = 210;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save('Dashboard.pdf');
+    showNotification('PDF generado', 'success');
+  });
 });
 
 document.getElementById('modoOscuroBtn').addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    const isDark = document.body.classList.contains('dark');
-    document.getElementById('modoOscuroBtn').innerHTML = isDark ? 
-        '<span>☀️</span> Modo claro' : 
-        '<span>🌙</span> Modo oscuro';
-    
-    localStorage.setItem('darkMode', isDark);
-    
-    // Actualizar gráficos existentes
-    Object.values(charts).forEach(chart => {
-        if (chart) {
-            chart.options.scales.x.grid.color = isDark ? chartColors.dark.grid : chartColors.light.grid;
-            chart.options.scales.x.ticks.color = isDark ? chartColors.dark.text : chartColors.light.text;
-            chart.options.scales.y.grid.color = isDark ? chartColors.dark.grid : chartColors.light.grid;
-            chart.options.scales.y.ticks.color = isDark ? chartColors.dark.text : chartColors.light.text;
-            chart.options.plugins.tooltip.backgroundColor = isDark ? '#2d2d2d' : 'white';
-            chart.options.plugins.tooltip.titleColor = isDark ? '#ffffff' : '#1a1a1a';
-            chart.options.plugins.tooltip.bodyColor = isDark ? '#b0b0b0' : '#666666';
-            chart.options.plugins.tooltip.borderColor = isDark ? '#404040' : '#e0e0e0';
-            chart.update();
-        }
-    });
-    
-    // Actualizar gráfico de pronóstico
-    if (forecastChart) {
-        forecastChart.options.scales.x.grid.color = isDark ? chartColors.dark.grid : chartColors.light.grid;
-        forecastChart.options.scales.x.ticks.color = isDark ? chartColors.dark.text : chartColors.light.text;
-        forecastChart.options.scales.x.title.color = isDark ? chartColors.dark.text : chartColors.light.text;
-        forecastChart.options.scales.y.grid.color = isDark ? chartColors.dark.grid : chartColors.light.grid;
-        forecastChart.options.scales.y.ticks.color = isDark ? chartColors.dark.text : chartColors.light.text;
-        forecastChart.options.scales.y.title.color = isDark ? chartColors.dark.text : chartColors.light.text;
-        forecastChart.options.plugins.legend.labels.color = isDark ? chartColors.dark.text : chartColors.light.text;
-        forecastChart.options.plugins.tooltip.backgroundColor = isDark ? '#2d2d2d' : 'white';
-        forecastChart.options.plugins.tooltip.titleColor = isDark ? '#ffffff' : '#1a1a1a';
-        forecastChart.options.plugins.tooltip.bodyColor = isDark ? '#b0b0b0' : '#666666';
-        forecastChart.options.plugins.tooltip.borderColor = isDark ? '#404040' : '#e0e0e0';
-        forecastChart.update();
-    }
-    
-    showNotification(`Modo ${isDark ? 'oscuro' : 'claro'} activado`, 'success');
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  document.getElementById('modoOscuroBtn').innerHTML = isDark ? '☀️ Modo claro' : '🌙 Modo oscuro';
+  localStorage.setItem('darkMode', isDark);
+  showNotification(`Modo ${isDark ? 'oscuro' : 'claro'} activado`, 'success');
 });
 
 if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark');
-    document.getElementById('modoOscuroBtn').innerHTML = '<span>☀️</span> Modo claro';
+  document.body.classList.add('dark');
+  document.getElementById('modoOscuroBtn').innerHTML = '☀️ Modo claro';
 }
 
 document.querySelectorAll('.forecast-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        
-        currentForecastVariable = normalizeVariableName(this.dataset.variable);
-        
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+
+    currentForecastVariable = this.dataset.variable;
+
+    if (forecastData[currentForecastVariable]) {
+      updateForecastChart();
+      updateModelParams();
+      updateQuickStats();
+    } else {
+      loadForecastData(currentForecastVariable).then(() => {
         if (forecastData[currentForecastVariable]) {
-            updateForecastChart();
-            updateModelParams();
-            updateQuickStats();
-        } else {
-            loadForecastData(currentForecastVariable).then(() => {
-                if (forecastData[currentForecastVariable]) {
-                    updateForecastChart();
-                    updateModelParams();
-                    updateQuickStats();
-                }
-            });
+          updateForecastChart();
+          updateModelParams();
+          updateQuickStats();
         }
-    });
+      });
+    }
+  });
 });
 
 /* ============================
    INICIALIZACIÓN
    ============================ */
-// Inicializar gráfico de pronóstico
-initializeForecastChart();
-
-// Cargar datos iniciales
 loadData();
-setInterval(loadData, 30000); // Actualizar cada 30 segundos
-
-// Cargar pronósticos iniciales
-loadAllForecasts();
+setInterval(loadData, 30000);
 
 setTimeout(() => {
-    showNotification('Dashboard cargado 🎉', 'success');
+  showNotification('Dashboard cargado 🎉', 'success');
 }, 1000);
 
 console.log('%c🚀 Dashboard Pro v2.0', 'color: #7AC043; font-size: 20px; font-weight: bold;');
-console.log('%c✅ Variables PM normalizadas: pm2.5 y pm10', 'color: #4CAF50; font-size: 14px;');
 </script>
 </body>
 </html>
