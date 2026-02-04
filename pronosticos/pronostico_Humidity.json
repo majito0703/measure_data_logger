@@ -1,0 +1,603 @@
+{
+  "metadata": {
+    "variable": "Humidity",
+    "modelo": "SARIMA(1, 0, 0)(1, 1, 1, 12)",
+    "fecha_entrenamiento": "2026-02-04 19:16:28",
+    "fecha_ultimo_dato": "2026-02-02 23:00:00",
+    "valor_ultimo_dato": 63.97135802469137,
+    "horizonte_pronostico": 72,
+    "unidades": "%",
+    "ecuacion": "Δ^d Δ_s^D y_t = 0.0016·y_t-1 + -1.0000·y_t-12 + -0.0006·ε_t-12 + ε_t",
+    "metricas": {
+      "aic": -2520.4584687010997,
+      "bic": -2508.38934935384,
+      "hqic": -2515.555365327777,
+      "log_likelihood": 1264.2292343505499,
+      "num_observaciones": 176
+    }
+  },
+  "parametros": {
+    "ar.L1": 0.001634437477060884,
+    "ar.S.L12": -0.9999977621794913,
+    "ma.S.L12": -0.0006251409417600239,
+    "sigma2": 2.81061062116097e-09
+  },
+  "pronostico": [
+    {
+      "fecha": "2026-02-03 00:00:00",
+      "pronostico": 63.08709883240684,
+      "limite_inferior_80": 63.087032312627585,
+      "limite_superior_80": 63.08716535218609,
+      "limite_inferior_95": 63.08699709918353,
+      "limite_superior_95": 63.08720056563015
+    },
+    {
+      "fecha": "2026-02-03 01:00:00",
+      "pronostico": 63.77528005675938,
+      "limite_inferior_80": 63.775213536894526,
+      "limite_superior_80": 63.77534657662423,
+      "limite_inferior_95": 63.77517832340516,
+      "limite_superior_95": 63.7753817901136
+    },
+    {
+      "fecha": "2026-02-03 02:00:00",
+      "pronostico": 64.71485826972335,
+      "limite_inferior_80": 64.71479174985849,
+      "limite_superior_80": 64.71492478958821,
+      "limite_inferior_95": 64.71475653636914,
+      "limite_superior_95": 64.71496000307756
+    },
+    {
+      "fecha": "2026-02-03 03:00:00",
+      "pronostico": 65.09045894129058,
+      "limite_inferior_80": 65.09039242142572,
+      "limite_superior_80": 65.09052546115544,
+      "limite_inferior_95": 65.09035720793636,
+      "limite_superior_95": 65.09056067464479
+    },
+    {
+      "fecha": "2026-02-03 04:00:00",
+      "pronostico": 65.2491932782018,
+      "limite_inferior_80": 65.24912675833694,
+      "limite_superior_80": 65.24925979806666,
+      "limite_inferior_95": 65.24909154484759,
+      "limite_superior_95": 65.24929501155601
+    },
+    {
+      "fecha": "2026-02-03 05:00:00",
+      "pronostico": 65.52618253050811,
+      "limite_inferior_80": 65.52611601064325,
+      "limite_superior_80": 65.52624905037297,
+      "limite_inferior_95": 65.5260807971539,
+      "limite_superior_95": 65.52628426386232
+    },
+    {
+      "fecha": "2026-02-03 06:00:00",
+      "pronostico": 66.05237352233378,
+      "limite_inferior_80": 66.05230700246892,
+      "limite_superior_80": 66.05244004219864,
+      "limite_inferior_95": 66.05227178897957,
+      "limite_superior_95": 66.052475255688
+    },
+    {
+      "fecha": "2026-02-03 07:00:00",
+      "pronostico": 65.72142523605373,
+      "limite_inferior_80": 65.72135871618887,
+      "limite_superior_80": 65.72149175591859,
+      "limite_inferior_95": 65.72132350269952,
+      "limite_superior_95": 65.72152696940795
+    },
+    {
+      "fecha": "2026-02-03 08:00:00",
+      "pronostico": 63.41904849211554,
+      "limite_inferior_80": 63.41898197225069,
+      "limite_superior_80": 63.419115011980395,
+      "limite_inferior_95": 63.41894675876132,
+      "limite_superior_95": 63.419150225469764
+    },
+    {
+      "fecha": "2026-02-03 09:00:00",
+      "pronostico": 61.105430816016295,
+      "limite_inferior_80": 61.10536429615144,
+      "limite_superior_80": 61.10549733588115,
+      "limite_inferior_95": 61.10532908266208,
+      "limite_superior_95": 61.10553254937051
+    },
+    {
+      "fecha": "2026-02-03 10:00:00",
+      "pronostico": 59.67335771958326,
+      "limite_inferior_80": 59.67328977778974,
+      "limite_superior_80": 59.673425661376776,
+      "limite_inferior_95": 59.67325381157681,
+      "limite_superior_95": 59.67346162758971
+    },
+    {
+      "fecha": "2026-02-03 11:00:00",
+      "pronostico": 58.96571886640524,
+      "limite_inferior_80": 58.965650224684765,
+      "limite_superior_80": 58.965787508125715,
+      "limite_inferior_95": 58.96561388795288,
+      "limite_superior_95": 58.9658238448576
+    },
+    {
+      "fecha": "2026-02-03 12:00:00",
+      "pronostico": 57.58810754386632,
+      "limite_inferior_80": 57.5880389021338,
+      "limite_superior_80": 57.58817618559884,
+      "limite_inferior_95": 57.58800256539555,
+      "limite_superior_95": 57.588212522337095
+    },
+    {
+      "fecha": "2026-02-03 13:00:00",
+      "pronostico": 55.922239795956074,
+      "limite_inferior_80": 55.922172561361165,
+      "limite_superior_80": 55.92230703055098,
+      "limite_inferior_95": 55.922136969516565,
+      "limite_superior_95": 55.92234262239558
+    },
+    {
+      "fecha": "2026-02-03 14:00:00",
+      "pronostico": 54.5722449196212,
+      "limite_inferior_80": 54.57217768502629,
+      "limite_superior_80": 54.57231215421611,
+      "limite_inferior_95": 54.57214209318169,
+      "limite_superior_95": 54.57234774606071
+    },
+    {
+      "fecha": "2026-02-03 15:00:00",
+      "pronostico": 57.377437895315936,
+      "limite_inferior_80": 57.37737066072103,
+      "limite_superior_80": 57.377505129910844,
+      "limite_inferior_95": 57.37733506887643,
+      "limite_superior_95": 57.377540721755445
+    },
+    {
+      "fecha": "2026-02-03 16:00:00",
+      "pronostico": 59.40445752394325,
+      "limite_inferior_80": 59.40439028934834,
+      "limite_superior_80": 59.40452475853816,
+      "limite_inferior_95": 59.40435469750374,
+      "limite_superior_95": 59.40456035038276
+    },
+    {
+      "fecha": "2026-02-03 17:00:00",
+      "pronostico": 61.97324869158674,
+      "limite_inferior_80": 61.97318145699183,
+      "limite_superior_80": 61.97331592618165,
+      "limite_inferior_95": 61.97314586514723,
+      "limite_superior_95": 61.97335151802625
+    },
+    {
+      "fecha": "2026-02-03 18:00:00",
+      "pronostico": 62.7300074348756,
+      "limite_inferior_80": 62.729940200280694,
+      "limite_superior_80": 62.73007466947051,
+      "limite_inferior_95": 62.729904608436094,
+      "limite_superior_95": 62.73011026131511
+    },
+    {
+      "fecha": "2026-02-03 19:00:00",
+      "pronostico": 64.23000333754199,
+      "limite_inferior_80": 64.22993610294708,
+      "limite_superior_80": 64.2300705721369,
+      "limite_inferior_95": 64.22990051110247,
+      "limite_superior_95": 64.2301061639815
+    },
+    {
+      "fecha": "2026-02-03 20:00:00",
+      "pronostico": 63.80944357080838,
+      "limite_inferior_80": 63.80937633621347,
+      "limite_superior_80": 63.809510805403285,
+      "limite_inferior_95": 63.80934074436887,
+      "limite_superior_95": 63.809546397247885
+    },
+    {
+      "fecha": "2026-02-03 21:00:00",
+      "pronostico": 64.47499245950897,
+      "limite_inferior_80": 64.47492522491406,
+      "limite_superior_80": 64.47505969410388,
+      "limite_inferior_95": 64.47488963306947,
+      "limite_superior_95": 64.47509528594847
+    },
+    {
+      "fecha": "2026-02-03 22:00:00",
+      "pronostico": 64.66301793454015,
+      "limite_inferior_80": 64.66294999273345,
+      "limite_superior_80": 64.66308587634686,
+      "limite_inferior_95": 64.66291402651353,
+      "limite_superior_95": 64.66312184256677
+    },
+    {
+      "fecha": "2026-02-03 23:00:00",
+      "pronostico": 63.9713468229694,
+      "limite_inferior_80": 63.971278881162704,
+      "limite_superior_80": 63.9714147647761,
+      "limite_inferior_95": 63.97124291494279,
+      "limite_superior_95": 63.97145073099601
+    },
+    {
+      "fecha": "2026-02-04 00:00:00",
+      "pronostico": 63.087086526651355,
+      "limite_inferior_80": 63.0869914427394,
+      "limite_superior_80": 63.08718161056331,
+      "limite_inferior_95": 63.08694110835688,
+      "limite_superior_95": 63.08723194494583
+    },
+    {
+      "fecha": "2026-02-04 01:00:00",
+      "pronostico": 63.77526248306482,
+      "limite_inferior_80": 63.775167399092986,
+      "limite_superior_80": 63.77535756703666,
+      "limite_inferior_95": 63.77511706467877,
+      "limite_superior_95": 63.775407901450876
+    },
+    {
+      "fecha": "2026-02-04 02:00:00",
+      "pronostico": 64.7148355723752,
+      "limite_inferior_80": 64.71474048840335,
+      "limite_superior_80": 64.71493065634704,
+      "limite_inferior_95": 64.71469015398914,
+      "limite_superior_95": 64.71498099076125
+    },
+    {
+      "fecha": "2026-02-04 03:00:00",
+      "pronostico": 65.09044168093389,
+      "limite_inferior_80": 65.09034659696205,
+      "limite_superior_80": 65.09053676490574,
+      "limite_inferior_95": 65.09029626254784,
+      "limite_superior_95": 65.09058709931995
+    },
+    {
+      "fecha": "2026-02-04 04:00:00",
+      "pronostico": 65.24918019873226,
+      "limite_inferior_80": 65.24908511476042,
+      "limite_superior_80": 65.2492752827041,
+      "limite_inferior_95": 65.24903478034621,
+      "limite_superior_95": 65.24932561711832
+    },
+    {
+      "fecha": "2026-02-04 05:00:00",
+      "pronostico": 65.5261745796799,
+      "limite_inferior_80": 65.52607949570806,
+      "limite_superior_80": 65.52626966365175,
+      "limite_inferior_95": 65.52602916129385,
+      "limite_superior_95": 65.52631999806596
+    },
+    {
+      "fecha": "2026-02-04 06:00:00",
+      "pronostico": 66.05236608747481,
+      "limite_inferior_80": 66.05227100350297,
+      "limite_superior_80": 66.05246117144665,
+      "limite_inferior_95": 66.05222066908875,
+      "limite_superior_95": 66.05251150586086
+    },
+    {
+      "fecha": "2026-02-04 07:00:00",
+      "pronostico": 65.72142189851922,
+      "limite_inferior_80": 65.72132681454738,
+      "limite_superior_80": 65.72151698249107,
+      "limite_inferior_95": 65.72127648013317,
+      "limite_superior_95": 65.72156731690528
+    },
+    {
+      "fecha": "2026-02-04 08:00:00",
+      "pronostico": 63.41904936574966,
+      "limite_inferior_80": 63.41895428177782,
+      "limite_superior_80": 63.41914444972149,
+      "limite_inferior_95": 63.4189039473636,
+      "limite_superior_95": 63.41919478413571
+    },
+    {
+      "fecha": "2026-02-04 09:00:00",
+      "pronostico": 61.105438356490446,
+      "limite_inferior_80": 61.10534327251861,
+      "limite_superior_80": 61.10553344046228,
+      "limite_inferior_95": 61.10529293810439,
+      "limite_superior_95": 61.1055837748765
+    },
+    {
+      "fecha": "2026-02-04 10:00:00",
+      "pronostico": 59.67336888554721,
+      "limite_inferior_80": 59.67327280143962,
+      "limite_superior_80": 59.6734649696548,
+      "limite_inferior_95": 59.67322193758552,
+      "limite_superior_95": 59.67351583350891
+    },
+    {
+      "fecha": "2026-02-04 11:00:00",
+      "pronostico": 58.96573006810214,
+      "limite_inferior_80": 58.96563348780504,
+      "limite_superior_80": 58.965826648399236,
+      "limite_inferior_95": 58.965582361284085,
+      "limite_superior_95": 58.965877774920195
+    },
+    {
+      "fecha": "2026-02-04 12:00:00",
+      "pronostico": 57.588119849594264,
+      "limite_inferior_80": 57.588023269288676,
+      "limite_superior_80": 57.58821642989985,
+      "limite_inferior_95": 57.58797214276322,
+      "limite_superior_95": 57.58826755642531
+    },
+    {
+      "fecha": "2026-02-04 13:00:00",
+      "pronostico": 55.922257369611295,
+      "limite_inferior_80": 55.922161784258904,
+      "limite_superior_80": 55.922352954963685,
+      "limite_inferior_95": 55.92211118442985,
+      "limite_superior_95": 55.92240355479274
+    },
+    {
+      "fecha": "2026-02-04 14:00:00",
+      "pronostico": 54.57226761691858,
+      "limite_inferior_80": 54.57217203156619,
+      "limite_superior_80": 54.57236320227097,
+      "limite_inferior_95": 54.57212143173714,
+      "limite_superior_95": 54.57241380210002
+    },
+    {
+      "fecha": "2026-02-04 15:00:00",
+      "pronostico": 57.37745515563398,
+      "limite_inferior_80": 57.37735957028159,
+      "limite_superior_80": 57.37755074098637,
+      "limite_inferior_95": 57.37730897045254,
+      "limite_superior_95": 57.377601340815424
+    },
+    {
+      "fecha": "2026-02-04 16:00:00",
+      "pronostico": 59.40447060338352,
+      "limite_inferior_80": 59.40437501803113,
+      "limite_superior_80": 59.40456618873591,
+      "limite_inferior_95": 59.40432441820208,
+      "limite_superior_95": 59.404616788564965
+    },
+    {
+      "fecha": "2026-02-04 17:00:00",
+      "pronostico": 61.97325664239716,
+      "limite_inferior_80": 61.97316105704477,
+      "limite_superior_80": 61.97335222774955,
+      "limite_inferior_95": 61.97311045721572,
+      "limite_superior_95": 61.9734028275786
+    },
+    {
+      "fecha": "2026-02-04 18:00:00",
+      "pronostico": 62.73001486971793,
+      "limite_inferior_80": 62.729919284365536,
+      "limite_superior_80": 62.73011045507032,
+      "limite_inferior_95": 62.729868684536484,
+      "limite_superior_95": 62.73016105489937
+    },
+    {
+      "fecha": "2026-02-04 19:00:00",
+      "pronostico": 64.23000667506903,
+      "limite_inferior_80": 64.22991108971664,
+      "limite_superior_80": 64.23010226042143,
+      "limite_inferior_95": 64.22986048988759,
+      "limite_superior_95": 64.23015286025048
+    },
+    {
+      "fecha": "2026-02-04 20:00:00",
+      "pronostico": 63.809442697176216,
+      "limite_inferior_80": 63.809347111823826,
+      "limite_superior_80": 63.80953828252861,
+      "limite_inferior_95": 63.80929651199477,
+      "limite_superior_95": 63.80958888235766
+    },
+    {
+      "fecha": "2026-02-04 21:00:00",
+      "pronostico": 64.47498491905169,
+      "limite_inferior_80": 64.47488933369931,
+      "limite_superior_80": 64.47508050440408,
+      "limite_inferior_95": 64.47483873387026,
+      "limite_superior_95": 64.47513110423313
+    },
+    {
+      "fecha": "2026-02-04 22:00:00",
+      "pronostico": 64.66300676860118,
+      "limite_inferior_80": 64.66291068448433,
+      "limite_superior_80": 64.66310285271803,
+      "limite_inferior_95": 64.66285982062533,
+      "limite_superior_95": 64.66315371657703
+    },
+    {
+      "fecha": "2026-02-04 23:00:00",
+      "pronostico": 63.97133562129757,
+      "limite_inferior_80": 63.97123953718073,
+      "limite_superior_80": 63.97143170541441,
+      "limite_inferior_95": 63.97118867332173,
+      "limite_superior_95": 63.97148256927341
+    },
+    {
+      "fecha": "2026-02-05 00:00:00",
+      "pronostico": 63.087074220950946,
+      "limite_inferior_80": 63.08695735778777,
+      "limite_superior_80": 63.087191084114124,
+      "limite_inferior_95": 63.086895494166086,
+      "limite_superior_95": 63.087252947735806
+    },
+    {
+      "fecha": "2026-02-05 01:00:00",
+      "pronostico": 63.77524490944892,
+      "limite_inferior_80": 63.77512804623702,
+      "limite_superior_80": 63.77536177266082,
+      "limite_inferior_95": 63.77506618258954,
+      "limite_superior_95": 63.775423636308304
+    },
+    {
+      "fecha": "2026-02-05 02:00:00",
+      "pronostico": 64.71481287512862,
+      "limite_inferior_80": 64.71469601191671,
+      "limite_superior_80": 64.71492973834052,
+      "limite_inferior_95": 64.71463414826924,
+      "limite_superior_95": 64.71499160198799
+    },
+    {
+      "fecha": "2026-02-05 03:00:00",
+      "pronostico": 65.09042442065446,
+      "limite_inferior_80": 65.09030755744256,
+      "limite_superior_80": 65.09054128386636,
+      "limite_inferior_95": 65.09024569379508,
+      "limite_superior_95": 65.09060314751383
+    },
+    {
+      "fecha": "2026-02-05 04:00:00",
+      "pronostico": 65.24916711932127,
+      "limite_inferior_80": 65.24905025610937,
+      "limite_superior_80": 65.24928398253317,
+      "limite_inferior_95": 65.2489883924619,
+      "limite_superior_95": 65.24934584618065
+    },
+    {
+      "fecha": "2026-02-05 05:00:00",
+      "pronostico": 65.52616662888728,
+      "limite_inferior_80": 65.52604976567538,
+      "limite_superior_80": 65.52628349209918,
+      "limite_inferior_95": 65.52598790202791,
+      "limite_superior_95": 65.52634535574666
+    },
+    {
+      "fecha": "2026-02-05 06:00:00",
+      "pronostico": 66.05235865264912,
+      "limite_inferior_80": 66.05224178943722,
+      "limite_superior_80": 66.05247551586102,
+      "limite_inferior_95": 66.05217992578974,
+      "limite_superior_95": 66.0525373795085
+    },
+    {
+      "fecha": "2026-02-05 07:00:00",
+      "pronostico": 65.72141856099965,
+      "limite_inferior_80": 65.72130169778775,
+      "limite_superior_80": 65.72153542421155,
+      "limite_inferior_95": 65.72123983414028,
+      "limite_superior_95": 65.72159728785903
+    },
+    {
+      "fecha": "2026-02-05 08:00:00",
+      "pronostico": 63.419050239379864,
+      "limite_inferior_80": 63.41893337616796,
+      "limite_superior_80": 63.419167102591764,
+      "limite_inferior_95": 63.41887151252048,
+      "limite_superior_95": 63.419228966239245
+    },
+    {
+      "fecha": "2026-02-05 09:00:00",
+      "pronostico": 61.10544589693085,
+      "limite_inferior_80": 61.10532903371895,
+      "limite_superior_80": 61.10556276014275,
+      "limite_inferior_95": 61.10526717007148,
+      "limite_superior_95": 61.10562462379023
+    },
+    {
+      "fecha": "2026-02-05 10:00:00",
+      "pronostico": 59.6733800514612,
+      "limite_inferior_80": 59.67326237307121,
+      "limite_superior_80": 59.67349772985119,
+      "limite_inferior_95": 59.67320007789452,
+      "limite_superior_95": 59.67356002502788
+    },
+    {
+      "fecha": "2026-02-05 11:00:00",
+      "pronostico": 58.96574126974891,
+      "limite_inferior_80": 58.965623185875764,
+      "limite_superior_80": 58.96585935362206,
+      "limite_inferior_95": 58.96556067604925,
+      "limite_superior_95": 58.96592186344857
+    },
+    {
+      "fecha": "2026-02-05 12:00:00",
+      "pronostico": 57.58813215526713,
+      "limite_inferior_80": 57.58801407138709,
+      "limite_superior_80": 57.58825023914717,
+      "limite_inferior_95": 57.587951561556935,
+      "limite_superior_95": 57.58831274897733
+    },
+    {
+      "fecha": "2026-02-05 13:00:00",
+      "pronostico": 55.922274943187865,
+      "limite_inferior_80": 55.92215767167493,
+      "limite_superior_80": 55.9223922147008,
+      "limite_inferior_95": 55.922095591885935,
+      "limite_superior_95": 55.922454294489796
+    },
+    {
+      "fecha": "2026-02-05 14:00:00",
+      "pronostico": 54.57229031411437,
+      "limite_inferior_80": 54.572173042601435,
+      "limite_superior_80": 54.5724075856273,
+      "limite_inferior_95": 54.57211096281244,
+      "limite_superior_95": 54.5724696654163
+    },
+    {
+      "fecha": "2026-02-05 15:00:00",
+      "pronostico": 57.377472415874784,
+      "limite_inferior_80": 57.37735514436185,
+      "limite_superior_80": 57.37758968738772,
+      "limite_inferior_95": 57.377293064572854,
+      "limite_superior_95": 57.377651767176715
+    },
+    {
+      "fecha": "2026-02-05 16:00:00",
+      "pronostico": 59.40448368276526,
+      "limite_inferior_80": 59.404366411252326,
+      "limite_superior_80": 59.404600954278195,
+      "limite_inferior_95": 59.40430433146333,
+      "limite_superior_95": 59.40466303406719
+    },
+    {
+      "fecha": "2026-02-05 17:00:00",
+      "pronostico": 61.973264593172,
+      "limite_inferior_80": 61.97314732165906,
+      "limite_superior_80": 61.97338186468493,
+      "limite_inferior_95": 61.973085241870066,
+      "limite_superior_95": 61.97344394447393
+    },
+    {
+      "fecha": "2026-02-05 18:00:00",
+      "pronostico": 62.73002230452698,
+      "limite_inferior_80": 62.72990503301405,
+      "limite_superior_80": 62.73013957603992,
+      "limite_inferior_95": 62.72984295322505,
+      "limite_superior_95": 62.730201655828914
+    },
+    {
+      "fecha": "2026-02-05 19:00:00",
+      "pronostico": 64.23001001258113,
+      "limite_inferior_80": 64.2298927410682,
+      "limite_superior_80": 64.23012728409407,
+      "limite_inferior_95": 64.22983066127921,
+      "limite_superior_95": 64.23018936388306
+    },
+    {
+      "fecha": "2026-02-05 20:00:00",
+      "pronostico": 63.80944182354797,
+      "limite_inferior_80": 63.80932455203504,
+      "limite_superior_80": 63.809559095060905,
+      "limite_inferior_95": 63.80926247224604,
+      "limite_superior_95": 63.8096211748499
+    },
+    {
+      "fecha": "2026-02-05 21:00:00",
+      "pronostico": 64.47497737862817,
+      "limite_inferior_80": 64.47486010711523,
+      "limite_superior_80": 64.4750946501411,
+      "limite_inferior_95": 64.47479802732624,
+      "limite_superior_95": 64.47515672993009
+    },
+    {
+      "fecha": "2026-02-05 22:00:00",
+      "pronostico": 64.66299560271219,
+      "limite_inferior_80": 64.6628779243147,
+      "limite_superior_80": 64.66311328110967,
+      "limite_inferior_95": 64.66281562913403,
+      "limite_superior_95": 64.66317557629034
+    },
+    {
+      "fecha": "2026-02-05 23:00:00",
+      "pronostico": 63.971324419675874,
+      "limite_inferior_80": 63.97120674127838,
+      "limite_superior_80": 63.97144209807337,
+      "limite_inferior_95": 63.97114444609772,
+      "limite_superior_95": 63.97150439325403
+    }
+  ]
+}

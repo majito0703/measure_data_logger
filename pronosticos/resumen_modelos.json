@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "fecha_generacion": "2026-02-04 19:17:00",
+    "fecha_ultimo_dato": "2026-02-02 23:00:00",
+    "num_variables": 4,
+    "total_observaciones": 176,
+    "rango_datos": {
+      "inicio": "2026-01-26 16:00:00",
+      "fin": "2026-02-02 23:00:00"
+    }
+  },
+  "modelos": {
+    "Temperature": {
+      "orden": "(1, 0, 0)",
+      "orden_estacional": "(1, 1, 1, 12)",
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.0109·y_t-1 + -1.0000·y_t-12 + 0.0001·ε_t-12 + ε_t",
+      "metricas": {
+        "aic": -2204.1646357204554,
+        "bic": -2192.0955163731956,
+        "hqic": -2199.2615323471327,
+        "log_likelihood": 1106.0823178602277,
+        "num_observaciones": 176
+      },
+      "ultimo_valor": 31.07601851851852,
+      "unidades": "°C"
+    },
+    "Humidity": {
+      "orden": "(1, 0, 0)",
+      "orden_estacional": "(1, 1, 1, 12)",
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.0016·y_t-1 + -1.0000·y_t-12 + -0.0006·ε_t-12 + ε_t",
+      "metricas": {
+        "aic": -2520.4584687010997,
+        "bic": -2508.38934935384,
+        "hqic": -2515.555365327777,
+        "log_likelihood": 1264.2292343505499,
+        "num_observaciones": 176
+      },
+      "ultimo_valor": 63.97135802469137,
+      "unidades": "%"
+    },
+    "PM 2.5": {
+      "orden": "(1, 0, 1)",
+      "orden_estacional": "(1, 1, 0, 12)",
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.3003·y_t-1 + -0.4780·ε_t-1 + -1.0000·y_t-12 + ε_t",
+      "metricas": {
+        "aic": -2068.4986213280395,
+        "bic": -2056.4295019807796,
+        "hqic": -2063.595517954717,
+        "log_likelihood": 1038.2493106640197,
+        "num_observaciones": 176
+      },
+      "ultimo_valor": 10.467283950617285,
+      "unidades": "µg/m³"
+    },
+    "PM 10": {
+      "orden": "(0, 0, 0)",
+      "orden_estacional": "(1, 1, 1, 12)",
+      "ecuacion": "Δ^d Δ_s^D y_t =  + -1.0000·y_t-12 + -0.0000·ε_t-12 + ε_t",
+      "metricas": {
+        "aic": -3197.349891033712,
+        "bic": -3188.2980515232675,
+        "hqic": -3193.67256350372,
+        "log_likelihood": 1601.674945516856,
+        "num_observaciones": 176
+      },
+      "ultimo_valor": 11.319135802469136,
+      "unidades": "µg/m³"
+    }
+  }
+}
