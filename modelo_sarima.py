@@ -411,14 +411,27 @@ plt.show()
 fig = plot_time_series(df2, variable="PM 2.5", units="µg/m³", time_unit="Day")
 plt.show()
 
+# Copiar el DataFrame
 df3 = df2.copy()
-# Eliminar los días 24 y 25
-df3 = df3[~df3.index.day.isin([24, 25])]
-df3 = df3.drop(columns=["PM 1"])
-# Verificar los primeros registros
-print(df3.head())
 
-# Verificar los últimos registros para asegurarte que se eliminaron los días 19 y 20
+# Encontrar las fechas únicas y seleccionar los dos últimos días
+fechas_unicas = sorted(set(df3.index.date))
+dias_a_eliminar = fechas_unicas[-2:]  # Los dos últimos días
+
+# Convertir a lista de strings para comparación
+dias_a_eliminar_str = [d.strftime("%Y-%m-%d") for d in dias_a_eliminar]
+
+# Crear una máscara booleana
+mask = df3.index.strftime("%Y-%m-%d").isin(dias_a_eliminar_str)
+
+# Eliminar los dos últimos días
+df3 = df3[~mask]
+
+# Eliminar columna PM 1
+df3 = df3.drop(columns=["PM 1"], errors="ignore")
+
+# Verificar
+print(df3.head())
 print(df3.tail())
 
 # ======================================================
