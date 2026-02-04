@@ -31,13 +31,39 @@ jobs:
       with:
         python-version: '3.10'
     
-    # 3. 📦 Instalar programas necesarios
+    # 3. 📅 VERIFICAR HORARIO DE EJECUCIÓN (AGREGAR AQUÍ)
+    - name: Verificar horario de ejecución
+      run: |
+        echo "📅 CONFIGURACIÓN DE EJECUCIÓN AUTOMÁTICA"
+        echo "========================================"
+        echo "Cron configurado: '0 */12 * * *'"
+        echo ""
+        echo "⏰ Ejecuciones programadas (en UTC):"
+        echo "- 00:00 UTC (medianoche)"
+        echo "- 12:00 UTC (mediodía)"
+        echo ""
+        echo "🌍 Conversión a Colombia (UTC-5):"
+        echo "- 00:00 UTC = 19:00 (7 PM) del día anterior"
+        echo "- 12:00 UTC = 07:00 (7 AM)"
+        echo ""
+        echo "🕐 Hora actual del sistema: $(date)"
+        echo "🕐 Hora actual UTC: $(date -u)"
+        echo ""
+        echo "⏳ Próxima ejecución:"
+        CURRENT_HOUR=$(date -u +%H)
+        if [ $CURRENT_HOUR -lt 12 ]; then
+            echo "👉 A las 12:00 UTC (07:00 hora Colombia)"
+        else
+            echo "👉 A las 00:00 UTC mañana (19:00 hora Colombia hoy)"
+        fi
+    
+    # 4. 📦 Instalar programas necesarios
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    # 4. 🚀 Ejecutar tu código (solo genera archivos)
+    # 5. 🚀 Ejecutar tu código (solo genera archivos)
     - name: Ejecutar modelo SARIMA
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +72,7 @@ jobs:
         echo "🚀 Iniciando modelo SARIMA..."
         python modelo_sarima.py
     
-    # 5. 🔍 Verificar qué archivos se generaron
+    # 6. 🔍 Verificar qué archivos se generaron
     - name: Verificar archivos generados
       run: |
         echo "📁 Estructura de directorios después de ejecutar:"
@@ -63,7 +89,7 @@ jobs:
           echo ""
         done
     
-    # 6. 📤 Configurar git correctamente para el push
+    # 7. 📤 Configurar git correctamente para el push
     - name: Configurar Git
       run: |
         echo "🔧 Configurando Git..."
@@ -71,7 +97,7 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global pull.rebase false
     
-    # 7. 🔄 Sincronizar con los últimos cambios del repositorio
+    # 8. 🔄 Sincronizar con los últimos cambios del repositorio
     - name: Sincronizar con repositorio remoto
       run: |
         echo "🔄 Sincronizando con cambios remotos..."
@@ -80,7 +106,7 @@ jobs:
         # Hacer merge con estrategia "theirs" para aceptar cambios remotos
         git pull origin main --rebase || git pull origin main --allow-unrelated-histories || true
     
-    # 8. 💾 Agregar y commitear cambios
+    # 9. 💾 Agregar y commitear cambios
     - name: Agregar y committear cambios
       run: |
         echo "💾 Preparando cambios para commit..."
@@ -99,7 +125,7 @@ jobs:
           echo "⚠️ No hay cambios para commit"
         fi
     
-    # 9. 🚀 Hacer push de los cambios
+    # 10. 🚀 Hacer push de los cambios
     - name: Hacer push de cambios
       run: |
         echo "🚀 Intentando hacer push..."
