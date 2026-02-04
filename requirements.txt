@@ -1,0 +1,5 @@
+gspread
+pandas
+numpy
+matplotlib
+statsmodels
