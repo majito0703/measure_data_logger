@@ -1,0 +1,58 @@
+[
+  {
+    "variable":"Temperature",
+    "orden":"(1, 0, 1)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":-2270.1020996575,
+    "bic":-2241.9961238434,
+    "hqic":-2259.7927676284,
+    "log_likelihood":1140.0510498287,
+    "num_observaciones":2067,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.7313\u00b7y_t-1 + -0.0104\u00b7\u03b5_t-1 + -0.9943\u00b7y_t-12 + -0.0471\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-04 00:00:00",
+    "valor_ultimo_dato":30.2723985891,
+    "fecha_generacion":"2026-02-04 22:32:42"
+  },
+  {
+    "variable":"Humidity",
+    "orden":"(1, 0, 1)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":3121.1400164186,
+    "bic":3149.2459922327,
+    "hqic":3131.4493484477,
+    "log_likelihood":-1555.5700082093,
+    "num_observaciones":2067,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.8263\u00b7y_t-1 + 0.1383\u00b7\u03b5_t-1 + -0.9163\u00b7y_t-12 + -0.4249\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-04 00:00:00",
+    "valor_ultimo_dato":62.9656084656,
+    "fecha_generacion":"2026-02-04 22:32:42"
+  },
+  {
+    "variable":"PM 2.5",
+    "orden":"(1, 0, 1)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":7449.344111984,
+    "bic":7477.4500877981,
+    "hqic":7459.6534440131,
+    "log_likelihood":-3719.672055992,
+    "num_observaciones":2067,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.5703\u00b7y_t-1 + 0.1223\u00b7\u03b5_t-1 + -0.7085\u00b7y_t-12 + -1.0000\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-04 00:00:00",
+    "valor_ultimo_dato":7.6005291005,
+    "fecha_generacion":"2026-02-04 22:32:42"
+  },
+  {
+    "variable":"PM 10",
+    "orden":"(1, 0, 1)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":8198.0950047365,
+    "bic":8226.2009805506,
+    "hqic":8208.4043367657,
+    "log_likelihood":-4094.0475023683,
+    "num_observaciones":2067,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.5611\u00b7y_t-1 + 0.0487\u00b7\u03b5_t-1 + -0.7105\u00b7y_t-12 + -1.0000\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-04 00:00:00",
+    "valor_ultimo_dato":8.2345679012,
+    "fecha_generacion":"2026-02-04 22:32:42"
+  }
+]
