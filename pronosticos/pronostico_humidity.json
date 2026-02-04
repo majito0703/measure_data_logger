@@ -27,13 +27,13 @@
       "sigma2": 1.4734774246220748
     }
   },
-  "fecha_generacion": "2026-02-04 01:48:34",
+  "fecha_generacion": "2026-02-04 04:07:34",
   "estadisticas": {
     "min": 52.53333333333333,
     "max": 69.76666666666667,
     "media": 62.18615801399455,
     "mediana": 63.266666666666666,
-    "desviacion_estandar": 3.831022025115776,
+    "desviacion_estandar": 3.8310220251157787,
     "primer_registro": "2025-11-09 22:00:00",
     "ultimo_registro": "2025-11-23 23:00:00",
     "rango_dias": 14
@@ -1974,7 +1974,7 @@
   "metadata": {
     "generado_por": "modelo_sarima.py",
     "version": "2.0",
-    "ultima_actualizacion": "2026-02-04T01:48:34.000995",
+    "ultima_actualizacion": "2026-02-04T04:07:34.911650",
     "resample_frecuencia": "1H",
     "datos_fuente": "Google Sheets"
   }
