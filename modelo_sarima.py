@@ -11,6 +11,10 @@ import os
 import pickle
 import json
 import warnings
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
 warnings.filterwarnings("ignore")
 
@@ -18,6 +22,37 @@ warnings.filterwarnings("ignore")
 # URL DE GOOGLE SHEETS (definida a nivel global)
 # ======================================================
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1x1FeUolFWlR07tgrc6F4cgeUhJYV7uQ5yuRTBHO8jWI/edit?gid=0#gid=0"
+
+# ======================================================
+# CONFIGURACIÓN DE CARPETAS DE SALIDA
+# ======================================================
+def configurar_carpetas_salida():
+    """Configura las carpetas donde se guardarán los resultados"""
+    try:
+        # En Colab, guardar en Drive
+        if 'IN_COLAB' in globals() and IN_COLAB:
+            carpeta_base = "/content/drive/MyDrive/pronosticos"
+        else:
+            # En GitHub Actions o local
+            carpeta_base = "./pronosticos"
+        
+        # Crear subcarpetas (solo las necesarias)
+        carpetas = {
+            'base': carpeta_base,
+            'graficos': os.path.join(carpeta_base, 'graficos'),
+            'datos': os.path.join(carpeta_base, 'datos'),
+            'resumen': os.path.join(carpeta_base, 'resumen')
+            # NOTA: Omitimos la carpeta 'modelos' para evitar archivos grandes
+        }
+        
+        for carpeta in carpetas.values():
+            os.makedirs(carpeta, exist_ok=True)
+            print(f"✅ Carpeta creada/verificada: {carpeta}")
+        
+        return carpetas
+    except Exception as e:
+        print(f"⚠️  Error configurando carpetas: {e}")
+        return None
 
 # ======================================================
 # 1. FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS (COLAB + GITHUB)
@@ -49,10 +84,6 @@ def conectar_a_google_sheets():
             from google.auth import default
 
             creds, _ = default()
-
-            # Guardar credenciales (opcional)
-            with open("/content/token.pickle", "wb") as token:
-                pickle.dump(creds, token)
 
             import gspread
 
@@ -103,10 +134,7 @@ try:
 
     drive.mount("/content/drive", force_remount=False)
     IN_COLAB = True
-
-    # Crear carpeta para pronósticos
-    os.makedirs("/content/drive/MyDrive/pronosticos", exist_ok=True)
-    print("✅ Google Drive montado y carpeta creada")
+    print("✅ Google Drive montado")
 
 except:
     IN_COLAB = False
@@ -122,17 +150,13 @@ else:
     print("✅ En GitHub, las dependencias se instalan desde requirements.txt")
 
 # ======================================================
-# 4. IMPORTAR BIBLIOTECAS
+# 4. IMPORTAR BIBLIOTECAS RESTANTES
 # ======================================================
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import gspread
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import matplotlib.dates as mdates
-from datetime import timedelta
 
 # Cargar jupyter-black (solo Colab)
 if IN_COLAB:
@@ -398,9 +422,24 @@ print(df3.head())
 print(df3.tail())
 
 # ======================================================
-# 1. RESAMPLEO A DATOS POR HORA
+# CONFIGURAR CARPETAS DE SALIDA
 # ======================================================
+print("\n" + "=" * 60)
+print("📁 CONFIGURANDO CARPETAS DE SALIDA")
+print("=" * 60)
+
+carpetas = configurar_carpetas_salida()
+
+# ======================================================
+# 1. RESAMPLEO A DATOS POR HORA CON FRECUENCIA EXPLÍCITA
+# ======================================================
+# Asegurar que el índice tenga frecuencia para SARIMA
 df_hourly = df3.resample("H").mean().dropna()
+
+# Asignar frecuencia explícita al índice (IMPORTANTE PARA SARIMA)
+if not df_hourly.index.freq:
+    print("⚠️  Asignando frecuencia horaria al índice...")
+    df_hourly = df_hourly.asfreq('H')
 
 variables = ["Temperature", "Humidity", "PM 2.5", "PM 10"]
 
@@ -608,124 +647,325 @@ def mostrar_parametros_tabla(modelo, orden, orden_seas, aic):
     print("-" * 60)
 
 # ======================================================
-# 5. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON FECHAS MEJORADAS
+# 5. FUNCIONES PARA GUARDAR RESULTADOS (SOLO FORMATOS PEQUEÑOS)
 # ======================================================
-def graficar_pronostico(modelo, series, pasos=48, limite=None):
-    pred = modelo.get_forecast(steps=pasos)
-    media = pred.predicted_mean
-    conf_80 = pred.conf_int(alpha=0.20)
-    conf_95 = pred.conf_int(alpha=0.05)
+def guardar_pronostico_csv(modelo, serie, variable, pasos=72):
+    """Guarda el pronóstico en un archivo CSV"""
+    try:
+        if carpetas is None:
+            print("⚠️  No se pudieron crear carpetas, no se guardará el pronóstico")
+            return None
+            
+        pred = modelo.get_forecast(steps=pasos)
+        media = pred.predicted_mean
+        conf_95 = pred.conf_int(alpha=0.05)
+        
+        # Crear DataFrame con el pronóstico
+        df_pronostico = pd.DataFrame({
+            'fecha': media.index,
+            'pronostico': media.values,
+            'limite_inferior_95': conf_95.iloc[:, 0],
+            'limite_superior_95': conf_95.iloc[:, 1]
+        })
+        
+        # Formatear fechas
+        df_pronostico['fecha'] = pd.to_datetime(df_pronostico['fecha'])
+        df_pronostico['fecha_str'] = df_pronostico['fecha'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Agregar información adicional
+        df_pronostico['variable'] = variable
+        df_pronostico['fecha_generacion'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        df_pronostico['horizonte_pronostico'] = f'{pasos} horas'
+        
+        # Reordenar columnas
+        df_pronostico = df_pronostico[[
+            'variable', 'fecha', 'fecha_str', 'pronostico',
+            'limite_inferior_95', 'limite_superior_95',
+            'fecha_generacion', 'horizonte_pronostico'
+        ]]
+        
+        # Guardar en CSV
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M')
+        nombre_archivo = f"pronostico_{variable}_{fecha_actual}.csv"
+        ruta_completa = os.path.join(carpetas['datos'], nombre_archivo)
+        
+        df_pronostico.to_csv(ruta_completa, index=False, encoding='utf-8')
+        print(f"✅ Pronóstico CSV guardado en: {ruta_completa}")
+        
+        return ruta_completa
+        
+    except Exception as e:
+        print(f"⚠️  Error guardando pronóstico CSV para {variable}: {e}")
+        return None
 
-    # Crear figura con tamaño adecuado
-    fig, ax = plt.subplots(figsize=(15, 6))
+def guardar_grafico_pronostico(fig, variable):
+    """Guarda el gráfico del pronóstico"""
+    try:
+        if carpetas is None:
+            return None
+            
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M')
+        nombre_archivo = f"pronostico_{variable}_{fecha_actual}.png"
+        ruta_completa = os.path.join(carpetas['graficos'], nombre_archivo)
+        
+        fig.savefig(ruta_completa, dpi=150, bbox_inches='tight')
+        print(f"✅ Gráfico PNG guardado en: {ruta_completa}")
+        
+        return ruta_completa
+        
+    except Exception as e:
+        print(f"⚠️  Error guardando gráfico para {variable}: {e}")
+        return None
 
-    # Datos históricos
-    ax.plot(series.index, series.values, label="Medido", color="black", linewidth=1.5)
+def guardar_parametros_json(modelo, variable, orden, orden_seas, aic, ecuacion):
+    """Guarda solo los parámetros del modelo en formato JSON (archivo pequeño)"""
+    try:
+        if carpetas is None:
+            return None
+            
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M')
+        nombre_archivo = f"parametros_{variable}_{fecha_actual}.json"
+        ruta_completa = os.path.join(carpetas['resumen'], nombre_archivo)
+        
+        # Extraer solo la información esencial (sin el modelo completo)
+        info_modelo = {
+            'variable': variable,
+            'orden': str(orden),
+            'orden_estacional': str(orden_seas),
+            'aic': float(aic),
+            'ecuacion': ecuacion,
+            'fecha_entrenamiento': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'parametros': {str(k): float(v) for k, v in modelo.params.items()},
+            'num_observaciones': modelo.nobs,
+            'log_likelihood': float(modelo.llf),
+            'bic': float(modelo.bic),
+            'hqic': float(modelo.hqic)
+        }
+        
+        with open(ruta_completa, 'w', encoding='utf-8') as f:
+            json.dump(info_modelo, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ Parámetros JSON guardados en: {ruta_completa}")
+        
+        return ruta_completa
+        
+    except Exception as e:
+        print(f"⚠️  Error guardando parámetros JSON para {variable}: {e}")
+        return None
 
-    # Pronóstico
-    ax.plot(
-        media.index,
-        media.values,
-        label=f"Pronóstico {series.name}",
-        color="red",
-        linewidth=2,
-    )
-
-    # Bandas de confianza
-    ax.fill_between(
-        conf_80.index,
-        conf_80.iloc[:, 0],
-        conf_80.iloc[:, 1],
-        color="green",
-        alpha=0.3,
-        label="Confianza 80%",
-    )
-    ax.fill_between(
-        conf_95.index,
-        conf_95.iloc[:, 0],
-        conf_95.iloc[:, 1],
-        color="yellow",
-        alpha=0.2,
-        label="Confianza 95%",
-    )
-
-    # Línea vertical para separar historial de pronóstico
-    ultimo_historial = series.index[-1]
-    ax.axvline(x=ultimo_historial, color="gray", linestyle="--", alpha=0.7, linewidth=1)
-
-    # Línea de norma o límite permitido
-    if limite is not None:
-        ax.axhline(
-            y=limite,
-            color="blue",
-            linestyle="--",
-            linewidth=2,
-            label="Nivel máximo permitido (24H) en Colombia",
-        )
-
-    # Configurar formato de fechas
-    # Determinar el rango de fechas
-    fecha_min = series.index.min()
-    fecha_max = media.index.max()
-
-    # Calcular diferencia de días para determinar el formato
-    dias_totales = (fecha_max - fecha_min).days
-
-    if dias_totales <= 7:  # Si es menos de una semana
-        # Formato: Día Hora (ej: "11 Nov 10:00")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
-        ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
-    elif dias_totales <= 30:  # Si es menos de un mes
-        # Formato: Día Mes (ej: "11 Nov")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-    else:  # Si es más de un mes
-        # Formato: Mes (ej: "Nov 2025")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-        ax.xaxis.set_major_locator(mdates.MonthLocator())
-
-    # Rotar etiquetas para mejor lectura
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
-
-    # Agregar leyenda de separación
-    ax.text(
-        ultimo_historial + timedelta(hours=1),
-        ax.get_ylim()[1] * 0.95,
-        "Pronóstico",
-        fontsize=10,
-        color="darkred",
-        alpha=0.8,
-    )
-
-    # Títulos y etiquetas
-    ax.set_title(f"Pronóstico SARIMA - {series.name}", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Fecha y Hora", fontsize=12)
-
-    # Etiqueta del eje Y dependiendo de la variable
-    if series.name == "Temperature":
-        ax.set_ylabel("Temperatura (°C)", fontsize=12)
-    elif series.name == "Humidity":
-        ax.set_ylabel("Humedad (%)", fontsize=12)
-    elif series.name in ["PM 2.5", "PM 10"]:
-        ax.set_ylabel(f"{series.name} (µg/m³)", fontsize=12)
-    else:
-        ax.set_ylabel(series.name, fontsize=12)
-
-    # Cuadrícula
-    ax.grid(True, alpha=0.3, linestyle="--")
-
-    # Leyenda
-    ax.legend(loc="upper left", fontsize=10)
-
-    # Ajustar márgenes
-    plt.tight_layout()
-
-    plt.show()
-
-
+def crear_resumen_general(resultados, ecuaciones, df_hourly, variables):
+    """Crea un resumen general de todos los modelos"""
+    try:
+        if carpetas is None:
+            return None
+            
+        fecha_actual = datetime.now().strftime('%Y%m%d_%H%M')
+        
+        # Crear resumen en formato CSV
+        resumen_data = []
+        
+        for var in variables:
+            if var in resultados:
+                modelo = resultados[var]
+                resumen_data.append({
+                    'variable': var,
+                    'orden': str(modelo.specification.order),
+                    'orden_estacional': str(modelo.specification.seasonal_order),
+                    'aic': float(modelo.aic),
+                    'bic': float(modelo.bic),
+                    'hqic': float(modelo.hqic),
+                    'log_likelihood': float(modelo.llf),
+                    'num_observaciones': int(modelo.nobs),
+                    'ecuacion': ecuaciones.get(var, 'No disponible'),
+                    'fecha_ultimo_dato': df_hourly.index[-1].strftime('%Y-%m-%d %H:%M:%S'),
+                    'valor_ultimo_dato': float(df_hourly[var].iloc[-1]),
+                    'fecha_generacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                })
+        
+        df_resumen = pd.DataFrame(resumen_data)
+        
+        # Guardar en CSV
+        ruta_csv = os.path.join(carpetas['resumen'], f"resumen_modelos_{fecha_actual}.csv")
+        df_resumen.to_csv(ruta_csv, index=False, encoding='utf-8')
+        
+        # Guardar en JSON también
+        ruta_json = os.path.join(carpetas['resumen'], f"resumen_modelos_{fecha_actual}.json")
+        df_resumen.to_json(ruta_json, orient='records', indent=2)
+        
+        print(f"✅ Resumen CSV guardado en: {ruta_csv}")
+        print(f"✅ Resumen JSON guardado en: {ruta_json}")
+        
+        return ruta_csv, ruta_json
+        
+    except Exception as e:
+        print(f"⚠️  Error creando resumen general: {e}")
+        return None, None
 
 # ======================================================
-# 6. EJECUCIÓN COMPLETA POR VARIABLE
+# 6. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON MANEJO DE FECHAS
+# ======================================================
+def graficar_pronostico(modelo, serie, variable, pasos=48, limite=None):
+    try:
+        pred = modelo.get_forecast(steps=pasos)
+        media = pred.predicted_mean
+        conf_80 = pred.conf_int(alpha=0.20)
+        conf_95 = pred.conf_int(alpha=0.05)
+
+        # Crear figura con tamaño adecuado
+        fig, ax = plt.subplots(figsize=(15, 6))
+
+        # Datos históricos
+        ax.plot(serie.index, serie.values, label="Medido", color="black", linewidth=1.5)
+
+        # Verificar si el pronóstico tiene índice de fechas
+        if hasattr(media.index, 'freq') and media.index.freq is not None:
+            # El pronóstico tiene fechas
+            fecha_min = serie.index.min()
+            fecha_max = media.index.max()
+            
+            # Pronóstico
+            ax.plot(
+                media.index,
+                media.values,
+                label=f"Pronóstico {variable}",
+                color="red",
+                linewidth=2,
+            )
+
+            # Bandas de confianza
+            ax.fill_between(
+                conf_80.index,
+                conf_80.iloc[:, 0],
+                conf_80.iloc[:, 1],
+                color="green",
+                alpha=0.3,
+                label="Confianza 80%",
+            )
+            ax.fill_between(
+                conf_95.index,
+                conf_95.iloc[:, 0],
+                conf_95.iloc[:, 1],
+                color="yellow",
+                alpha=0.2,
+                label="Confianza 95%",
+            )
+
+            # Línea vertical para separar historial de pronóstico
+            ultimo_historial = serie.index[-1]
+            ax.axvline(x=ultimo_historial, color="gray", linestyle="--", alpha=0.7, linewidth=1)
+
+            # Configurar formato de fechas
+            # Calcular diferencia de días para determinar el formato
+            dias_totales = (fecha_max - fecha_min).days
+
+            if dias_totales <= 7:  # Si es menos de una semana
+                # Formato: Día Hora (ej: "11 Nov 10:00")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+            elif dias_totales <= 30:  # Si es menos de un mes
+                # Formato: Día Mes (ej: "11 Nov")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+            else:  # Si es más de un mes
+                # Formato: Mes (ej: "Nov 2025")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
+
+            # Agregar leyenda de separación
+            ax.text(
+                ultimo_historial + timedelta(hours=1),
+                ax.get_ylim()[1] * 0.95,
+                "Pronóstico",
+                fontsize=10,
+                color="darkred",
+                alpha=0.8,
+            )
+        else:
+            # El pronóstico no tiene fechas, usar índice numérico
+            print(f"⚠️  Pronóstico para {variable} no tiene fechas, usando índice numérico")
+            
+            # Crear fechas para el pronóstico
+            ultima_fecha = serie.index[-1]
+            frec = pd.infer_freq(serie.index) or 'H'
+            fechas_pronostico = pd.date_range(
+                start=ultima_fecha + pd.Timedelta(hours=1), 
+                periods=pasos, 
+                freq=frec
+            )
+            
+            # Pronóstico
+            ax.plot(
+                fechas_pronostico,
+                media.values,
+                label=f"Pronóstico {variable}",
+                color="red",
+                linewidth=2,
+            )
+
+            # Línea vertical para separar historial de pronóstico
+            ax.axvline(x=ultima_fecha, color="gray", linestyle="--", alpha=0.7, linewidth=1)
+
+            # Formato de fechas para todo el gráfico
+            todas_fechas = list(serie.index) + list(fechas_pronostico)
+            fecha_min = min(todas_fechas)
+            fecha_max = max(todas_fechas)
+            
+            dias_totales = (fecha_max - fecha_min).days
+            
+            if dias_totales <= 7:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+            elif dias_totales <= 30:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+            else:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
+
+        # Línea de norma o límite permitido
+        if limite is not None:
+            ax.axhline(
+                y=limite,
+                color="blue",
+                linestyle="--",
+                linewidth=2,
+                label="Nivel máximo permitido (24H) en Colombia",
+            )
+
+        # Rotar etiquetas para mejor lectura
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
+
+        # Títulos y etiquetas
+        ax.set_title(f"Pronóstico SARIMA - {variable}", fontsize=14, fontweight="bold")
+        ax.set_xlabel("Fecha y Hora", fontsize=12)
+
+        # Etiqueta del eje Y dependiendo de la variable
+        if variable == "Temperature":
+            ax.set_ylabel("Temperatura (°C)", fontsize=12)
+        elif variable == "Humidity":
+            ax.set_ylabel("Humedad (%)", fontsize=12)
+        elif variable in ["PM 2.5", "PM 10"]:
+            ax.set_ylabel(f"{variable} (µg/m³)", fontsize=12)
+        else:
+            ax.set_ylabel(variable, fontsize=12)
+
+        # Cuadrícula
+        ax.grid(True, alpha=0.3, linestyle="--")
+
+        # Leyenda
+        ax.legend(loc="upper left", fontsize=10)
+
+        # Ajustar márgenes
+        plt.tight_layout()
+        
+        return fig
+        
+    except Exception as e:
+        print(f"⚠️  Error al graficar pronóstico para {variable}: {e}")
+        return None
+
+# ======================================================
+# 7. EJECUCIÓN COMPLETA POR VARIABLE CON MANEJO DE ERRORES
 # ======================================================
 limites = {
     "Temperature": None,
@@ -736,7 +976,11 @@ limites = {
 
 resultados = {}
 ecuaciones = {}
-parametros_tablas = {}
+archivos_guardados = []
+
+print(f"\n{'='*80}")
+print("🚀 INICIANDO PROCESO DE MODELADO SARIMA")
+print(f"{'='*80}")
 
 for var in variables:
     print(f"\n{'='*80}")
@@ -745,44 +989,174 @@ for var in variables:
 
     serie = df_hourly[var]
 
-    modelo, orden, orden_s, aic, parametros, summary = buscar_mejor_modelo(serie)
+    try:
+        modelo, orden, orden_s, aic, parametros, summary = buscar_mejor_modelo(serie)
 
-    print(f"\nMejor modelo para {var}: SARIMA{orden}{orden_s}")
-    print(f"AIC = {aic:.2f}")
+        print(f"\nMejor modelo para {var}: SARIMA{orden}{orden_s}")
+        print(f"AIC = {aic:.2f}")
 
-    # Obtener y mostrar ecuación matemática
-    ecuacion = obtener_ecuacion_sarima(modelo, orden, orden_s)
-    print(f"\nEcuación matemática:")
-    print(f"{ecuacion}")
+        # Obtener y mostrar ecuación matemática
+        try:
+            ecuacion = obtener_ecuacion_sarima(modelo, orden, orden_s)
+            print(f"\nEcuación matemática:")
+            print(f"{ecuacion}")
+        except Exception as e:
+            print(f"⚠️  Error obteniendo ecuación: {e}")
+            ecuacion = "No disponible"
 
-    # Mostrar parámetros en formato de tabla
-    mostrar_parametros_tabla(modelo, orden, orden_s, aic)
+        # Mostrar parámetros en formato de tabla
+        try:
+            mostrar_parametros_tabla(modelo, orden, orden_s, aic)
+        except Exception as e:
+            print(f"⚠️  Error mostrando parámetros: {e}")
 
-    # Guardar resultados
-    resultados[var] = modelo
-    ecuaciones[var] = ecuacion
-    parametros_tablas[var] = {
-        "orden": orden,
-        "orden_estacional": orden_s,
-        "aic": aic,
-        "parametros": parametros,
-        "summary": summary,
-    }
+        # Guardar resultados en diccionarios
+        resultados[var] = modelo
+        ecuaciones[var] = ecuacion
 
-    # Graficar pronóstico (72 horas adelante)
-    graficar_pronostico(modelo, serie, pasos=72, limite=limites[var])
+        # Graficar pronóstico (72 horas adelante)
+        try:
+            fig = graficar_pronostico(modelo, serie, var, pasos=72, limite=limites[var])
+            if fig is not None:
+                # Guardar gráfico
+                ruta_grafico = guardar_grafico_pronostico(fig, var)
+                if ruta_grafico:
+                    archivos_guardados.append(("Gráfico", var, ruta_grafico))
+                plt.close(fig)
+        except Exception as e:
+            print(f"⚠️  Error graficando pronóstico: {e}")
+        
+        # Guardar pronóstico en CSV
+        try:
+            ruta_csv = guardar_pronostico_csv(modelo, serie, var, pasos=72)
+            if ruta_csv:
+                archivos_guardados.append(("CSV", var, ruta_csv))
+        except Exception as e:
+            print(f"⚠️  Error guardando CSV para {var}: {e}")
+        
+        # Guardar parámetros en JSON (archivo pequeño)
+        try:
+            ruta_json = guardar_parametros_json(modelo, var, orden, orden_s, aic, ecuacion)
+            if ruta_json:
+                archivos_guardados.append(("JSON Parámetros", var, ruta_json))
+        except Exception as e:
+            print(f"⚠️  Error guardando parámetros JSON para {var}: {e}")
+            
+    except Exception as e:
+        print(f"❌ Error procesando {var}: {e}")
+        print(f"⚠️  Saltando variable {var}...")
 
 # ======================================================
-# 7. RESUMEN FINAL DE TODOS LOS MODELOS
+# 8. CREAR RESUMEN GENERAL
+# ======================================================
+try:
+    ruta_csv_resumen, ruta_json_resumen = crear_resumen_general(resultados, ecuaciones, df_hourly, variables)
+    if ruta_csv_resumen:
+        archivos_guardados.append(("Resumen CSV", "General", ruta_csv_resumen))
+    if ruta_json_resumen:
+        archivos_guardados.append(("Resumen JSON", "General", ruta_json_resumen))
+except Exception as e:
+    print(f"⚠️  Error creando resumen general: {e}")
+
+# ======================================================
+# 9. RESUMEN FINAL DE TODOS LOS MODELOS
 # ======================================================
 print(f"\n{'='*80}")
-print(" RESUMEN FINAL DE MODELOS SARIMA")
+print(" 📊 RESUMEN FINAL DE MODELOS SARIMA")
 print(f"{'='*80}")
 
 for var in variables:
-    print(f"\n{var}:")
-    print(f"  Modelo: SARIMA{resultados[var].specification.order}")
-    print(f"          {resultados[var].specification.seasonal_order}")
-    print(f"  AIC: {resultados[var].aic:.2f}")
-    print(f"  Ecuación: {ecuaciones[var]}")
-    print(f"  Número de observaciones: {len(df_hourly[var])}")
+    if var in resultados:
+        print(f"\n{var}:")
+        print(f"  Modelo: SARIMA{resultados[var].specification.order}")
+        print(f"          {resultados[var].specification.seasonal_order}")
+        print(f"  AIC: {resultados[var].aic:.2f}")
+        print(f"  Ecuación: {ecuaciones.get(var, 'No disponible')}")
+        print(f"  Número de observaciones: {len(df_hourly[var])}")
+        print(f"  Último dato: {df_hourly[var].iloc[-1]:.2f} ({df_hourly.index[-1].strftime('%Y-%m-%d %H:%M')})")
+    else:
+        print(f"\n{var}: No se pudo ajustar modelo")
+
+# ======================================================
+# 10. RESUMEN DE ARCHIVOS GUARDADOS
+# ======================================================
+print(f"\n{'='*80}")
+print(" 💾 ARCHIVOS GUARDADOS")
+print(f"{'='*80}")
+
+if archivos_guardados:
+    for tipo, variable, ruta in archivos_guardados:
+        print(f"  {tipo} - {variable}: {ruta}")
+    
+    # Contar por tipo
+    tipos_contador = {}
+    for tipo, _, _ in archivos_guardados:
+        tipos_contador[tipo] = tipos_contador.get(tipo, 0) + 1
+    
+    print(f"\n📊 Total de archivos guardados: {len(archivos_guardados)}")
+    for tipo, count in tipos_contador.items():
+        print(f"  {tipo}: {count} archivo(s)")
+else:
+    print("  No se guardaron archivos.")
+
+print(f"\n{'='*80}")
+print(" ✅ PROCESO COMPLETADO EXITOSAMENTE")
+print(f"{'='*80}")
+
+# Mostrar ubicación de las carpetas
+if carpetas:
+    print(f"\n📁 Carpetas creadas:")
+    for nombre, ruta in carpetas.items():
+        print(f"  {nombre}: {ruta}")
+        
+    # Verificar contenido
+    print(f"\n📋 Contenido de las carpetas:")
+    for nombre, ruta in carpetas.items():
+        if os.path.exists(ruta):
+            archivos = os.listdir(ruta)
+            if archivos:
+                print(f"  {nombre} ({len(archivos)} archivos):")
+                for archivo in archivos[:5]:  # Mostrar solo primeros 5
+                    tamaño = os.path.getsize(os.path.join(ruta, archivo))
+                    tamaño_mb = tamaño / (1024 * 1024)
+                    print(f"    - {archivo} ({tamaño_mb:.2f} MB)")
+                if len(archivos) > 5:
+                    print(f"    ... y {len(archivos) - 5} más")
+            else:
+                print(f"  {nombre}: vacía")
+else:
+    print("⚠️  No se pudieron crear carpetas para guardar resultados")
+
+# ======================================================
+# 11. LIMPIAR ARCHIVOS TEMPORALES GRANDES
+# ======================================================
+print(f"\n{'='*80}")
+print(" 🧹 LIMPIANDO ARCHIVOS TEMPORALES")
+print("=" * 80)
+
+# Listar archivos temporales grandes y eliminarlos si existen
+archivos_a_eliminar = []
+for root, dirs, files in os.walk('.'):
+    for file in files:
+        if file.endswith('.pkl'):
+            ruta_completa = os.path.join(root, file)
+            archivos_a_eliminar.append(ruta_completa)
+
+if archivos_a_eliminar:
+    print(f"⚠️  Encontrados {len(archivos_a_eliminar)} archivos .pkl grandes:")
+    for archivo in archivos_a_eliminar:
+        try:
+            tamaño = os.path.getsize(archivo)
+            tamaño_mb = tamaño / (1024 * 1024)
+            print(f"  - {archivo} ({tamaño_mb:.2f} MB)")
+            
+            # Preguntar si eliminar (en modo interactivo)
+            # En GitHub Actions, eliminamos automáticamente
+            if not IN_COLAB:
+                os.remove(archivo)
+                print(f"    ✅ Eliminado")
+        except:
+            pass
+    print("✅ Archivos temporales grandes eliminados para evitar problemas con GitHub")
+else:
+    print("✅ No se encontraron archivos .pkl grandes")
