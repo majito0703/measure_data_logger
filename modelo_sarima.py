@@ -769,8 +769,8 @@ import json
 from datetime import datetime
 import pandas as pd
 
-# 🔴 REEMPLAZA ESTO CON TU TOKEN DE GITHUB (si es necesario)
-GITHUB_TOKEN = "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"
+# 🔴 CORREGIDO: Usar variable de entorno en lugar de token hardcodeado
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GITHUB_USER = "majito0703"
 REPO_NAME = "measure_data_logger"
 BRANCH = "main"
@@ -779,6 +779,10 @@ BRANCH = "main"
 # 2. FUNCIÓN PARA CREAR ARCHIVOS JSON CON TODO EL HISTORIAL - CORREGIDA
 def crear_archivos_json_completos():
     print("\n📝 Creando archivos JSON con TODOS los datos...")
+    
+    # 🔴 CORREGIDO: Crear carpeta pronosticos antes de guardar archivos
+    os.makedirs("pronosticos", exist_ok=True)
+    print("📂 Carpeta 'pronosticos' creada/verificada")
 
     json_files = {}
 
@@ -899,7 +903,8 @@ def crear_archivos_json_completos():
         elif nombre_base == "pm10":
             nombre_base = "pm10"
 
-        nombre_json = f"pronostico_{nombre_base}.json"
+        # 🔴 CORREGIDO: Guardar DENTRO de la carpeta pronosticos
+        nombre_json = f"pronosticos/pronostico_{nombre_base}.json"
 
         with open(nombre_json, "w", encoding="utf-8") as f:
             json.dump(datos_completos, f, ensure_ascii=False, indent=2)
@@ -917,7 +922,7 @@ def crear_archivos_json_completos():
 
 # 3. FUNCIÓN PARA SUBIR A GITHUB - MEJORADA CON MEJOR MANEJO DE ERRORES
 def subir_a_github_json(nombre_archivo, datos_json, mensaje_commit):
-    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/pronosticos/{nombre_archivo}"
+    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/{nombre_archivo}"
 
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -1040,7 +1045,8 @@ for var in variables:
         elif nombre_base == "pm10":
             nombre_base = "pm10"
 
-        csv_nombre = f"datos_{nombre_base}.csv"
+        # 🔴 CORREGIDO: Guardar DENTRO de la carpeta pronosticos
+        csv_nombre = f"pronosticos/datos_{nombre_base}.csv"
         df_historial.to_csv(csv_nombre, index=False, encoding="utf-8")
 
         print(f"  ✅ {var}: {csv_nombre} ({len(df_historial)} registros)")
@@ -1053,7 +1059,7 @@ for var in variables:
 
         csv_github_nombre = f"pronosticos/datos_{nombre_base}.csv"
         if subir_a_github_json(
-            f"datos_{nombre_base}.csv", {"contenido": contenido}, mensaje_commit
+            csv_github_nombre, {"contenido": contenido}, mensaje_commit
         ):
             exitosos += 1
 
@@ -1094,8 +1100,8 @@ for var in variables:
                 "PM 2.5": "PM2.5",
                 "PM 10": "PM10",
             }.get(var, var),
-            "archivo_json": f"pronostico_{nombre_base}.json",
-            "archivo_csv": f"datos_{nombre_base}.csv",
+            "archivo_json": f"pronosticos/pronostico_{nombre_base}.json",  # 🔴 CORREGIDO
+            "archivo_csv": f"pronosticos/datos_{nombre_base}.csv",  # 🔴 CORREGIDO
             "unidad": (
                 "°C" if var == "Temperature" else "%" if var == "Humidity" else "µg/m³"
             ),
@@ -1134,12 +1140,12 @@ if fechas_todas:
         "fecha_ultima_actualizacion": datetime.now().isoformat(),
     }
 
-# Guardar y subir índice
-with open("index.json", "w", encoding="utf-8") as f:
+# 🔴 CORREGIDO: Guardar DENTRO de la carpeta pronosticos
+with open("pronosticos/index.json", "w", encoding="utf-8") as f:
     json.dump(indice_pronosticos, f, ensure_ascii=False, indent=2)
 
-print("  📄 Procesando: index.json")
-if subir_a_github_json("index.json", indice_pronosticos, mensaje_commit):
+print("  📄 Procesando: pronosticos/index.json")
+if subir_a_github_json("pronosticos/index.json", indice_pronosticos, mensaje_commit):
     exitosos += 1
     print("    ✅ Índice subido exitosamente")
 
@@ -1167,8 +1173,8 @@ for var in variables:
     print(f"   • Desde: {serie.index[0].strftime('%d/%m/%Y %H:%M')}")
     print(f"   • Hasta: {serie.index[-1].strftime('%d/%m/%Y %H:%M')}")
     print(f"   • Rango: {(serie.index[-1] - serie.index[0]).days} días")
-    print(f"   • Archivo JSON: pronostico_{nombre_base}.json")
-    print(f"   • Archivo CSV: datos_{nombre_base}.csv")
+    print(f"   • Archivo JSON: pronosticos/pronostico_{nombre_base}.json")  # 🔴 CORREGIDO
+    print(f"   • Archivo CSV: pronosticos/datos_{nombre_base}.csv")  # 🔴 CORREGIDO
 
 print(
     f"\n📁 Total de archivos generados: {len(variables) * 2 + 1}"
@@ -1226,7 +1232,7 @@ if len(variables) > 0:
     elif nombre_base == "pm10":
         nombre_base = "pm10"
 
-    primer_json = f"pronostico_{nombre_base}.json"
+    primer_json = f"pronosticos/pronostico_{nombre_base}.json"  # 🔴 CORREGIDO
 
     if os.path.exists(primer_json):
         with open(primer_json, "r", encoding="utf-8") as f:
