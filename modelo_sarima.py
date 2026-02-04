@@ -129,7 +129,6 @@ except:
 
 if IN_COLAB:
     print("📦 Instalando dependencias en Colab...")
-
 else:
     print("✅ En GitHub, las dependencias se instalan desde requirements.txt")
 
