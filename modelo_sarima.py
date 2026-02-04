@@ -689,29 +689,7 @@ def graficar_pronostico(modelo, series, pasos=48, limite=None):
 
     plt.show()
 
-    # Guardar la figura en Google Drive
-    nombre_archivo = (
-        f"pronostico_{series.name}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.png"
-    )
-    ruta_drive = f"/content/drive/MyDrive/pronosticos/{nombre_archivo}"
-    fig.savefig(ruta_drive, dpi=150, bbox_inches="tight")
 
-    # También guardar los datos del pronóstico
-    pronostico_data = {
-        "fecha": media.index.strftime("%Y-%m-%d %H:%M:%S").tolist(),
-        "pronostico": media.values.tolist(),
-        "limite_inferior_80": conf_80.iloc[:, 0].tolist(),
-        "limite_superior_80": conf_80.iloc[:, 1].tolist(),
-        "limite_inferior_95": conf_95.iloc[:, 0].tolist(),
-        "limite_superior_95": conf_95.iloc[:, 1].tolist(),
-    }
-
-    df_pronostico = pd.DataFrame(pronostico_data)
-    df_pronostico.to_csv(
-        f"/content/drive/MyDrive/pronosticos/datos_{series.name}.csv", index=False
-    )
-
-    return nombre_archivo  # Esto es nuevo
 
 # ======================================================
 # 6. EJECUCIÓN COMPLETA POR VARIABLE
