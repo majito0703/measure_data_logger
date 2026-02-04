@@ -16,6 +16,80 @@ jobs:
       contents: write
     
     steps:
+    # 0. 📅 MOSTRAR INFORMACIÓN DE PROGRAMACIÓN (NUEVO PASO)
+    - name: Mostrar información de ejecución
+      run: |
+        echo "📅 INFORMACIÓN DE EJECUCIÓN PROGRAMADA"
+        echo "========================================"
+        echo ""
+        echo "🔄 Esta ejecución fue activada por: ${{ github.event_name }}"
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          echo "✅ EJECUCIÓN AUTOMÁTICA (programada)"
+        else
+          echo "👤 EJECUCIÓN MANUAL (workflow_dispatch)"
+        fi
+        echo ""
+        echo "⏰ FRECUENCIA PROGRAMADA:"
+        echo "  • Cron: '0 */12 * * *'"
+        echo "  • Se ejecuta cada 12 horas"
+        echo "  • En punto de la hora (minuto 0)"
+        echo "  • Hora base: UTC"
+        echo ""
+        echo "🌍 PRÓXIMAS EJECUCIONES CALCULADAS:"
+        
+        # Calcular próximas ejecuciones
+        python3 << 'EOF'
+import datetime
+import pytz
+from datetime import timedelta
+
+# Configurar zonas horarias
+utc = pytz.UTC
+bogota = pytz.timezone('America/Bogota')
+
+print("\nHoras UTC (hora del servidor):")
+print("-" * 40)
+
+# Encontrar próximas 4 ejecuciones UTC
+ahora = datetime.datetime.now(utc)
+print(f"Hora actual: {ahora.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+
+# Calcular cuántas horas faltan para la próxima ejecución (00:00 o 12:00 UTC)
+horas_hasta_proxima = (12 - (ahora.hour % 12)) % 12
+if horas_hasta_proxima == 0:
+    horas_hasta_proxima = 12
+
+print(f"\nPróximas 4 ejecuciones programadas:")
+
+for i in range(4):
+    # Calcular hora de ejecución
+    ejecucion_utc = (ahora.replace(minute=0, second=0, microsecond=0) + 
+                     timedelta(hours=horas_hasta_proxima + i*12))
+    
+    # Convertir a Colombia
+    ejecucion_colombia = ejecucion_utc.astimezone(bogota)
+    
+    # Calcular cuánto tiempo falta
+    tiempo_falta = ejecucion_utc - ahora
+    horas_faltan = int(tiempo_falta.total_seconds() // 3600)
+    minutos_faltan = int((tiempo_falta.total_seconds() % 3600) // 60)
+    
+    print(f"\n{i+1}. {ejecucion_utc.strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"   {ejecucion_colombia.strftime('%Y-%m-%d %H:%M %Z')}")
+    print(f"   ⏱️  En {horas_faltan}h {minutos_faltan}m")
+
+print(f"\n📊 RESUMEN PARA COLOMBIA:")
+print(f"   • Mañana 7:00 AM (si corresponde)")
+print(f"   • Hoy 7:00 PM (si corresponde)")
+print(f"   • Cada 12 horas (7AM / 7PM)")
+EOF
+        
+        echo ""
+        echo "🔗 Para ver la próxima ejecución oficial en GitHub:"
+        echo "   1. Ve a la pestaña 'Actions'"
+        echo "   2. Haz clic en '🤖 Ejecutar SARIMA Automático'"
+        echo "   3. Busca 'Next scheduled run:' en la parte superior"
+    
     # 1. 📥 Descargar el código con FORCE para sobrescribir
     - name: Descargar código
       uses: actions/checkout@v3
@@ -116,3 +190,44 @@ jobs:
         }
         
         echo "✅ Push completado exitosamente"
+        
+    # 10. 📊 MOSTRAR RESUMEN FINAL (NUEVO PASO)
+    - name: Mostrar resumen final
+      if: always()
+      run: |
+        echo ""
+        echo "📊 RESUMEN DE EJECUCIÓN"
+        echo "========================"
+        echo ""
+        echo "✅ Workflow completado: ${{ job.status }}"
+        echo ""
+        echo "🔄 Próxima ejecución automática:"
+        echo "   • En aproximadamente 12 horas"
+        
+        # Calcular próxima ejecución
+        python3 << 'EOF'
+import datetime
+import pytz
+from datetime import timedelta
+
+utc = pytz.UTC
+bogota = pytz.timezone('America/Bogota')
+
+ahora = datetime.datetime.now(utc)
+horas_hasta_proxima = (12 - (ahora.hour % 12)) % 12
+if horas_hasta_proxima == 0:
+    horas_hasta_proxima = 12
+
+proxima_utc = ahora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=horas_hasta_proxima)
+proxima_colombia = proxima_utc.astimezone(bogota)
+
+print(f"   • {proxima_utc.strftime('%Y-%m-%d %H:%M UTC')}")
+print(f"   • {proxima_colombia.strftime('%Y-%m-%d %H:%M %Z')}")
+EOF
+        
+        echo ""
+        echo "📁 Tus datos están disponibles en:"
+        echo "   https://github.com/majito0703/measure_data_logger/tree/main/pronosticos"
+        echo ""
+        echo "👀 Para monitorear ejecuciones futuras:"
+        echo "   https://github.com/majito0703/measure_data_logger/actions"
