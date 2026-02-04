@@ -5,51 +5,69 @@ on:
     - cron: '0 */12 * * *'
   workflow_dispatch:
 
+# 🔧 AÑADE ESTOS PERMISOS GLOBALES
+permissions:
+  contents: write  # Permite escribir (commit/push) en el repositorio
+  pages: write     # Si usas GitHub Pages
+  actions: read    # Para ver otras acciones
+
 jobs:
   ejecutar-sarima:
     runs-on: ubuntu-latest
+    
+    # 🔧 AÑADE TAMBIÉN PERMISOS A NIVEL DE JOB
+    permissions:
+      contents: write  # Sobrescribe permisos para este job específico
     
     steps:
     # 1. 📥 Descargar el código
     - name: Descargar código
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # IMPORTANTE: Trae todo el historial
+        fetch-depth: 0
+        # 🔧 IMPORTANTE: Configurar token
+        token: ${{ secrets.GITHUB_TOKEN }}
     
-    # 2. 🔍 Verificar el archivo ANTES de ejecutar
-    - name: Verificar archivo modelo_sarima.py
-      run: |
-        echo "🔍 Verificando línea 132 del archivo..."
-        echo "=== Contenido líneas 130-135 ==="
-        sed -n '130,135p' modelo_sarima.py
-        echo "=== Buscando líneas con '!' ==="
-        grep -n "!" modelo_sarima.py || echo "✅ No hay líneas con '!'"
-    
-    # 3. 🐍 Instalar Python
+    # 2. 🐍 Instalar Python
     - name: Instalar Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
     
-    # 4. 📦 Instalar programas necesarios
+    # 3. 📦 Instalar programas necesarios
     - name: Instalar dependencias
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    # 5. 🚀 Ejecutar tu código
+    # 4. 🚀 Ejecutar tu código (generará los archivos)
     - name: Ejecutar modelo SARIMA
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GOOGLE_SHEETS_CREDS: ${{ secrets.GOOGLE_SHEETS_CREDS }}
       run: |
         echo "🚀 Iniciando modelo SARIMA..."
-        echo "📄 Ejecutando: $(which python) modelo_sarima.py"
         python modelo_sarima.py
     
-    # 6. 📋 Verificar resultados
-    - name: Verificar archivos generados
+    # 5. 📤 Subir archivos generados (NUEVO PASO)
+    - name: Subir archivos generados
       run: |
-        echo "📁 Archivos generados:"
-        ls -la *.json *.csv 2>/dev/null || echo "No se encontraron archivos JSON/CSV"
-        ls -la pronosticos/ 2>/dev/null && echo "✅ Carpeta 'pronosticos' creada"
+        echo "📤 Subiendo archivos generados..."
+        
+        # Configurar git
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Agregar todos los archivos nuevos
+        git add *.json *.csv pronosticos/ || true
+        
+        # Verificar si hay cambios
+        if git diff --cached --quiet; then
+          echo "⚠️ No hay cambios para subir"
+        else
+          echo "💾 Guardando cambios..."
+          git commit -m "🤖 Actualización automática $(date +'%Y-%m-%d %H:%M')"
+          
+          echo "🚀 Subiendo cambios..."
+          git push origin HEAD:main
+        fi
