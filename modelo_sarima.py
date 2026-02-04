@@ -36,13 +36,13 @@ def configurar_carpetas_salida():
             # En GitHub Actions o local
             carpeta_base = "./pronosticos"
         
-        # Crear subcarpetas
+        # Crear subcarpetas (solo las necesarias)
         carpetas = {
             'base': carpeta_base,
             'graficos': os.path.join(carpeta_base, 'graficos'),
             'datos': os.path.join(carpeta_base, 'datos'),
-            'modelos': os.path.join(carpeta_base, 'modelos'),
             'resumen': os.path.join(carpeta_base, 'resumen')
+            # NOTA: Omitimos la carpeta 'modelos' para evitar archivos grandes
         }
         
         for carpeta in carpetas.values():
@@ -84,10 +84,6 @@ def conectar_a_google_sheets():
             from google.auth import default
 
             creds, _ = default()
-
-            # Guardar credenciales (opcional)
-            with open("/content/token.pickle", "wb") as token:
-                pickle.dump(creds, token)
 
             import gspread
 
@@ -651,7 +647,7 @@ def mostrar_parametros_tabla(modelo, orden, orden_seas, aic):
     print("-" * 60)
 
 # ======================================================
-# 5. FUNCIONES PARA GUARDAR RESULTADOS
+# 5. FUNCIONES PARA GUARDAR RESULTADOS (SOLO FORMATOS PEQUEÑOS)
 # ======================================================
 def guardar_pronostico_csv(modelo, serie, variable, pasos=72):
     """Guarda el pronóstico en un archivo CSV"""
@@ -694,12 +690,12 @@ def guardar_pronostico_csv(modelo, serie, variable, pasos=72):
         ruta_completa = os.path.join(carpetas['datos'], nombre_archivo)
         
         df_pronostico.to_csv(ruta_completa, index=False, encoding='utf-8')
-        print(f"✅ Pronóstico guardado en: {ruta_completa}")
+        print(f"✅ Pronóstico CSV guardado en: {ruta_completa}")
         
         return ruta_completa
         
     except Exception as e:
-        print(f"⚠️  Error guardando pronóstico para {variable}: {e}")
+        print(f"⚠️  Error guardando pronóstico CSV para {variable}: {e}")
         return None
 
 def guardar_grafico_pronostico(fig, variable):
@@ -713,7 +709,7 @@ def guardar_grafico_pronostico(fig, variable):
         ruta_completa = os.path.join(carpetas['graficos'], nombre_archivo)
         
         fig.savefig(ruta_completa, dpi=150, bbox_inches='tight')
-        print(f"✅ Gráfico guardado en: {ruta_completa}")
+        print(f"✅ Gráfico PNG guardado en: {ruta_completa}")
         
         return ruta_completa
         
@@ -721,37 +717,40 @@ def guardar_grafico_pronostico(fig, variable):
         print(f"⚠️  Error guardando gráfico para {variable}: {e}")
         return None
 
-def guardar_modelo(modelo, variable, orden, orden_seas, aic):
-    """Guarda el modelo en formato pickle"""
+def guardar_parametros_json(modelo, variable, orden, orden_seas, aic, ecuacion):
+    """Guarda solo los parámetros del modelo en formato JSON (archivo pequeño)"""
     try:
         if carpetas is None:
             return None
             
         fecha_actual = datetime.now().strftime('%Y%m%d_%H%M')
-        nombre_archivo = f"modelo_{variable}_{fecha_actual}.pkl"
-        ruta_completa = os.path.join(carpetas['modelos'], nombre_archivo)
+        nombre_archivo = f"parametros_{variable}_{fecha_actual}.json"
+        ruta_completa = os.path.join(carpetas['resumen'], nombre_archivo)
         
-        # Guardar información del modelo
+        # Extraer solo la información esencial (sin el modelo completo)
         info_modelo = {
-            'modelo': modelo,
             'variable': variable,
-            'orden': orden,
-            'orden_estacional': orden_seas,
-            'aic': aic,
-            'fecha_entrenamiento': datetime.now(),
-            'parametros': modelo.params.to_dict(),
-            'resumen': str(modelo.summary())
+            'orden': str(orden),
+            'orden_estacional': str(orden_seas),
+            'aic': float(aic),
+            'ecuacion': ecuacion,
+            'fecha_entrenamiento': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'parametros': {str(k): float(v) for k, v in modelo.params.items()},
+            'num_observaciones': modelo.nobs,
+            'log_likelihood': float(modelo.llf),
+            'bic': float(modelo.bic),
+            'hqic': float(modelo.hqic)
         }
         
-        with open(ruta_completa, 'wb') as f:
-            pickle.dump(info_modelo, f)
+        with open(ruta_completa, 'w', encoding='utf-8') as f:
+            json.dump(info_modelo, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ Modelo guardado en: {ruta_completa}")
+        print(f"✅ Parámetros JSON guardados en: {ruta_completa}")
         
         return ruta_completa
         
     except Exception as e:
-        print(f"⚠️  Error guardando modelo para {variable}: {e}")
+        print(f"⚠️  Error guardando parámetros JSON para {variable}: {e}")
         return None
 
 def crear_resumen_general(resultados, ecuaciones, df_hourly, variables):
@@ -772,11 +771,15 @@ def crear_resumen_general(resultados, ecuaciones, df_hourly, variables):
                     'variable': var,
                     'orden': str(modelo.specification.order),
                     'orden_estacional': str(modelo.specification.seasonal_order),
-                    'aic': modelo.aic,
-                    'num_observaciones': len(df_hourly[var]),
+                    'aic': float(modelo.aic),
+                    'bic': float(modelo.bic),
+                    'hqic': float(modelo.hqic),
+                    'log_likelihood': float(modelo.llf),
+                    'num_observaciones': int(modelo.nobs),
                     'ecuacion': ecuaciones.get(var, 'No disponible'),
                     'fecha_ultimo_dato': df_hourly.index[-1].strftime('%Y-%m-%d %H:%M:%S'),
-                    'valor_ultimo_dato': df_hourly[var].iloc[-1]
+                    'valor_ultimo_dato': float(df_hourly[var].iloc[-1]),
+                    'fecha_generacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 })
         
         df_resumen = pd.DataFrame(resumen_data)
@@ -789,14 +792,14 @@ def crear_resumen_general(resultados, ecuaciones, df_hourly, variables):
         ruta_json = os.path.join(carpetas['resumen'], f"resumen_modelos_{fecha_actual}.json")
         df_resumen.to_json(ruta_json, orient='records', indent=2)
         
-        print(f"✅ Resumen guardado en: {ruta_csv}")
+        print(f"✅ Resumen CSV guardado en: {ruta_csv}")
         print(f"✅ Resumen JSON guardado en: {ruta_json}")
         
-        return ruta_csv
+        return ruta_csv, ruta_json
         
     except Exception as e:
         print(f"⚠️  Error creando resumen general: {e}")
-        return None
+        return None, None
 
 # ======================================================
 # 6. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON MANEJO DE FECHAS
@@ -973,7 +976,6 @@ limites = {
 
 resultados = {}
 ecuaciones = {}
-parametros_tablas = {}
 archivos_guardados = []
 
 print(f"\n{'='*80}")
@@ -1011,13 +1013,6 @@ for var in variables:
         # Guardar resultados en diccionarios
         resultados[var] = modelo
         ecuaciones[var] = ecuacion
-        parametros_tablas[var] = {
-            "orden": orden,
-            "orden_estacional": orden_s,
-            "aic": aic,
-            "parametros": parametros,
-            "summary": summary,
-        }
 
         # Graficar pronóstico (72 horas adelante)
         try:
@@ -1039,13 +1034,13 @@ for var in variables:
         except Exception as e:
             print(f"⚠️  Error guardando CSV para {var}: {e}")
         
-        # Guardar modelo
+        # Guardar parámetros en JSON (archivo pequeño)
         try:
-            ruta_modelo = guardar_modelo(modelo, var, orden, orden_s, aic)
-            if ruta_modelo:
-                archivos_guardados.append(("Modelo", var, ruta_modelo))
+            ruta_json = guardar_parametros_json(modelo, var, orden, orden_s, aic, ecuacion)
+            if ruta_json:
+                archivos_guardados.append(("JSON Parámetros", var, ruta_json))
         except Exception as e:
-            print(f"⚠️  Error guardando modelo para {var}: {e}")
+            print(f"⚠️  Error guardando parámetros JSON para {var}: {e}")
             
     except Exception as e:
         print(f"❌ Error procesando {var}: {e}")
@@ -1055,9 +1050,11 @@ for var in variables:
 # 8. CREAR RESUMEN GENERAL
 # ======================================================
 try:
-    ruta_resumen = crear_resumen_general(resultados, ecuaciones, df_hourly, variables)
-    if ruta_resumen:
-        archivos_guardados.append(("Resumen", "General", ruta_resumen))
+    ruta_csv_resumen, ruta_json_resumen = crear_resumen_general(resultados, ecuaciones, df_hourly, variables)
+    if ruta_csv_resumen:
+        archivos_guardados.append(("Resumen CSV", "General", ruta_csv_resumen))
+    if ruta_json_resumen:
+        archivos_guardados.append(("Resumen JSON", "General", ruta_json_resumen))
 except Exception as e:
     print(f"⚠️  Error creando resumen general: {e}")
 
@@ -1090,6 +1087,15 @@ print(f"{'='*80}")
 if archivos_guardados:
     for tipo, variable, ruta in archivos_guardados:
         print(f"  {tipo} - {variable}: {ruta}")
+    
+    # Contar por tipo
+    tipos_contador = {}
+    for tipo, _, _ in archivos_guardados:
+        tipos_contador[tipo] = tipos_contador.get(tipo, 0) + 1
+    
+    print(f"\n📊 Total de archivos guardados: {len(archivos_guardados)}")
+    for tipo, count in tipos_contador.items():
+        print(f"  {tipo}: {count} archivo(s)")
 else:
     print("  No se guardaron archivos.")
 
@@ -1111,10 +1117,46 @@ if carpetas:
             if archivos:
                 print(f"  {nombre} ({len(archivos)} archivos):")
                 for archivo in archivos[:5]:  # Mostrar solo primeros 5
-                    print(f"    - {archivo}")
+                    tamaño = os.path.getsize(os.path.join(ruta, archivo))
+                    tamaño_mb = tamaño / (1024 * 1024)
+                    print(f"    - {archivo} ({tamaño_mb:.2f} MB)")
                 if len(archivos) > 5:
                     print(f"    ... y {len(archivos) - 5} más")
             else:
                 print(f"  {nombre}: vacía")
 else:
     print("⚠️  No se pudieron crear carpetas para guardar resultados")
+
+# ======================================================
+# 11. LIMPIAR ARCHIVOS TEMPORALES GRANDES
+# ======================================================
+print(f"\n{'='*80}")
+print(" 🧹 LIMPIANDO ARCHIVOS TEMPORALES")
+print("=" * 80)
+
+# Listar archivos temporales grandes y eliminarlos si existen
+archivos_a_eliminar = []
+for root, dirs, files in os.walk('.'):
+    for file in files:
+        if file.endswith('.pkl'):
+            ruta_completa = os.path.join(root, file)
+            archivos_a_eliminar.append(ruta_completa)
+
+if archivos_a_eliminar:
+    print(f"⚠️  Encontrados {len(archivos_a_eliminar)} archivos .pkl grandes:")
+    for archivo in archivos_a_eliminar:
+        try:
+            tamaño = os.path.getsize(archivo)
+            tamaño_mb = tamaño / (1024 * 1024)
+            print(f"  - {archivo} ({tamaño_mb:.2f} MB)")
+            
+            # Preguntar si eliminar (en modo interactivo)
+            # En GitHub Actions, eliminamos automáticamente
+            if not IN_COLAB:
+                os.remove(archivo)
+                print(f"    ✅ Eliminado")
+        except:
+            pass
+    print("✅ Archivos temporales grandes eliminados para evitar problemas con GitHub")
+else:
+    print("✅ No se encontraron archivos .pkl grandes")
