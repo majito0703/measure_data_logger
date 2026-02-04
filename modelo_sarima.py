@@ -249,6 +249,29 @@ else:
 print("\n📋 Primeras filas de datos:")
 print(df0.head(2))
 
+# ======================================================
+# 6.1. VERIFICACIÓN DE ACTUALIZACIÓN DE DATOS
+# ======================================================
+print("\n📅 Verificando actualización de datos...")
+print(f"Última fecha en datos: {df0['Date'].iloc[-1]}")
+print(f"Total de registros: {len(df0)}")
+
+# Verificar si hay datos recientes
+try:
+    ultima_fecha_str = df0['Date'].iloc[-1]
+    ultima_fecha = pd.to_datetime(ultima_fecha_str, format="%d/%m/%Y %H:%M:%S", errors='coerce')
+    if ultima_fecha:
+        hoy = datetime.now()
+        diferencia = hoy - ultima_fecha
+        print(f"Días desde el último registro: {diferencia.days}")
+        
+        if diferencia.days > 7:
+            print("⚠️  ADVERTENCIA: Los datos pueden estar desactualizados")
+        else:
+            print("✅ Datos actualizados recientemente")
+except Exception as e:
+    print(f"⚠️  Error verificando actualización: {e}")
+
 df0.rename(
     columns={
         "Date": "date",
@@ -411,28 +434,88 @@ plt.show()
 fig = plot_time_series(df2, variable="PM 2.5", units="µg/m³", time_unit="Day")
 plt.show()
 
+# ======================================================
+# MODIFICACIÓN CRÍTICA: SELECCIÓN DE ÚLTIMOS 1200 DATOS Y ELIMINACIÓN DE ÚLTIMOS 2 DÍAS
+# ======================================================
+print("\n" + "="*60)
+print("📊 SELECCIÓN DE DATOS PARA MODELADO")
+print("="*60)
+
 # Copiar el DataFrame
 df3 = df2.copy()
 
-# Encontrar las fechas únicas y seleccionar los dos últimos días
-fechas_unicas = sorted(set(df3.index.date))
-dias_a_eliminar = fechas_unicas[-2:]  # Los dos últimos días
+print(f"📊 Datos totales disponibles: {len(df3)} registros")
 
-# Convertir a lista de strings para comparación
-dias_a_eliminar_str = [d.strftime("%Y-%m-%d") for d in dias_a_eliminar]
+# ======================================================
+# PASO 1: SELECCIONAR ÚLTIMOS 1200 DATOS
+# ======================================================
 
-# Crear una máscara booleana
-mask = df3.index.strftime("%Y-%m-%d").isin(dias_a_eliminar_str)
+# Obtener los últimos 1200 datos (aproximadamente 200 horas con datos cada 10 minutos)
+# Si hay menos de 1200 datos, usar todos los disponibles
+total_datos = len(df3)
+datos_a_usar = min(1200, total_datos)
 
-# Eliminar los dos últimos días
-df3 = df3[~mask]
+# Seleccionar los últimos N datos
+df3_temp = df3.tail(datos_a_usar).copy()
 
-# Eliminar columna PM 1
+print(f"✅ Últimos {len(df3_temp)} datos seleccionados para procesar")
+print(f"📅 Rango inicial: {df3_temp.index[0]} a {df3_temp.index[-1]}")
+
+# ======================================================
+# PASO 2: ELIMINAR LOS ÚLTIMOS 2 DÍAS DE ESOS 1200 DATOS
+# ======================================================
+
+# Encontrar las fechas únicas en los datos seleccionados
+fechas_unicas = sorted(set(df3_temp.index.date))
+print(f"\n📅 Fechas únicas en los datos seleccionados: {len(fechas_unicas)} días")
+
+if len(fechas_unicas) > 2:
+    # Seleccionar los DOS últimos días
+    dias_a_eliminar = fechas_unicas[-2:]  # Los dos últimos días
+    
+    print(f"🗑️  Eliminando datos de los últimos 2 días:")
+    for dia in dias_a_eliminar:
+        print(f"   - {dia.strftime('%Y-%m-%d')}")
+    
+    # Convertir a lista de strings para comparación
+    dias_a_eliminar_str = [d.strftime("%Y-%m-%d") for d in dias_a_eliminar]
+    
+    # Crear una máscara booleana
+    mask = df3_temp.index.strftime("%Y-%m-%d").isin(dias_a_eliminar_str)
+    
+    # Contar cuántos registros se eliminarán
+    registros_a_eliminar = mask.sum()
+    print(f"   Total de registros a eliminar: {registros_a_eliminar}")
+    
+    # Eliminar los dos últimos días
+    df3 = df3_temp[~mask].copy()
+    
+    print(f"\n✅ Datos después de eliminar últimos 2 días:")
+    print(f"   - Registros restantes: {len(df3)}")
+    print(f"   - Rango final: {df3.index[0]} a {df3.index[-1]}")
+    
+else:
+    # Si hay 2 días o menos, usar todos los datos disponibles
+    print(f"⚠️  Solo hay {len(fechas_unicas)} días de datos, usando todos disponibles")
+    df3 = df3_temp.copy()
+
+# ======================================================
+# PASO 3: ELIMINAR COLUMNA PM 1 (si existe)
+# ======================================================
 df3 = df3.drop(columns=["PM 1"], errors="ignore")
 
-# Verificar
-print(df3.head())
-print(df3.tail())
+# Verificación final
+print(f"\n📋 Resumen final:")
+print(f"   - Total registros para modelado: {len(df3)}")
+print(f"   - Columnas: {list(df3.columns)}")
+print(f"   - Rango temporal: {df3.index[0]} a {df3.index[-1]}")
+print(f"   - Días cubiertos: {(df3.index[-1] - df3.index[0]).days} días")
+
+# Mostrar las primeras y últimas filas
+print(f"\n🔍 Primeras 3 filas:")
+print(df3.head(3))
+print(f"\n🔍 Últimas 3 filas:")
+print(df3.tail(3))
 
 # ======================================================
 # CONFIGURAR CARPETAS DE SALIDA
@@ -663,19 +746,36 @@ def mostrar_parametros_tabla(modelo, orden, orden_seas, aic):
 # 5. FUNCIONES PARA GUARDAR RESULTADOS (SOLO FORMATOS PEQUEÑOS)
 # ======================================================
 def guardar_pronostico_csv(modelo, serie, variable, pasos=72):
-    """Guarda el pronóstico en un archivo CSV"""
+    """Guarda el pronóstico en un archivo CSV con fechas correctas"""
     try:
         if carpetas is None:
             print("⚠️  No se pudieron crear carpetas, no se guardará el pronóstico")
             return None
-            
+        
+        # Obtener pronóstico
         pred = modelo.get_forecast(steps=pasos)
         media = pred.predicted_mean
         conf_95 = pred.conf_int(alpha=0.05)
         
+        # Obtener última fecha histórica
+        ultima_fecha_historica = serie.index[-1]
+        
+        # Inferir frecuencia
+        freq = pd.infer_freq(serie.index) or 'H'
+        
+        # Crear fechas para el pronóstico
+        if isinstance(freq, str):
+            fechas_pronostico = pd.date_range(
+                start=ultima_fecha_historica + pd.Timedelta(hours=1), 
+                periods=pasos, 
+                freq=freq
+            )
+        else:
+            fechas_pronostico = [ultima_fecha_historica + (i+1) * freq for i in range(pasos)]
+        
         # Crear DataFrame con el pronóstico
         df_pronostico = pd.DataFrame({
-            'fecha': media.index,
+            'fecha': fechas_pronostico,
             'pronostico': media.values,
             'limite_inferior_95': conf_95.iloc[:, 0],
             'limite_superior_95': conf_95.iloc[:, 1]
@@ -770,7 +870,7 @@ def crear_resumen_general(resultados, ecuaciones, df_hourly, variables):
     """Crea un resumen general de todos los modelos"""
     try:
         if carpetas is None:
-            return None
+            return None, None
             
         fecha_actual = datetime.now().strftime('%Y%m%d_%H%M')
         
@@ -815,126 +915,115 @@ def crear_resumen_general(resultados, ecuaciones, df_hourly, variables):
         return None, None
 
 # ======================================================
-# 6. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON MANEJO DE FECHAS
+# 6. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON MANEJO DE FECHAS ACTUALIZADO
 # ======================================================
-def graficar_pronostico(modelo, serie, variable, pasos=48, limite=None):
+def graficar_pronostico(modelo, serie, variable, pasos=72, limite=None):
     try:
+        # Obtener pronóstico
         pred = modelo.get_forecast(steps=pasos)
         media = pred.predicted_mean
         conf_80 = pred.conf_int(alpha=0.20)
         conf_95 = pred.conf_int(alpha=0.05)
-
+        
         # Crear figura con tamaño adecuado
         fig, ax = plt.subplots(figsize=(15, 6))
-
-        # Datos históricos
-        ax.plot(serie.index, serie.values, label="Medido", color="black", linewidth=1.5)
-
-        # Verificar si el pronóstico tiene índice de fechas
-        if hasattr(media.index, 'freq') and media.index.freq is not None:
-            # El pronóstico tiene fechas
-            fecha_min = serie.index.min()
-            fecha_max = media.index.max()
-            
-            # Pronóstico
-            ax.plot(
-                media.index,
-                media.values,
-                label=f"Pronóstico {variable}",
-                color="red",
-                linewidth=2,
-            )
-
-            # Bandas de confianza
-            ax.fill_between(
-                conf_80.index,
-                conf_80.iloc[:, 0],
-                conf_80.iloc[:, 1],
-                color="green",
-                alpha=0.3,
-                label="Confianza 80%",
-            )
-            ax.fill_between(
-                conf_95.index,
-                conf_95.iloc[:, 0],
-                conf_95.iloc[:, 1],
-                color="yellow",
-                alpha=0.2,
-                label="Confianza 95%",
-            )
-
-            # Línea vertical para separar historial de pronóstico
-            ultimo_historial = serie.index[-1]
-            ax.axvline(x=ultimo_historial, color="gray", linestyle="--", alpha=0.7, linewidth=1)
-
-            # Configurar formato de fechas
-            # Calcular diferencia de días para determinar el formato
-            dias_totales = (fecha_max - fecha_min).days
-
-            if dias_totales <= 7:  # Si es menos de una semana
-                # Formato: Día Hora (ej: "11 Nov 10:00")
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
-                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
-            elif dias_totales <= 30:  # Si es menos de un mes
-                # Formato: Día Mes (ej: "11 Nov")
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
-                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-            else:  # Si es más de un mes
-                # Formato: Mes (ej: "Nov 2025")
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-                ax.xaxis.set_major_locator(mdates.MonthLocator())
-
-            # Agregar leyenda de separación
-            ax.text(
-                ultimo_historial + timedelta(hours=1),
-                ax.get_ylim()[1] * 0.95,
-                "Pronóstico",
-                fontsize=10,
-                color="darkred",
-                alpha=0.8,
-            )
-        else:
-            # El pronóstico no tiene fechas, usar índice numérico
-            print(f"⚠️  Pronóstico para {variable} no tiene fechas, usando índice numérico")
-            
-            # Crear fechas para el pronóstico
-            ultima_fecha = serie.index[-1]
-            frec = pd.infer_freq(serie.index) or 'H'
-            fechas_pronostico = pd.date_range(
-                start=ultima_fecha + pd.Timedelta(hours=1), 
-                periods=pasos, 
-                freq=frec
-            )
-            
-            # Pronóstico
-            ax.plot(
-                fechas_pronostico,
-                media.values,
-                label=f"Pronóstico {variable}",
-                color="red",
-                linewidth=2,
-            )
-
-            # Línea vertical para separar historial de pronóstico
-            ax.axvline(x=ultima_fecha, color="gray", linestyle="--", alpha=0.7, linewidth=1)
-
-            # Formato de fechas para todo el gráfico
-            todas_fechas = list(serie.index) + list(fechas_pronostico)
-            fecha_min = min(todas_fechas)
-            fecha_max = max(todas_fechas)
-            
-            dias_totales = (fecha_max - fecha_min).days
-            
-            if dias_totales <= 7:
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
-                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
-            elif dias_totales <= 30:
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
-                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+        
+        # ============================================
+        # MEJORA: Asegurar que las fechas del pronóstico sean correctas
+        # ============================================
+        
+        # Obtener la última fecha histórica
+        ultima_fecha_historica = serie.index[-1]
+        
+        # Verificar si la serie tiene frecuencia definida
+        freq = pd.infer_freq(serie.index)
+        if freq is None:
+            # Intentar inferir la frecuencia (horaria en este caso)
+            if len(serie) > 1:
+                freq = pd.Timedelta(serie.index[-1] - serie.index[-2])
             else:
-                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-                ax.xaxis.set_major_locator(mdates.MonthLocator())
-
+                freq = pd.Timedelta(hours=1)  # Valor por defecto
+        
+        # Crear índice para el pronóstico
+        if isinstance(freq, pd.Timedelta):
+            # Usar la frecuencia inferida
+            fechas_pronostico = [ultima_fecha_historica + (i+1) * freq for i in range(pasos)]
+        else:
+            # Usar frecuencia explícita (ej: 'H' para horas)
+            fechas_pronostico = pd.date_range(
+                start=ultima_fecha_historica + pd.Timedelta(hours=1), 
+                periods=pasos, 
+                freq=freq if isinstance(freq, str) else 'H'
+            )
+        
+        # Asignar las fechas al pronóstico
+        media.index = fechas_pronostico
+        conf_80.index = fechas_pronostico
+        conf_95.index = fechas_pronostico
+        
+        # ============================================
+        # CONTINUAR CON EL GRÁFICO
+        # ============================================
+        
+        # Graficar datos históricos (últimos 7 días para mejor visualización)
+        ultimos_7_dias = serie.index[-min(len(serie), 7*24):]  # Últimas 168 horas (7 días)
+        ax.plot(
+            ultimos_7_dias, 
+            serie.loc[ultimos_7_dias].values, 
+            label="Medido (últimos 7 días)", 
+            color="black", 
+            linewidth=1.5
+        )
+        
+        # Pronóstico
+        ax.plot(
+            media.index,
+            media.values,
+            label=f"Pronóstico {variable}",
+            color="red",
+            linewidth=2,
+        )
+        
+        # Bandas de confianza
+        ax.fill_between(
+            conf_80.index,
+            conf_80.iloc[:, 0],
+            conf_80.iloc[:, 1],
+            color="green",
+            alpha=0.3,
+            label="Confianza 80%",
+        )
+        ax.fill_between(
+            conf_95.index,
+            conf_95.iloc[:, 0],
+            conf_95.iloc[:, 1],
+            color="yellow",
+            alpha=0.2,
+            label="Confianza 95%",
+        )
+        
+        # Línea vertical para separar historial de pronóstico
+        ax.axvline(x=ultima_fecha_historica, color="gray", linestyle="--", alpha=0.7, linewidth=1)
+        
+        # Formatear eje X para mostrar fechas recientes
+        fecha_min = ultimos_7_dias[0]
+        fecha_max = media.index[-1]
+        
+        # Configurar formato de fechas según el rango
+        dias_totales = (fecha_max - fecha_min).days
+        
+        if dias_totales <= 7:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+            ax.xaxis.set_major_locator(mdates.HourLocator(interval=12))
+            ax.tick_params(axis='x', rotation=45)
+        elif dias_totales <= 30:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+            ax.tick_params(axis='x', rotation=45)
+        else:
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+            ax.xaxis.set_major_locator(mdates.MonthLocator())
+        
         # Línea de norma o límite permitido
         if limite is not None:
             ax.axhline(
@@ -944,9 +1033,6 @@ def graficar_pronostico(modelo, serie, variable, pasos=48, limite=None):
                 linewidth=2,
                 label="Nivel máximo permitido (24H) en Colombia",
             )
-
-        # Rotar etiquetas para mejor lectura
-        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
         # Títulos y etiquetas
         ax.set_title(f"Pronóstico SARIMA - {variable}", fontsize=14, fontweight="bold")
@@ -975,6 +1061,8 @@ def graficar_pronostico(modelo, serie, variable, pasos=48, limite=None):
         
     except Exception as e:
         print(f"⚠️  Error al graficar pronóstico para {variable}: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 # ======================================================
@@ -1141,7 +1229,38 @@ else:
     print("⚠️  No se pudieron crear carpetas para guardar resultados")
 
 # ======================================================
-# 11. LIMPIAR ARCHIVOS TEMPORALES GRANDES
+# 11. RESUMEN DE ACTUALIZACIÓN DE DATOS
+# ======================================================
+print(f"\n{'='*80}")
+print(" 🔄 RESUMEN DE ACTUALIZACIÓN DE DATOS")
+print(f"{'='*80}")
+
+if 'df0' in locals() and not df0.empty:
+    print(f"📊 Datos cargados de Google Sheets:")
+    print(f"  - Total registros: {len(df0)}")
+    print(f"  - Primera fecha: {df0['date'].iloc[0]}")
+    print(f"  - Última fecha: {df0['date'].iloc[-1]}")
+    
+    try:
+        ultima_fecha_str = df0['date'].iloc[-1]
+        ultima_fecha = pd.to_datetime(ultima_fecha_str, format="%d/%m/%Y %H:%M:%S")
+        hoy = datetime.now()
+        
+        print(f"\n📅 Análisis de actualización:")
+        print(f"  - Último registro: {ultima_fecha.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"  - Fecha actual: {hoy.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"  - Diferencia: {(hoy - ultima_fecha).days} días")
+        
+        if (hoy - ultima_fecha).days <= 2:
+            print("  ✅ Datos actualizados (menos de 2 días de diferencia)")
+        else:
+            print(f"  ⚠️  Los datos tienen más de {(hoy - ultima_fecha).days} días")
+            
+    except Exception as e:
+        print(f"  ⚠️  Error analizando fechas: {e}")
+
+# ======================================================
+# 12. LIMPIAR ARCHIVOS TEMPORALES GRANDES
 # ======================================================
 print(f"\n{'='*80}")
 print(" 🧹 LIMPIANDO ARCHIVOS TEMPORALES")
@@ -1173,3 +1292,8 @@ if archivos_a_eliminar:
     print("✅ Archivos temporales grandes eliminados para evitar problemas con GitHub")
 else:
     print("✅ No se encontraron archivos .pkl grandes")
+
+print(f"\n{'='*80}")
+print(" 🎯 MODELO ACTUALIZADO PARA USAR ÚLTIMOS 1200 DATOS")
+print("    Y ELIMINAR ÚLTIMOS 2 DÍAS")
+print(f"{'='*80}")
