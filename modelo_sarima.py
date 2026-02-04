@@ -129,9 +129,7 @@ except:
 
 if IN_COLAB:
     print("📦 Instalando dependencias en Colab...")
-    !python3 -m pip install --upgrade pip >& /dev/null
-    !python3 -m pip install jupyter-black >& /dev/null
-    !pip install gspread pandas numpy matplotlib statsmodels >& /dev/null
+
 else:
     print("✅ En GitHub, las dependencias se instalan desde requirements.txt")
 
