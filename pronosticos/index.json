@@ -1,0 +1,15 @@
+{
+  "variables": [
+    "Temperature",
+    "Humidity",
+    "PM 2.5",
+    "PM 10"
+  ],
+  "ultima_actualizacion": "2026-02-04 23:48:23",
+  "archivos": {
+    "Temperature": "pronostico_Temperature.json",
+    "Humidity": "pronostico_Humidity.json",
+    "PM 2.5": "pronostico_PM_2_5.json",
+    "PM 10": "pronostico_PM_10.json"
+  }
+}
