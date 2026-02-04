@@ -573,7 +573,7 @@ header {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: linear-gradient(135deg, var(--ucc-verde), var(--ucc-verde-claro);
+  background: linear-gradient(135deg, var(--ucc-verde), var(--ucc-verde-claro));
   color: white;
   font-size: 10px;
   padding: 4px 8px;
@@ -722,7 +722,7 @@ table {
   table {
     display: block;
     overflow-x: auto;
-    white-space: nowarp;
+    white-space: nowrap;
     -webkit-overflow-scrolling: touch;
   }
   
@@ -1302,7 +1302,7 @@ html { scroll-behavior: smooth; }
   margin: -1px;
   overflow: hidden;
   clip: rect(0,0,0,0);
-  white-space: nowarp;
+  white-space: nowrap;
   border-width: 0;
 }
 </style>
@@ -1432,7 +1432,7 @@ html { scroll-behavior: smooth; }
         <button class="range-btn active" data-range="24h">⏱️ Últimas 24h</button>
         <button class="range-btn" data-range="7d">📅 Última semana</button>
         <button class="range-btn" data-range="all">📊 Todo</button>
-        <button class="range-btn" data-range="forecast" id="forecastBtn">🔮 Pronósticos SARIMA</button>
+        <button class="range-btn" data-range="forecast" id="forecastBtn">🔮 Pronósticos</button>
       </div>
       
       <div class="controls-group" style="margin-left: auto;">
@@ -1477,15 +1477,15 @@ html { scroll-behavior: smooth; }
     <!-- Pronósticos por hora -->
     <div class="hourly-forecast-container" id="hourlyForecastContainer">
       <div class="hourly-forecast-title">
-        🔮 Pronóstico SARIMA por Hora
+        🔮 Pronóstico por Hora
       </div>
       <div class="hourly-forecast-scroll">
         <div class="hourly-forecast" id="hourlyForecast"></div>
       </div>
     </div>
     
-    <!-- Parámetros del modelo -->
-    <div class="model-params-card" id="modelParamsCard" style="display: none;">
+    <!-- Parámetros del modelo OCULTOS -->
+    <div class="model-params-card" id="modelParamsCard" style="display: none !important;">
       <div class="canvas-title">
         <strong>⚙️ Parámetros del Modelo SARIMA</strong>
         <small id="modelInfo">Selecciona una variable</small>
@@ -1529,7 +1529,7 @@ html { scroll-behavior: smooth; }
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: red;"></div>
-          <span>Pronóstico SARIMA</span>
+          <span>Pronóstico</span>
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: rgba(0, 255, 0, 0.3); border: 1px solid #00c853;"></div>
@@ -1538,6 +1538,10 @@ html { scroll-behavior: smooth; }
         <div class="legend-item">
           <div class="legend-color" style="background: rgba(255, 255, 0, 0.3); border: 1px solid #ffd600;"></div>
           <span>Confianza 95%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: transparent; border: 1px dashed blue;"></div>
+          <span>Límite Permitido</span>
         </div>
       </div>
     </div>
@@ -1590,22 +1594,6 @@ html { scroll-behavior: smooth; }
 const API_URL = "datos/datos_sensores.json";
 const FORECAST_BASE_URL = "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/";
 
-// Archivos JSON fijos generados por el modelo SARIMA
-const FORECAST_FILES = {
-  'temp': 'pronostico_temperature.json',
-  'hum': 'pronostico_humidity.json',
-  'pm10': 'pronostico_pm10.json',
-  'pm25': 'pronostico_pm25.json'
-};
-
-// Mapeo de variables para pronósticos
-const FORECAST_VARIABLE_MAP = {
-  'temp': 'temperature',
-  'hum': 'humidity',
-  'pm10': 'pm10',
-  'pm25': 'pm2.5'
-};
-
 let rawData = [];
 let filtered = [];
 let currentVariable = 'temp';
@@ -1620,18 +1608,8 @@ const charts = {};
    ============================ */
 function parseDate(s) {
   if (!s) return null;
-  // Intentar diferentes formatos
-  const formats = [
-    s => new Date(s.replace(' ', 'T')), // ISO con espacio
-    s => new Date(s), // ISO directo
-    s => new Date(s.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$2-$1')) // DD/MM/YYYY
-  ];
-  
-  for (const format of formats) {
-    const d = format(s);
-    if (!isNaN(d.getTime())) return d;
-  }
-  return new Date(s);
+  const d = new Date(s.replace(' ', 'T'));
+  return isNaN(d) ? new Date(s) : d;
 }
 
 function showNotification(message, type = 'success') {
@@ -1647,18 +1625,6 @@ function showNotification(message, type = 'success') {
     notification.style.opacity = '0';
     setTimeout(() => notification.remove(), 300);
   }, 3000);
-}
-
-function formatDateTime(date) {
-  if (!date) return 'N/A';
-  const d = new Date(date);
-  return d.toLocaleString('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 }
 
 /* ============================
@@ -1678,7 +1644,7 @@ async function loadData() {
       radiacion: r.radiacion !== undefined ? Number(r.radiacion) : null,
       pm10: r.pm10 !== undefined ? Number(r.pm10) : null,
       pm25: r.pm25 !== undefined ? Number(r.pm25) : null
-    })).filter(x => x.fecha && parseDate(x.fecha)).sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
+    })).filter(x => x.fecha).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
     
     if (rawData.length === 0) {
       showNotification('No se encontraron datos', 'warning');
@@ -1713,7 +1679,13 @@ function updateKPI() {
     { id: 'pm25', value: last.pm25, prev: prev.pm25 }
   ];
   
-  const timeStr = formatDateTime(last.fecha);
+  const timeStr = new Date(last.fecha).toLocaleString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
   
   updates.forEach(({ id, value, prev }) => {
     const el = document.getElementById(`card_${id}`);
@@ -1747,7 +1719,13 @@ function updateHistoricalTable() {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${formatDateTime(r.fecha)}</td>
+      <td>${new Date(r.fecha).toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}</td>
       <td>${r.temperatura !== null ? r.temperatura.toFixed(2) : '--'}</td>
       <td>${r.humedad !== null ? r.humedad.toFixed(2) : '--'}</td>
       <td>${r.radiacion !== null ? r.radiacion.toFixed(2) : '--'}</td>
@@ -1773,7 +1751,7 @@ function applyRange(range, from = null, to = null) {
   const end = to || new Date();
   filtered = rawData.filter(r => {
     const d = parseDate(r.fecha);
-    return d && d >= start && d <= end;
+    return d >= start && d <= end;
   });
   
   renderMainChart();
@@ -1859,9 +1837,6 @@ function renderChart(id, label, labels, data, color) {
           padding: 12,
           displayColors: false,
           callbacks: {
-            title: function(tooltipItems) {
-              return formatDateTime(tooltipItems[0].label);
-            },
             label: function(context) {
               return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
             }
@@ -1889,7 +1864,7 @@ function renderChart(id, label, labels, data, color) {
 }
 
 /* ============================
-   PRONÓSTICOS POR HORA - CONSUME JSON SARIMA
+   PRONÓSTICOS POR HORA
    ============================ */
 async function loadHourlyForecast() {
   const container = document.getElementById('hourlyForecastContainer');
@@ -1897,8 +1872,16 @@ async function loadHourlyForecast() {
   
   if (!container || !forecastDiv) return;
   
-  // Solo mostramos pronósticos para variables con archivo JSON
-  if (!FORECAST_FILES[currentVariable] || currentVariable === 'rad') {
+  const variableMap = {
+    'temp': 'temperature',
+    'hum': 'humidity',
+    'pm10': 'pm10',
+    'pm25': 'pm2.5'
+  };
+  
+  const forecastVariable = variableMap[currentVariable];
+  
+  if (!forecastVariable || currentVariable === 'rad') {
     container.style.display = 'none';
     return;
   }
@@ -1908,48 +1891,33 @@ async function loadHourlyForecast() {
     forecastDiv.innerHTML = `
       <div style="padding: 40px; text-align: center; color: #64748b;">
         <div class="loading-spinner" style="margin: 0 auto 10px;"></div>
-        Cargando pronósticos SARIMA...
+        Cargando pronósticos...
       </div>
     `;
     
-    const fileName = FORECAST_FILES[currentVariable];
+    const fileName = getForecastFileName(forecastVariable);
     const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
     
-    if (!response.ok) throw new Error(`Error ${response.status}: ${fileName}`);
+    if (!response.ok) throw new Error(`Error ${response.status}`);
     
     const data = await response.json();
     
-    // Verificar estructura del JSON SARIMA
-    if (!data.pronostico || typeof data.pronostico !== 'object') {
+    if (!data.pronosticos || data.pronosticos.length === 0) {
       forecastDiv.innerHTML = `
-        <div style="padding: 40px; text-align: center; color: #94a3b8;">
-          📊 No hay pronósticos disponibles en este momento
-        </div>
-      `;
-      return;
-    }
-    
-    // Obtener datos históricos (último disponible)
-    const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
-    const pronosticoEntries = Object.entries(data.pronostico);
-    
-    if (pronosticoEntries.length === 0) {
-      forecastDiv.innerHTML = `
-        <div style="padding: 40px; text-align: center; color: #94a3b8;">
+        <div style="padding: 40px; text-align: center; color: #64748b;">
           📊 No hay pronósticos disponibles
         </div>
       `;
       return;
     }
     
-    // Mostrar máximo 12 horas de pronóstico
-    const hoursToShow = Math.min(12, pronosticoEntries.length);
+    const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
+    const hoursToShow = Math.min(12, data.pronosticos.length);
     let cardsHTML = '';
     
-    // Card para datos históricos (actual)
     if (lastHistorical) {
       const currentValue = getCurrentValue(lastHistorical);
-      const now = parseDate(lastHistorical.fecha);
+      const now = new Date(lastHistorical.fecha);
       
       cardsHTML += `
         <div class="hour-card current">
@@ -1957,66 +1925,39 @@ async function loadHourlyForecast() {
           <div class="hour-day">${getDayName(now)}</div>
           <div class="hour-icon">${getVariableIcon(currentVariable, currentValue)}</div>
           <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
-          <div class="hour-label">${getUnitFromData(data)}</div>
-          <div class="hour-label" style="margin-top: 6px; font-weight: 700; color: var(--ucc-verde);">ACTUAL</div>
+          <div class="hour-label">${getUnit(forecastVariable)}</div>
+          <div class="hour-label" style="margin-top: 6px; font-weight: 700;">ACTUAL</div>
         </div>
       `;
     }
     
-    // Cards para pronósticos (próximas horas)
     for (let i = 0; i < hoursToShow; i++) {
-      const [timestamp, value] = pronosticoEntries[i];
-      const date = new Date(timestamp);
-      
-      // Formatear hora de manera amigable
-      const hourStr = date.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-      const dayStr = getDayName(date);
+      const forecast = data.pronosticos[i];
+      const date = new Date(forecast.fecha);
+      const value = parseFloat(forecast.pronostico);
+      const conf80Min = parseFloat(forecast.confianza_80_min);
+      const conf80Max = parseFloat(forecast.confianza_80_max);
       
       cardsHTML += `
         <div class="hour-card">
           <span class="forecast-badge">+${i + 1}h</span>
-          <div class="hour-time">${hourStr}</div>
-          <div class="hour-day">${dayStr}</div>
-          <div class="hour-icon">${getVariableIcon(currentVariable, parseFloat(value))}</div>
-          <div class="hour-value">${parseFloat(value).toFixed(1)}</div>
-          <div class="hour-label">${getUnitFromData(data)}</div>
-          <div class="hour-range" style="font-size: 10px; color: #64748b; margin-top: 4px;">
-            ${date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
-          </div>
+          <div class="hour-time">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="hour-day">${getDayName(date)}</div>
+          <div class="hour-icon">${getVariableIcon(currentVariable, value)}</div>
+          <div class="hour-value">${value.toFixed(1)}</div>
+          <div class="hour-label">${getUnit(forecastVariable)}</div>
+          ${conf80Min && conf80Max ? `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : ''}
         </div>
       `;
     }
     
-    // Actualizar el contenido del pronóstico
-    container.innerHTML = `
-      <div class="hourly-forecast-title">
-        🔮 Pronóstico SARIMA - ${getVariableDisplayName(FORECAST_VARIABLE_MAP[currentVariable] || currentVariable)} 
-        <span style="font-size: 12px; color: #64748b; margin-left: 10px;">
-          (Generado: ${formatDateTime(data.fecha_generacion)})
-        </span>
-      </div>
-      <div class="hourly-forecast-scroll">
-        <div class="hourly-forecast" id="hourlyForecast">${cardsHTML}</div>
-      </div>
-      <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 10px; font-size: 12px; color: #64748b;">
-        📊 Modelo: ${data.metadata?.modelo || 'SARIMA'} | 
-        Horizonte: ${data.metadata?.horizonte_pronostico || '72 horas'} | 
-        Puntos: ${data.estadisticas?.pronostico_puntos || pronosticoEntries.length}
-      </div>
-    `;
+    forecastDiv.innerHTML = cardsHTML;
     
   } catch (error) {
-    console.error('Error cargando pronósticos:', error);
-    container.innerHTML = `
-      <div class="hourly-forecast-title">
-        🔮 Pronóstico SARIMA
-      </div>
+    console.error('Error:', error);
+    forecastDiv.innerHTML = `
       <div style="padding: 40px; text-align: center; color: #ef4444;">
-        ❌ Error al cargar pronósticos SARIMA
-        <div style="font-size: 11px; margin-top: 8px;">${error.message}</div>
+        ❌ Error al cargar pronósticos
       </div>
     `;
   }
@@ -2034,7 +1975,6 @@ function getCurrentValue(data) {
 }
 
 function getDayName(date) {
-  if (!date) return 'N/A';
   const days = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
   return days[date.getDay()];
 }
@@ -2090,26 +2030,23 @@ function getVariableIcon(variable, value) {
   return icon;
 }
 
-function getUnitFromData(data) {
-  return data.unidad || '';
-}
-
-function getVariableDisplayName(variable) {
-  const names = {
-    'temperature': 'Temperatura',
-    'humidity': 'Humedad',
-    'pm2.5': 'PM2.5',
-    'pm10': 'PM10'
+function getUnit(variable) {
+  const units = {
+    'temperature': '°C',
+    'humidity': '%',
+    'pm2.5': 'µg/m³',
+    'pm10': 'µg/m³'
   };
-  return names[variable] || variable;
+  return units[variable] || '';
 }
 
 /* ============================
-   MODO PRONÓSTICOS SARIMA
+   MODO PRONÓSTICOS
    ============================ */
 function showForecastMode() {
   document.getElementById('forecastChartContainer').style.display = 'block';
-  document.getElementById('modelParamsCard').style.display = 'block';
+  // Parámetros del modelo OCULTOS permanentemente
+  // document.getElementById('modelParamsCard').style.display = 'block';
   document.getElementById('mainChartCard').style.display = 'none';
   document.getElementById('variableSelector').style.display = 'none';
   document.getElementById('hourlyForecastContainer').style.display = 'none';
@@ -2134,13 +2071,10 @@ function hideForecastMode() {
   }
 }
 
-/* ============================
-   CARGA DE TODOS LOS PRONÓSTICOS
-   ============================ */
 async function loadAllForecasts() {
   try {
     document.getElementById('forecastLoading').style.display = 'inline-block';
-    document.getElementById('forecastInfo').textContent = 'Cargando pronósticos SARIMA...';
+    document.getElementById('forecastInfo').textContent = 'Cargando...';
     
     forecastData = {};
     
@@ -2153,9 +2087,7 @@ async function loadAllForecasts() {
     
     const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
     document.getElementById('forecastInfo').innerHTML = `
-      <span class="badge ${loadedCount === 4 ? 'success' : 'warning'}">
-        ${loadedCount}/4 pronósticos cargados
-      </span>
+      <span class="badge success">${loadedCount}/4 cargados</span>
     `;
     
     if (forecastData['temperature']) {
@@ -2168,9 +2100,19 @@ async function loadAllForecasts() {
     console.error('Error:', error);
     document.getElementById('forecastLoading').style.display = 'none';
     document.getElementById('forecastInfo').innerHTML = `
-      <span class="badge error">Error cargando pronósticos</span>
+      <span class="badge error">Error</span>
     `;
   }
+}
+
+function getForecastFileName(variable) {
+  const fileMap = {
+    'temperature': 'pronostico_Temperature.json',
+    'humidity': 'pronostico_Humidity.json',
+    'pm2.5': 'pronostico_PM 2.5.json',
+    'pm10': 'pronostico_PM 10.json'
+  };
+  return fileMap[variable] || `pronostico_${variable}.json`;
 }
 
 async function loadForecastData(variable) {
@@ -2182,46 +2124,21 @@ async function loadForecastData(variable) {
     
     const data = await response.json();
     
-    // Convertir formato JSON SARIMA a estructura compatible
-    const historico = Object.entries(data.datos_historicos || {}).map(([fecha, valor]) => ({
-      fecha: fecha,
-      valor: valor
-    }));
-    
-    const pronosticos = Object.entries(data.pronostico || {}).map(([fecha, valor]) => ({
-      fecha: fecha,
-      pronostico: valor
-    }));
-    
     forecastData[variable] = {
-      variable: data.variable,
-      unidad: data.unidad,
-      fecha_generacion: data.fecha_generacion,
-      historico: historico,
-      pronosticos: pronosticos,
-      estadisticas: data.estadisticas || {},
-      metadata: data.metadata || {},
-      modelo: data.metadata?.modelo || 'SARIMA'
+      ...data,
+      variable: variable,
+      historico: Array.isArray(data.historico) ? data.historico : [],
+      pronosticos: Array.isArray(data.pronosticos) ? data.pronosticos : []
     };
     
     updateTabStatus(variable, 'loaded');
     return forecastData[variable];
     
   } catch (error) {
-    console.error(`Error cargando ${variable}:`, error);
+    console.error(`Error ${variable}:`, error);
     updateTabStatus(variable, 'error');
     return null;
   }
-}
-
-function getForecastFileName(variable) {
-  const fileMap = {
-    'temperature': 'pronostico_temperature.json',
-    'humidity': 'pronostico_humidity.json',
-    'pm2.5': 'pronostico_pm25.json',
-    'pm10': 'pronostico_pm10.json'
-  };
-  return fileMap[variable] || `pronostico_${variable}.json`;
 }
 
 function updateTabStatus(variable, status) {
@@ -2237,60 +2154,115 @@ function updateTabStatus(variable, status) {
 function updateForecastChart() {
   const data = forecastData[currentForecastVariable];
   if (!data || data.historico.length === 0 || data.pronosticos.length === 0) {
-    showNotification('No hay suficientes datos de pronóstico', 'warning');
+    showNotification('Datos insuficientes para pronóstico', 'warning');
     return;
   }
   
   const ctx = document.getElementById('forecastChart').getContext('2d');
   if (forecastChart) forecastChart.destroy();
   
-  // Preparar datos históricos
-  const historicalData = data.historico.map(item => ({
-    x: new Date(item.fecha),
-    y: parseFloat(item.valor) || 0
-  }));
+  const allDates = [];
+  const allData = [];
+  const datasetTypes = [];
   
-  // Preparar datos de pronóstico
-  const forecastDataPoints = data.pronosticos.map(item => ({
-    x: new Date(item.fecha),
-    y: parseFloat(item.pronostico) || 0
-  }));
+  data.historico.forEach(item => {
+    const date = new Date(item.fecha);
+    if (!isNaN(date.getTime())) {
+      allDates.push(date);
+      allData.push(parseFloat(item.valor) || 0);
+      datasetTypes.push('historical');
+    }
+  });
   
-  // Encontrar transición entre histórico y pronóstico
-  let transitionPoint = null;
-  if (historicalData.length > 0 && forecastDataPoints.length > 0) {
-    const lastHistorical = historicalData[historicalData.length - 1];
-    const firstForecast = forecastDataPoints[0];
-    
-    // Agregar punto intermedio para transición suave
-    transitionPoint = {
-      x: new Date((lastHistorical.x.getTime() + firstForecast.x.getTime()) / 2),
-      y: lastHistorical.y
-    };
+  const forecastStartDate = new Date(data.pronosticos[0].fecha);
+  if (allDates.length > 0) {
+    allDates.push(forecastStartDate);
+    allData.push(allData[allData.length - 1]);
+    datasetTypes.push('transition');
   }
   
-  // Combinar todos los datos
-  const allDataPoints = [...historicalData];
-  if (transitionPoint) allDataPoints.push(transitionPoint);
-  allDataPoints.push(...forecastDataPoints);
+  data.pronosticos.forEach(item => {
+    const date = new Date(item.fecha);
+    if (!isNaN(date.getTime())) {
+      allDates.push(date);
+      allData.push(parseFloat(item.pronostico) || 0);
+      datasetTypes.push('forecast');
+    }
+  });
   
-  // Crear datasets
   const datasets = [{
-    label: 'Datos Históricos',
-    data: historicalData,
-    borderColor: 'black',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    label: 'Datos',
+    data: allDates.map((date, i) => ({ x: date, y: allData[i] })),
+    borderColor: ctx => {
+      const index = ctx.dataIndex;
+      return datasetTypes[index] === 'historical' ? 'black' : 'red';
+    },
+    backgroundColor: 'transparent',
     borderWidth: 2,
     tension: 0.2,
-    pointRadius: 3,
-    fill: false
+    pointRadius: 0,
+    segment: {
+      borderColor: ctx => {
+        const index = ctx.p0DataIndex;
+        return datasetTypes[index] === 'historical' ? 'black' : 'red';
+      }
+    }
   }];
   
-  if (transitionPoint) {
+  const forecastDates = data.pronosticos.map(i => new Date(i.fecha));
+  const conf80Upper = data.pronosticos.map(i => parseFloat(i.confianza_80_max) || 0);
+  const conf80Lower = data.pronosticos.map(i => parseFloat(i.confianza_80_min) || 0);
+  const conf95Upper = data.pronosticos.map(i => parseFloat(i.confianza_95_max) || 0);
+  const conf95Lower = data.pronosticos.map(i => parseFloat(i.confianza_95_min) || 0);
+  
+  if (conf95Upper.length > 0) {
     datasets.push({
-      label: 'Transición',
-      data: [historicalData[historicalData.length - 1], transitionPoint, forecastDataPoints[0]],
-      borderColor: 'gray',
+      label: 'Conf 95%',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf95Upper[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(255, 255, 0, 0.2)',
+      fill: { target: '-1', above: 'rgba(255, 255, 0, 0.2)' },
+      pointRadius: 0,
+      borderWidth: 0
+    });
+    
+    datasets.push({
+      label: '_conf95_lower',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf95Lower[i] })),
+      borderColor: 'transparent',
+      pointRadius: 0,
+      borderWidth: 0
+    });
+  }
+  
+  if (conf80Upper.length > 0) {
+    datasets.push({
+      label: 'Conf 80%',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf80Upper[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+      fill: { target: '-1', above: 'rgba(0, 255, 0, 0.2)' },
+      pointRadius: 0,
+      borderWidth: 0
+    });
+    
+    datasets.push({
+      label: '_conf80_lower',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf80Lower[i] })),
+      borderColor: 'transparent',
+      pointRadius: 0,
+      borderWidth: 0
+    });
+  }
+  
+  if (data.limite_permitido && data.limite_permitido > 0) {
+    datasets.push({
+      label: 'Límite',
+      data: [
+        { x: allDates[0], y: data.limite_permitido },
+        { x: allDates[allDates.length - 1], y: data.limite_permitido }
+      ],
+      borderColor: 'blue',
       borderWidth: 1,
       borderDash: [5, 5],
       pointRadius: 0,
@@ -2298,18 +2270,6 @@ function updateForecastChart() {
     });
   }
   
-  datasets.push({
-    label: 'Pronóstico SARIMA',
-    data: forecastDataPoints,
-    borderColor: 'red',
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    borderWidth: 3,
-    tension: 0.2,
-    pointRadius: 4,
-    fill: false
-  });
-  
-  // Crear gráfico
   forecastChart = new Chart(ctx, {
     type: 'line',
     data: { datasets },
@@ -2317,23 +2277,49 @@ function updateForecastChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true,
-          position: 'top'
-        },
+        legend: { display: false },
         tooltip: {
           mode: 'index',
           intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#7AC043',
+          borderWidth: 2,
+          padding: 12,
+          displayColors: false,
           callbacks: {
-            title: function(tooltipItems) {
-              const date = new Date(tooltipItems[0].parsed.x);
-              return formatDateTime(date);
+            title: items => {
+              if (items.length > 0) {
+                const date = new Date(items[0].parsed.x);
+                return date.toLocaleString('es-ES', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              }
+              return '';
             },
-            label: function(context) {
-              let label = context.dataset.label || '';
-              if (label) label += ': ';
-              label += context.parsed.y.toFixed(2) + ' ' + (data.unidad || '');
-              return label;
+            label: context => {
+              const label = context.dataset.label || '';
+              const value = context.parsed.y;
+              
+              if (label === 'Datos') {
+                const index = context.dataIndex;
+                const type = datasetTypes[index];
+                return `${type === 'historical' ? '📊 Histórico' : '🔮 Pronóstico'}: ${value.toFixed(2)}`;
+              }
+              
+              if (label === 'Límite') return `⚠️ Límite: ${value.toFixed(2)}`;
+              if (label.includes('Conf') || label.startsWith('_')) return null;
+              
+              return `${label}: ${value.toFixed(2)}`;
+            },
+            filter: item => {
+              const label = item.dataset.label || '';
+              return label === 'Datos' || label === 'Límite';
             }
           }
         }
@@ -2342,14 +2328,16 @@ function updateForecastChart() {
         x: {
           type: 'time',
           time: {
-            unit: 'hour',
+            unit: 'day',
             displayFormats: {
-              hour: 'dd/MM HH:mm'
+              hour: 'dd/MM HH:mm',
+              day: 'dd/MM'
             }
           },
           title: {
             display: true,
-            text: 'Fecha y Hora'
+            text: '📅 Fecha',
+            color: '#64748b'
           },
           grid: { color: 'rgba(0,0,0,0.05)' }
         },
@@ -2357,7 +2345,8 @@ function updateForecastChart() {
           beginAtZero: currentForecastVariable.includes('pm'),
           title: {
             display: true,
-            text: getVariableDisplayName(currentForecastVariable) + (data.unidad ? ` (${data.unidad})` : '')
+            text: getVariableDisplayName(currentForecastVariable),
+            color: '#64748b'
           },
           grid: { color: 'rgba(0,0,0,0.05)' }
         }
@@ -2365,17 +2354,13 @@ function updateForecastChart() {
     }
   });
   
-  // Actualizar título e información
-  document.getElementById('forecastTitle').innerHTML = 
-    `🔮 ${getVariableDisplayName(currentForecastVariable)} - Pronóstico SARIMA`;
-  
-  const genDate = new Date(data.fecha_generacion);
+  document.getElementById('forecastTitle').innerHTML = `🔮 ${getVariableDisplayName(currentForecastVariable)}`;
   document.getElementById('forecastInfo').innerHTML = `
-    <span class="badge info">${data.modelo}</span>
-    <span class="badge success">Generado: ${formatDateTime(genDate)}</span>
-    <span class="badge info">Horizonte: ${data.pronosticos.length} horas</span>
+    <span class="badge info">${data.modelo || 'SARIMA'}</span>
+    <span class="badge success">AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
   `;
   
+  updateQuickStats();
   document.getElementById('forecastChart').style.height = '350px';
 }
 
@@ -2390,28 +2375,28 @@ function updateQuickStats() {
   const min = valores.length > 0 ? Math.min(...valores) : 0;
   const max = valores.length > 0 ? Math.max(...valores) : 0;
   const avg = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : 0;
-  const unidad = data.unidad || '';
+  const unidad = getUnit(currentForecastVariable);
   
   statsContainer.innerHTML = `
     <div class="stat-card">
       <div class="stat-title">📉 Mínimo</div>
       <div class="stat-value">${min.toFixed(2)} ${unidad}</div>
-      <div class="stat-subtitle">Pronóstico más bajo</div>
+      <div class="stat-subtitle">Valor más bajo</div>
     </div>
     <div class="stat-card">
       <div class="stat-title">📈 Máximo</div>
       <div class="stat-value">${max.toFixed(2)} ${unidad}</div>
-      <div class="stat-subtitle">Pronóstico más alto</div>
+      <div class="stat-subtitle">Valor más alto</div>
     </div>
     <div class="stat-card">
       <div class="stat-title">📊 Promedio</div>
       <div class="stat-value">${avg.toFixed(2)} ${unidad}</div>
-      <div class="stat-subtitle">Media pronósticos</div>
+      <div class="stat-subtitle">Media</div>
     </div>
     <div class="stat-card">
       <div class="stat-title">⏰ Período</div>
       <div class="stat-value">${valores.length}</div>
-      <div class="stat-subtitle">Horas pronosticadas</div>
+      <div class="stat-subtitle">Horas</div>
     </div>
   `;
   
@@ -2427,67 +2412,62 @@ function updateModelParams() {
   
   if (!paramsGrid || !modelInfo) return;
   
-  const genDate = new Date(data.fecha_generacion);
   modelInfo.innerHTML = `
     ${getVariableDisplayName(currentForecastVariable)} | 
-    ${data.modelo} | 
-    Generado: ${formatDateTime(genDate)}
+    ${data.modelo || 'SARIMA'} | 
+    AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}
   `;
   
   paramsGrid.innerHTML = `
     <div class="param-group">
-      <div class="param-title">📊 Información del Modelo</div>
+      <div class="param-title">📊 General</div>
       <div class="param-item">
         <span class="param-label">Variable:</span>
-        <span class="param-value">${data.variable}</span>
+        <span class="param-value">${getVariableDisplayName(currentForecastVariable)}</span>
       </div>
       <div class="param-item">
         <span class="param-label">Modelo:</span>
-        <span class="param-value">${data.modelo}</span>
+        <span class="param-value">${data.modelo || 'SARIMA'}</span>
       </div>
       <div class="param-item">
-        <span class="param-label">Unidad:</span>
-        <span class="param-value">${data.unidad || 'N/A'}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Generado:</span>
-        <span class="param-value">${formatDateTime(data.fecha_generacion)}</span>
+        <span class="param-label">AIC:</span>
+        <span class="param-value">${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
       </div>
     </div>
     
     <div class="param-group">
-      <div class="param-title">📈 Estadísticas</div>
+      <div class="param-title">📈 Datos</div>
       <div class="param-item">
-        <span class="param-label">Datos históricos:</span>
-        <span class="param-value">${data.historico.length} puntos</span>
+        <span class="param-label">Históricos:</span>
+        <span class="param-value">${data.historico.length}</span>
       </div>
       <div class="param-item">
-        <span class="param-label">Horas pronóstico:</span>
-        <span class="param-value">${data.pronosticos.length}</span>
+        <span class="param-label">Pronósticos:</span>
+        <span class="param-value">${data.pronosticos.length} horas</span>
       </div>
+      ${data.limite_permitido ? `
       <div class="param-item">
-        <span class="param-label">Período pronóstico:</span>
-        <span class="param-value">
-          ${data.pronosticos[0] ? formatDateTime(data.pronosticos[0].fecha) : 'N/A'} a
-          ${data.pronosticos[data.pronosticos.length - 1] ? formatDateTime(data.pronosticos[data.pronosticos.length - 1].fecha) : 'N/A'}
-        </span>
+        <span class="param-label">Límite:</span>
+        <span class="param-value">${data.limite_permitido} ${getUnit(currentForecastVariable)}</span>
       </div>
+      ` : ''}
     </div>
     
-    ${data.metadata ? `
     <div class="param-group" style="grid-column: 1 / -1;">
-      <div class="param-title">🔬 Metadatos</div>
-      <div class="equation-box" style="font-family: 'Inter', sans-serif;">
-        Modelo: ${data.metadata.modelo || 'SARIMA'}<br/>
-        Horizonte: ${data.metadata.horizonte_pronostico || '72 horas'}<br/>
-        Fuente: ${data.metadata.fuente || 'Google Sheets'}<br/>
-        Actualizado: ${data.metadata.actualizado || 'N/A'}<br/>
-        ${data.metadata.periodo_historico ? `Período histórico: ${data.metadata.periodo_historico}<br/>` : ''}
-        ${data.metadata.periodo_pronostico ? `Período pronóstico: ${data.metadata.periodo_pronostico}` : ''}
-      </div>
+      <div class="param-title">🔬 Ecuación</div>
+      <div class="equation-box">${data.modelo || 'Modelo SARIMA'}</div>
     </div>
-    ` : ''}
   `;
+}
+
+function getVariableDisplayName(variable) {
+  const names = {
+    'temperature': 'Temperatura (°C)',
+    'humidity': 'Humedad (%)',
+    'pm2.5': 'PM2.5 (µg/m³)',
+    'pm10': 'PM10 (µg/m³)'
+  };
+  return names[variable] || variable;
 }
 
 /* ============================
@@ -2554,7 +2534,7 @@ function applyDateFilter() {
   
   filtered = rawData.filter(r => {
     const d = parseDate(r.fecha);
-    return d && d >= from && d <= to;
+    return d >= from && d <= to;
   });
   
   renderMainChart();
@@ -2642,14 +2622,13 @@ document.querySelectorAll('.forecast-tab').forEach(tab => {
    INICIALIZACIÓN
    ============================ */
 loadData();
-setInterval(loadData, 30000); // Actualizar datos cada 30 segundos
+setInterval(loadData, 30000);
 
 setTimeout(() => {
   showNotification('Dashboard cargado 🎉', 'success');
 }, 1000);
 
-console.log('%c🚀 Dashboard Pro v3.0 - SARIMA Integration', 'color: #7AC043; font-size: 20px; font-weight: bold;');
-console.log('%c📊 Consumiendo pronósticos desde: ' + FORECAST_BASE_URL, 'color: #003366; font-size: 14px;');
+console.log('%c🚀 Dashboard Pro v2.0', 'color: #7AC043; font-size: 20px; font-weight: bold;');
 </script>
 </body>
 </html>
