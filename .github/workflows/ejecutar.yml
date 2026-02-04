@@ -1,0 +1,125 @@
+name: Ejecutar Modelo SARIMA cada 12 horas
+
+on:
+  schedule:
+    # Se ejecuta cada 12 horas (a las 00:00 y 12:00 UTC)
+    # También a las 06:00 y 18:00 para más cobertura
+    - cron: '0 */6 * * *'  # Cada 6 horas
+  # También se puede ejecutar manualmente
+  workflow_dispatch:
+
+jobs:
+  ejecutar-modelo:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Descargar código
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🐍 Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: 📦 Instalar dependencias
+      run: |
+        echo "Instalando dependencias básicas..."
+        pip install --upgrade pip
+        pip install gspread pandas numpy matplotlib statsmodels
+        pip install jupyter nbconvert
+        echo "✅ Dependencias instaladas"
+    
+    - name: 🔧 Convertir notebook a script (si es necesario)
+      run: |
+        # Verificar si existe el notebook
+        if [ -f "modelo_sarima.ipynb" ]; then
+          echo "Convirtiendo notebook a script Python..."
+          jupyter nbconvert --to python modelo_sarima.ipynb
+          echo "✅ Notebook convertido"
+        else
+          echo "✅ Usando archivo Python existente"
+        fi
+    
+    - name: 🔑 Configurar Google Sheets access
+      run: |
+        echo "Configurando acceso a Google Sheets..."
+        # Crear archivo de credenciales temporal
+        echo "${{ secrets.GOOGLE_SHEETS_CREDS }}" > google_creds.json
+        echo "✅ Credenciales configuradas"
+    
+    - name: 🚀 Ejecutar Modelo SARIMA
+      env:
+        SHEET_URL: "${{ secrets.SHEET_URL }}"
+        GITHUB_TOKEN: "${{ secrets.PERSONAL_TOKEN }}"
+      run: |
+        echo "🎯 Iniciando ejecución del modelo..."
+        echo "URL de Sheets: $SHEET_URL"
+        
+        # Crear carpeta para pronósticos si no existe
+        mkdir -p pronosticos
+        
+        # Ejecutar el script Python
+        python -c "
+import os
+import json
+
+# Configurar variables de entorno
+os.environ['SHEET_URL'] = '${{ secrets.SHEET_URL }}'
+os.environ['GITHUB_TOKEN'] = '${{ secrets.PERSONAL_TOKEN }}'
+
+print('✅ Variables configuradas')
+print('📊 Ejecutando modelo...')
+"
+        
+        # Si tienes el archivo como script Python directo
+        if [ -f "modelo_sarima.py" ]; then
+          echo "📄 Ejecutando modelo_sarima.py..."
+          python modelo_sarima.py
+        else
+          echo "❌ No se encontró modelo_sarima.py"
+          exit 1
+        fi
+    
+    - name: 📤 Subir resultados actualizados
+      run: |
+        echo "📤 Subiendo resultados a GitHub..."
+        
+        # Configurar git
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Verificar qué archivos se generaron
+        echo "📁 Archivos generados:"
+        ls -la
+        
+        if [ -d "pronosticos" ]; then
+          echo "📂 Contenido de pronosticos/:"
+          ls -la pronosticos/
+        fi
+        
+        # Agregar cambios
+        git add .
+        
+        # Verificar si hay cambios
+        if git diff --cached --quiet; then
+          echo "ℹ️ No hay cambios para subir"
+        else
+          echo "💾 Guardando cambios..."
+          git commit -m "🤖 Actualización automática $(date '+%Y-%m-%d %H:%M')"
+          git push origin main
+          echo "✅ Cambios subidos a GitHub"
+        fi
+    
+    - name: 📊 Mostrar resultados
+      if: always()
+      run: |
+        echo "🎯 RESUMEN DE EJECUCIÓN"
+        echo "========================"
+        date
+        echo "Repositorio: https://github.com/${{ github.repository }}"
+        echo "Carpeta pronósticos: https://github.com/${{ github.repository }}/tree/main/pronosticos"
+        echo ""
+        echo "📁 Archivos disponibles:"
+        find . -name "*.json" -o -name "*.csv" | head -10
