@@ -5,28 +5,25 @@ on:
     - cron: '0 */12 * * *'
   workflow_dispatch:
 
-# 🔧 AÑADE ESTOS PERMISOS GLOBALES
 permissions:
-  contents: write  # Permite escribir (commit/push) en el repositorio
-  pages: write     # Si usas GitHub Pages
-  actions: read    # Para ver otras acciones
+  contents: write
 
 jobs:
   ejecutar-sarima:
     runs-on: ubuntu-latest
     
-    # 🔧 AÑADE TAMBIÉN PERMISOS A NIVEL DE JOB
     permissions:
-      contents: write  # Sobrescribe permisos para este job específico
+      contents: write
     
     steps:
-    # 1. 📥 Descargar el código
+    # 1. 📥 Descargar el código con FORCE para sobrescribir
     - name: Descargar código
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        # 🔧 IMPORTANTE: Configurar token
         token: ${{ secrets.GITHUB_TOKEN }}
+        # FORZAR checkout para evitar conflictos
+        ref: ${{ github.ref }}
     
     # 2. 🐍 Instalar Python
     - name: Instalar Python
@@ -40,7 +37,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    # 4. 🚀 Ejecutar tu código (generará los archivos)
+    # 4. 🚀 Ejecutar tu código (solo genera archivos)
     - name: Ejecutar modelo SARIMA
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,25 +46,73 @@ jobs:
         echo "🚀 Iniciando modelo SARIMA..."
         python modelo_sarima.py
     
-    # 5. 📤 Subir archivos generados (NUEVO PASO)
-    - name: Subir archivos generados
+    # 5. 🔍 Verificar qué archivos se generaron
+    - name: Verificar archivos generados
       run: |
-        echo "📤 Subiendo archivos generados..."
+        echo "📁 Estructura de directorios después de ejecutar:"
+        echo "=== Raíz ==="
+        ls -la
+        echo ""
+        echo "=== Carpeta pronosticos ==="
+        ls -la pronosticos/
+        echo ""
+        echo "=== Contenido de archivos JSON (primeras líneas) ==="
+        for file in pronosticos/*.json; do
+          echo "📄 $file:"
+          head -5 "$file"
+          echo ""
+        done
+    
+    # 6. 📤 Configurar git correctamente para el push
+    - name: Configurar Git
+      run: |
+        echo "🔧 Configurando Git..."
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global pull.rebase false
+    
+    # 7. 🔄 Sincronizar con los últimos cambios del repositorio
+    - name: Sincronizar con repositorio remoto
+      run: |
+        echo "🔄 Sincronizando con cambios remotos..."
+        # Obtener los últimos cambios
+        git fetch origin
+        # Hacer merge con estrategia "theirs" para aceptar cambios remotos
+        git pull origin main --rebase || git pull origin main --allow-unrelated-histories || true
+    
+    # 8. 💾 Agregar y commitear cambios
+    - name: Agregar y committear cambios
+      run: |
+        echo "💾 Preparando cambios para commit..."
         
-        # Configurar git
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        
-        # Agregar todos los archivos nuevos
-        git add *.json *.csv pronosticos/ || true
+        # Agregar solo la carpeta pronosticos (evita conflictos)
+        git add pronosticos/
         
         # Verificar si hay cambios
-        if git diff --cached --quiet; then
-          echo "⚠️ No hay cambios para subir"
-        else
-          echo "💾 Guardando cambios..."
-          git commit -m "🤖 Actualización automática $(date +'%Y-%m-%d %H:%M')"
+        if git status --porcelain | grep -q '^[ MADRC]'; then
+          echo "📋 Cambios detectados:"
+          git status --porcelain
           
-          echo "🚀 Subiendo cambios..."
-          git push origin HEAD:main
+          echo "📝 Creando commit..."
+          git commit -m "🤖 Actualización automática de pronósticos $(date +'%Y-%m-%d %H:%M')" || echo "⚠️ No se pudo crear commit (posiblemente sin cambios)"
+        else
+          echo "⚠️ No hay cambios para commit"
         fi
+    
+    # 9. 🚀 Hacer push de los cambios
+    - name: Hacer push de cambios
+      run: |
+        echo "🚀 Intentando hacer push..."
+        
+        # Primero, asegurar que tenemos la última versión
+        echo "🔄 Actualizando desde remoto..."
+        git pull origin main --rebase --autostash || true
+        
+        echo "📤 Haciendo push..."
+        # Forzar push si es necesario (para workflow automático)
+        git push origin HEAD:main || {
+          echo "⚠️ Push falló, intentando con force..."
+          git push origin HEAD:main --force-with-lease
+        }
+        
+        echo "✅ Push completado exitosamente"
