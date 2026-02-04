@@ -1,0 +1,58 @@
+[
+  {
+    "variable":"Temperature",
+    "orden":"(1, 0, 0)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":-2204.1646357205,
+    "bic":-2192.0955163732,
+    "hqic":-2199.2615323471,
+    "log_likelihood":1106.0823178602,
+    "num_observaciones":176,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.0109\u00b7y_t-1 + -1.0000\u00b7y_t-12 + 0.0001\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-02 23:00:00",
+    "valor_ultimo_dato":31.0760185185,
+    "fecha_generacion":"2026-02-04 19:00:14"
+  },
+  {
+    "variable":"Humidity",
+    "orden":"(1, 0, 0)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":-2520.4584687011,
+    "bic":-2508.3893493538,
+    "hqic":-2515.5553653278,
+    "log_likelihood":1264.2292343505,
+    "num_observaciones":176,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.0016\u00b7y_t-1 + -1.0000\u00b7y_t-12 + -0.0006\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-02 23:00:00",
+    "valor_ultimo_dato":63.9713580247,
+    "fecha_generacion":"2026-02-04 19:00:14"
+  },
+  {
+    "variable":"PM 2.5",
+    "orden":"(1, 0, 1)",
+    "orden_estacional":"(1, 1, 0, 12)",
+    "aic":-2068.498621328,
+    "bic":-2056.4295019808,
+    "hqic":-2063.5955179547,
+    "log_likelihood":1038.249310664,
+    "num_observaciones":176,
+    "ecuacion":"\u0394^d \u0394_s^D y_t = 0.3003\u00b7y_t-1 + -0.4780\u00b7\u03b5_t-1 + -1.0000\u00b7y_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-02 23:00:00",
+    "valor_ultimo_dato":10.4672839506,
+    "fecha_generacion":"2026-02-04 19:00:14"
+  },
+  {
+    "variable":"PM 10",
+    "orden":"(0, 0, 0)",
+    "orden_estacional":"(1, 1, 1, 12)",
+    "aic":-3197.3498910337,
+    "bic":-3188.2980515233,
+    "hqic":-3193.6725635037,
+    "log_likelihood":1601.6749455169,
+    "num_observaciones":176,
+    "ecuacion":"\u0394^d \u0394_s^D y_t =  + -1.0000\u00b7y_t-12 + -0.0000\u00b7\u03b5_t-12 + \u03b5_t",
+    "fecha_ultimo_dato":"2026-02-02 23:00:00",
+    "valor_ultimo_dato":11.3191358025,
+    "fecha_generacion":"2026-02-04 19:00:14"
+  }
+]
