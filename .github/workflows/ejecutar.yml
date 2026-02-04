@@ -1,0 +1,144 @@
+name: 🤖 Ejecutar SARIMA Automático
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ejecutar-sarima:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+    # 1. 📥 Descargar el código con FORCE para sobrescribir
+    - name: Descargar código
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # FORZAR checkout para evitar conflictos
+        ref: ${{ github.ref }}
+    
+    # 2. 🐍 Instalar Python
+    - name: Instalar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    # 3. 📅 VERIFICAR HORARIO DE EJECUCIÓN (AGREGAR AQUÍ)
+    - name: Verificar horario de ejecución
+      run: |
+        echo "📅 CONFIGURACIÓN DE EJECUCIÓN AUTOMÁTICA"
+        echo "========================================"
+        echo "Cron configurado: '0 */12 * * *'"
+        echo ""
+        echo "⏰ Ejecuciones programadas (en UTC):"
+        echo "- 00:00 UTC (medianoche)"
+        echo "- 12:00 UTC (mediodía)"
+        echo ""
+        echo "🌍 Conversión a Colombia (UTC-5):"
+        echo "- 00:00 UTC = 19:00 (7 PM) del día anterior"
+        echo "- 12:00 UTC = 07:00 (7 AM)"
+        echo ""
+        echo "🕐 Hora actual del sistema: $(date)"
+        echo "🕐 Hora actual UTC: $(date -u)"
+        echo ""
+        echo "⏳ Próxima ejecución:"
+        CURRENT_HOUR=$(date -u +%H)
+        if [ $CURRENT_HOUR -lt 12 ]; then
+            echo "👉 A las 12:00 UTC (07:00 hora Colombia)"
+        else
+            echo "👉 A las 00:00 UTC mañana (19:00 hora Colombia hoy)"
+        fi
+    
+    # 4. 📦 Instalar programas necesarios
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    # 5. 🚀 Ejecutar tu código (solo genera archivos)
+    - name: Ejecutar modelo SARIMA
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GOOGLE_SHEETS_CREDS: ${{ secrets.GOOGLE_SHEETS_CREDS }}
+      run: |
+        echo "🚀 Iniciando modelo SARIMA..."
+        python modelo_sarima.py
+    
+    # 6. 🔍 Verificar qué archivos se generaron
+    - name: Verificar archivos generados
+      run: |
+        echo "📁 Estructura de directorios después de ejecutar:"
+        echo "=== Raíz ==="
+        ls -la
+        echo ""
+        echo "=== Carpeta pronosticos ==="
+        ls -la pronosticos/
+        echo ""
+        echo "=== Contenido de archivos JSON (primeras líneas) ==="
+        for file in pronosticos/*.json; do
+          echo "📄 $file:"
+          head -5 "$file"
+          echo ""
+        done
+    
+    # 7. 📤 Configurar git correctamente para el push
+    - name: Configurar Git
+      run: |
+        echo "🔧 Configurando Git..."
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global pull.rebase false
+    
+    # 8. 🔄 Sincronizar con los últimos cambios del repositorio
+    - name: Sincronizar con repositorio remoto
+      run: |
+        echo "🔄 Sincronizando con cambios remotos..."
+        # Obtener los últimos cambios
+        git fetch origin
+        # Hacer merge con estrategia "theirs" para aceptar cambios remotos
+        git pull origin main --rebase || git pull origin main --allow-unrelated-histories || true
+    
+    # 9. 💾 Agregar y commitear cambios
+    - name: Agregar y committear cambios
+      run: |
+        echo "💾 Preparando cambios para commit..."
+        
+        # Agregar solo la carpeta pronosticos (evita conflictos)
+        git add pronosticos/
+        
+        # Verificar si hay cambios
+        if git status --porcelain | grep -q '^[ MADRC]'; then
+          echo "📋 Cambios detectados:"
+          git status --porcelain
+          
+          echo "📝 Creando commit..."
+          git commit -m "🤖 Actualización automática de pronósticos $(date +'%Y-%m-%d %H:%M')" || echo "⚠️ No se pudo crear commit (posiblemente sin cambios)"
+        else
+          echo "⚠️ No hay cambios para commit"
+        fi
+    
+    # 10. 🚀 Hacer push de los cambios
+    - name: Hacer push de cambios
+      run: |
+        echo "🚀 Intentando hacer push..."
+        
+        # Primero, asegurar que tenemos la última versión
+        echo "🔄 Actualizando desde remoto..."
+        git pull origin main --rebase --autostash || true
+        
+        echo "📤 Haciendo push..."
+        # Forzar push si es necesario (para workflow automático)
+        git push origin HEAD:main || {
+          echo "⚠️ Push falló, intentando con force..."
+          git push origin HEAD:main --force-with-lease
+        }
+        
+        echo "✅ Push completado exitosamente"
