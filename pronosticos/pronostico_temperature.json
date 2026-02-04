@@ -25,7 +25,7 @@
       "sigma2": 0.09552296932446787
     }
   },
-  "fecha_generacion": "2026-02-04 04:07:34",
+  "fecha_generacion": "2026-02-04 04:22:35",
   "estadisticas": {
     "min": 28.866666666666664,
     "max": 35.6,
@@ -1972,7 +1972,7 @@
   "metadata": {
     "generado_por": "modelo_sarima.py",
     "version": "2.0",
-    "ultima_actualizacion": "2026-02-04T04:07:34.894380",
+    "ultima_actualizacion": "2026-02-04T04:22:35.709130",
     "resample_frecuencia": "1H",
     "datos_fuente": "Google Sheets"
   }
