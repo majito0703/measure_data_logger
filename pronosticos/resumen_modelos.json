@@ -1,0 +1,44 @@
+{
+  "fecha_generacion": "2026-02-04T21:25:12.358411",
+  "variables_modeladas": [
+    "Temperature",
+    "Humidity",
+    "PM 2.5",
+    "PM 10"
+  ],
+  "total_variables": 4,
+  "modelos": {
+    "Temperature": {
+      "orden": "(1, 1, 1)",
+      "orden_estacional": "(1, 0, 1, 12)",
+      "aic": -3025.2584985011044,
+      "observaciones": 1923,
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.5177·y_t-1 + 0.1761·ε_t-1 + -0.9013·y_t-12 + 1.0000·ε_t-12 + ε_t",
+      "archivo_json": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_Temperature_20260204_212305.json"
+    },
+    "Humidity": {
+      "orden": "(1, 1, 1)",
+      "orden_estacional": "(1, 0, 1, 12)",
+      "aic": 2341.3393308278773,
+      "observaciones": 1923,
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.2907·y_t-1 + 0.1946·ε_t-1 + -0.9085·y_t-12 + 1.0000·ε_t-12 + ε_t",
+      "archivo_json": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_Humidity_20260204_212353.json"
+    },
+    "PM 2.5": {
+      "orden": "(1, 1, 1)",
+      "orden_estacional": "(1, 0, 1, 12)",
+      "aic": 7488.784620326961,
+      "observaciones": 1923,
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.7917·y_t-1 + -1.0682·ε_t-1 + 0.6585·y_t-12 + -0.7309·ε_t-12 + ε_t",
+      "archivo_json": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_PM 2.5_20260204_212430.json"
+    },
+    "PM 10": {
+      "orden": "(1, 1, 1)",
+      "orden_estacional": "(1, 0, 1, 12)",
+      "aic": 8497.961203786708,
+      "observaciones": 1923,
+      "ecuacion": "Δ^d Δ_s^D y_t = 0.7977·y_t-1 + -0.9440·ε_t-1 + 0.8933·y_t-12 + -1.0000·ε_t-12 + ε_t",
+      "archivo_json": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_PM 10_20260204_212512.json"
+    }
+  }
+}
