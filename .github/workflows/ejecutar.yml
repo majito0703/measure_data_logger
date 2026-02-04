@@ -1,10 +1,10 @@
 name: 🤖 Ejecutar SARIMA Automático
 
 on:
-  # Se ejecuta cada 12 horas (a las 00:00 y 12:00 UTC)
   schedule:
+    # Se ejecuta cada 12 horas (00:00 y 12:00 UTC)
     - cron: '0 */12 * * *'
-  # También puedes ejecutarlo manualmente
+  # También se puede ejecutar manualmente
   workflow_dispatch:
 
 jobs:
@@ -25,23 +25,34 @@ jobs:
     # 3. 📦 Instalar programas necesarios
     - name: Instalar dependencias
       run: |
-        pip install gspread pandas numpy matplotlib statsmodels
+        pip install -r requirements.txt
     
     # 4. 🚀 Ejecutar tu código
     - name: Ejecutar modelo SARIMA
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "🚀 Iniciando modelo SARIMA..."
         python modelo_sarima.py
     
-    # 5. 📤 Subir resultados
+    # 5. 📤 Subir resultados automáticamente
     - name: Subir archivos generados
       run: |
-        echo "📁 Archivos generados:"
-        ls -la
+        echo "📁 Verificando archivos generados..."
         
+        # Configurar git
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
+        # Agregar todos los cambios
         git add .
-        git commit -m "🤖 Actualización automática $(date)" || echo "No hay cambios"
-        git push
+        
+        # Verificar si hay cambios
+        if git diff --cached --quiet; then
+          echo "ℹ️ No hay cambios para subir"
+        else
+          echo "💾 Guardando cambios..."
+          git commit -m "🤖 Actualización automática $(date '+%Y-%m-%d %H:%M')"
+          git push
+          echo "✅ Cambios subidos a GitHub"
+        fi
