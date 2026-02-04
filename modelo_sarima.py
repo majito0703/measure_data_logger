@@ -1,5 +1,3 @@
-
-
 # -*- coding: utf-8 -*-
 """Modelo_Sarima.ipynb
 
@@ -13,8 +11,26 @@ import os
 import pickle
 import json
 import warnings
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
+
+# ======================================================
+# CONFIGURACIÓN DE CARPETAS
+# ======================================================
+# Determinar la ruta base del proyecto
+if __name__ == "__main__":
+    # En GitHub Actions o ejecución local
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+else:
+    # En Colab
+    BASE_DIR = "/content/drive/MyDrive" if IN_COLAB else "."
+
+# Carpeta para pronósticos
+PRONOSTICOS_DIR = os.path.join(BASE_DIR, "pronosticos")
+os.makedirs(PRONOSTICOS_DIR, exist_ok=True)
+
+print(f"📁 Carpeta de pronósticos: {PRONOSTICOS_DIR}")
 
 # ======================================================
 # URL DE GOOGLE SHEETS (definida a nivel global)
@@ -134,7 +150,7 @@ import gspread
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import matplotlib.dates as mdates
-from datetime import timedelta
+from datetime import datetime
 
 # Cargar jupyter-black (solo Colab)
 if IN_COLAB:
@@ -180,6 +196,59 @@ def plot_time_series(df, variable, units="", time_unit="Day"):
     plt.tight_layout()
     return fig
 
+# ======================================================
+# FUNCIÓN PARA GUARDAR PRONÓSTICOS EN JSON
+# ======================================================
+def guardar_pronostico_json(pronostico_df, variable, carpeta_destino=PRONOSTICOS_DIR):
+    """
+    Guarda el pronóstico en formato JSON con timestamp como string
+    """
+    try:
+        # Crear diccionario con los datos del pronóstico
+        datos_pronostico = {}
+        
+        # Convertir índice a strings ISO format
+        for idx, valor in pronostico_df.items():
+            if isinstance(idx, pd.Timestamp):
+                fecha_str = idx.isoformat()
+            else:
+                fecha_str = str(idx)
+            datos_pronostico[fecha_str] = float(valor)
+        
+        # Crear estructura completa
+        resultado = {
+            "variable": variable,
+            "fecha_generacion": datetime.now().isoformat(),
+            "total_puntos": len(pronostico_df),
+            "unidad": obtener_unidad_variable(variable),
+            "pronostico": datos_pronostico
+        }
+        
+        # Nombre del archivo
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nombre_archivo = f"pronostico_{variable}_{timestamp}.json"
+        ruta_archivo = os.path.join(carpeta_destino, nombre_archivo)
+        
+        # Guardar en JSON
+        with open(ruta_archivo, 'w', encoding='utf-8') as f:
+            json.dump(resultado, f, ensure_ascii=False, indent=2)
+        
+        print(f"💾 Pronóstico {variable} guardado en: {ruta_archivo}")
+        return ruta_archivo
+        
+    except Exception as e:
+        print(f"❌ Error guardando pronóstico JSON para {variable}: {e}")
+        return None
+
+def obtener_unidad_variable(variable):
+    """Obtiene la unidad de medida para cada variable"""
+    unidades = {
+        "Temperature": "°C",
+        "Humidity": "%",
+        "PM 2.5": "µg/m³",
+        "PM 10": "µg/m³"
+    }
+    return unidades.get(variable, "unidades")
 
 # ======================================================
 # 6. CONECTAR Y CARGAR DATOS
@@ -229,6 +298,7 @@ print(df0.head(2))
 
 df0.head(2)
 
+# Renombrar columnas
 df0.rename(
     columns={
         "Date": "date",
@@ -239,65 +309,106 @@ df0.rename(
     inplace=True,
 )
 
-df0["Temperature"] = pd.to_numeric(df0["Temperature"], errors="coerce")
-df0["Humidity"] = pd.to_numeric(df0["Humidity"], errors="coerce")
-df0["PM 2.5"] = pd.to_numeric(df0["PM 2.5"], errors="coerce")
-df0["PM 10"] = pd.to_numeric(df0["PM 10"], errors="coerce")
+# ======================================================
+# CORRECCIÓN: LIMPIAR DATOS ANTES DE CONVERSIÓN
+# ======================================================
 
-df1 = parse_datetime_index(df0, format="%d/%m/%Y %H:%M:%S")
-df1.head(10)
+print("🔍 Limpiando y preparando datos...")
 
-df1 = parse_datetime_index(df0, format="%d/%m/%Y %H:%M:%S")
-df1.head(10)
+# 1. Identificar y eliminar columnas vacías o no deseadas
+columnas_originales = df0.columns.tolist()
+print(f"Columnas originales: {columnas_originales}")
+
+# Eliminar columnas que no contienen datos numéricos o están vacías
+columnas_a_mantener = ["date", "Temperature", "Humidity", "PM 1", "PM 2.5", "PM 10"]
+df0 = df0[columnas_a_mantener]
+
+print(f"Columnas después de limpieza: {df0.columns.tolist()}")
+
+# 2. Convertir columnas a numéricas
+print("\n📊 Convirtiendo columnas a tipo numérico...")
+
+for col in ["Temperature", "Humidity", "PM 1", "PM 2.5", "PM 10"]:
+    if col in df0.columns:
+        # Verificar valores únicos antes de conversión
+        valores_unicos = df0[col].unique()[:5]
+        print(f"  {col}: {len(df0[col])} valores, primeros 5: {valores_unicos}")
+        
+        # Convertir, forzando errores a NaN
+        df0[col] = pd.to_numeric(df0[col], errors='coerce')
+        
+        # Verificar después de conversión
+        nans = df0[col].isna().sum()
+        if nans > 0:
+            print(f"    ⚠️  {nans} valores convertidos a NaN")
+        
+        # Rellenar NaN con el valor anterior (forward fill)
+        df0[col] = df0[col].fillna(method='ffill').fillna(method='bfill')
+
+print("\n✅ Tipos de datos después de conversión:")
+print(df0.dtypes)
 
 # ======================================================
-# LIMPIAR Y CONVERTIR DATOS ANTES DE RESAMPLE
+# 7. PARSEAR FECHAS Y CREAR ÍNDICE TEMPORAL
 # ======================================================
-print("🔍 Verificando tipos de datos antes de resample:")
-print(df1.dtypes)
 
-# Identificar columnas que deberían ser numéricas
-columnas_numericas = ["Temperature", "Humidity", "PM 2.5", "PM 10", "PM 1"]
+print("\n📅 Parseando fechas...")
+df1 = parse_datetime_index(df0, format="%d/%m/%Y %H:%M:%S")
 
-# Convertir cada columna a numérico, forzando errores a NaN
-for col in columnas_numericas:
-    if col in df1.columns:
-        print(f"\nConvirtiendo columna '{col}'...")
+# Verificar que todas las fechas sean válidas
+fechas_nulas = df1.index.isna().sum()
+if fechas_nulas > 0:
+    print(f"⚠️  {fechas_nulas} fechas no pudieron ser parseadas")
+    # Eliminar filas con fechas nulas
+    df1 = df1[~df1.index.isna()]
 
-        # Guardar valores originales para comparar
-        valores_originales = df1[col].head(5).tolist()
+print(f"✅ Índice temporal creado. Forma: {df1.shape}")
+print(f"   Rango de fechas: {df1.index.min()} a {df1.index.max()}")
+print(f"   Columnas disponibles: {df1.columns.tolist()}")
 
-        # Convertir a numérico
-        df1[col] = pd.to_numeric(df1[col], errors="coerce")
+# ======================================================
+# 8. RESAMPLE CORREGIDO - USANDO SOLO COLUMNAS NUMÉRICAS
+# ======================================================
 
-        # Contar valores convertidos y no convertidos
-        total_valores = len(df1[col])
-        valores_nan = df1[col].isna().sum()
-        valores_convertidos = total_valores - valores_nan
-
-        print(f"  Valores originales (primeros 5): {valores_originales}")
-        print(f"  Valores convertidos: {valores_convertidos}/{total_valores}")
-        print(f"  Valores no convertidos (NaN): {valores_nan}")
-
-        # Mostrar ejemplos de valores no convertidos
-        if valores_nan > 0:
-            valores_problematicos = df0.loc[df1[col].isna(), col].unique()[:5]
-            print(f"  Valores problemáticos encontrados: {valores_problematicos}")
-
-# Verificar tipos después de la conversión
-print("\n✅ Tipos de datos después de la conversión:")
-print(df1.dtypes)
-
-# Ahora sí hacer el resample
 print("\n📊 Realizando resample a 10 minutos...")
-df1 = df1.resample("10min").mean()
 
-print("✅ Resample completado exitosamente")
-print(f"📊 Nueva forma: {df1.shape[0]} filas × {df1.shape[1]} columnas")
+# Seleccionar solo columnas numéricas para el resample
+columnas_numericas = df1.select_dtypes(include=[np.number]).columns.tolist()
+print(f"Columnas numéricas para resample: {columnas_numericas}")
+
+if len(columnas_numericas) > 0:
+    # Crear un DataFrame con solo columnas numéricas para el resample
+    df_numerico = df1[columnas_numericas]
+    
+    # Realizar resample solo en columnas numéricas
+    df_resampled = df_numerico.resample("10min").mean()
+    
+    # Verificar que no haya valores nulos después del resample
+    valores_nulos = df_resampled.isna().sum().sum()
+    if valores_nulos > 0:
+        print(f"⚠️  {valores_nulos} valores nulos después del resample")
+        # Rellenar valores nulos con interpolación
+        df_resampled = df_resampled.interpolate(method='time')
+    
+    print(f"✅ Resample completado exitosamente")
+    print(f"   Nueva forma: {df_resampled.shape[0]} filas × {df_resampled.shape[1]} columnas")
+    print(f"   Rango: {df_resampled.index.min()} a {df_resampled.index.max()}")
+    
+    # Asignar de vuelta a df1
+    df1 = df_resampled
+else:
+    print("❌ No hay columnas numéricas para realizar el resample")
+    print("   Columnas disponibles:", df1.dtypes)
+    # Crear un DataFrame vacío para continuar
+    df1 = pd.DataFrame(index=pd.date_range(start=df1.index.min(), periods=100, freq='10min'))
 
 # Mostrar estadísticas
 print("\n📈 Estadísticas descriptivas:")
 print(df1.describe().transpose())
+
+# ======================================================
+# CONTINUAR CON EL CÓDIGO ORIGINAL...
+# ======================================================
 
 fig = plot_time_series(df1, variable="Temperature", units="°C", time_unit="Day")
 plt.show()
@@ -305,15 +416,19 @@ plt.show()
 fig = plot_time_series(df1, variable="Humidity", units="%", time_unit="Day")
 plt.show()
 
-fig = plot_time_series(df1, variable="PM 10", units="µg/m³", time_unit="Day")
-plt.show()
+if "PM 10" in df1.columns:
+    fig = plot_time_series(df1, variable="PM 10", units="µg/m³", time_unit="Day")
+    plt.show()
 
-fig = plot_time_series(df1, variable="PM 2.5", units="µg/m³", time_unit="Day")
-plt.show()
+if "PM 2.5" in df1.columns:
+    fig = plot_time_series(df1, variable="PM 2.5", units="µg/m³", time_unit="Day")
+    plt.show()
 
 df2 = df1.copy()
 
 vars_to_impute = ["Temperature", "Humidity", "PM 10", "PM 2.5"]
+# Filtrar solo las columnas que existen
+vars_to_impute = [var for var in vars_to_impute if var in df2.columns]
 
 for var in vars_to_impute:
     # Marcar NaN antes de imputar
@@ -329,9 +444,13 @@ df2 = df2.loc[:, ~df2.columns.str.endswith("_imputed")]
 # Ver primeras filas del nuevo DataFrame
 print(df2.head())
 
-# Ver solo los datos imputados de cada variable
-print(df2[[col for col in df2.columns if "imputed" in col]].sum())
-df2 = df2.loc[:, ~df2.columns.str.endswith("_imputed")]
+# Verificar datos imputados
+imputed_cols = [col for col in df2.columns if "imputed" in col]
+if imputed_cols:
+    print(df2[imputed_cols].sum())
+    df2 = df2.loc[:, ~df2.columns.str.endswith("_imputed")]
+else:
+    print("No hay columnas imputadas")
 
 fig = plot_time_series(df2, variable="Temperature", units="°C", time_unit="Day")
 plt.show()
@@ -339,16 +458,19 @@ plt.show()
 fig = plot_time_series(df2, variable="Humidity", units="%", time_unit="Day")
 plt.show()
 
-fig = plot_time_series(df2, variable="PM 10", units="µg/m³", time_unit="Day")
-plt.show()
+if "PM 10" in df2.columns:
+    fig = plot_time_series(df2, variable="PM 10", units="µg/m³", time_unit="Day")
+    plt.show()
 
-fig = plot_time_series(df2, variable="PM 2.5", units="µg/m³", time_unit="Day")
-plt.show()
+if "PM 2.5" in df2.columns:
+    fig = plot_time_series(df2, variable="PM 2.5", units="µg/m³", time_unit="Day")
+    plt.show()
 
 df3 = df2.copy()
 # Eliminar los días 24 y 25
 df3 = df3[~df3.index.day.isin([24, 25])]
-df3 = df3.drop(columns=["PM 1"])
+if "PM 1" in df3.columns:
+    df3 = df3.drop(columns=["PM 1"])
 # Verificar los primeros registros
 print(df3.head())
 
@@ -361,6 +483,10 @@ print(df3.tail())
 df_hourly = df3.resample("H").mean().dropna()
 
 variables = ["Temperature", "Humidity", "PM 2.5", "PM 10"]
+# Filtrar solo las variables que existen en df_hourly
+variables = [var for var in variables if var in df_hourly.columns]
+
+print(f"\n📈 Variables disponibles para modelado: {variables}")
 
 # ======================================================
 # 2. OPTIMIZADOR SARIMA (SIN PMDARIMA)
@@ -404,7 +530,8 @@ def buscar_mejor_modelo(series):
                                     mejores_parametros = modelo.params
                                     mejor_summary = modelo.summary()
 
-                            except:
+                            except Exception as e:
+                                # Silenciar errores de ajuste, continuar con siguiente combinación
                                 continue
 
     return (
@@ -569,10 +696,47 @@ def mostrar_parametros_tabla(modelo, orden, orden_seas, aic):
 # 5. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON FECHAS MEJORADAS
 # ======================================================
 def graficar_pronostico(modelo, series, pasos=48, limite=None):
+    """
+    Grafica el pronóstico SARIMA con manejo seguro de fechas
+    Retorna el pronóstico como DataFrame para guardarlo
+    """
+    # Obtener pronóstico
     pred = modelo.get_forecast(steps=pasos)
     media = pred.predicted_mean
     conf_80 = pred.conf_int(alpha=0.20)
     conf_95 = pred.conf_int(alpha=0.05)
+    
+    # CRÍTICO: Asegurar que el índice del pronóstico sea datetime
+    def ensure_datetime_index(index, reference_index=None):
+        """Convierte un índice a DatetimeIndex si no lo es"""
+        if isinstance(index, pd.DatetimeIndex):
+            return index
+        
+        # Si el índice es entero, crear fechas basadas en referencia
+        if reference_index is not None and isinstance(reference_index, pd.DatetimeIndex):
+            last_date = reference_index[-1]
+            freq = pd.infer_freq(reference_index) or 'H'
+            
+            # Crear nuevas fechas
+            new_index = pd.date_range(
+                start=last_date + pd.Timedelta(hours=1),
+                periods=len(index),
+                freq=freq
+            )
+            return new_index
+        
+        # Fallback: usar fechas genéricas
+        return pd.date_range(
+            start=pd.Timestamp.now(),
+            periods=len(index),
+            freq='H'
+        )
+    
+    # Asegurar que todos los índices sean DatetimeIndex
+    if not isinstance(media.index, pd.DatetimeIndex):
+        media.index = ensure_datetime_index(media.index, series.index)
+        conf_80.index = media.index
+        conf_95.index = media.index
 
     # Crear figura con tamaño adecuado
     fig, ax = plt.subplots(figsize=(15, 6))
@@ -621,39 +785,48 @@ def graficar_pronostico(modelo, series, pasos=48, limite=None):
             label="Nivel máximo permitido (24H) en Colombia",
         )
 
-    # Configurar formato de fechas
-    # Determinar el rango de fechas
-    fecha_min = series.index.min()
-    fecha_max = media.index.max()
-
-    # Calcular diferencia de días para determinar el formato
-    dias_totales = (fecha_max - fecha_min).days
-
-    if dias_totales <= 7:  # Si es menos de una semana
-        # Formato: Día Hora (ej: "11 Nov 10:00")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
-        ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
-    elif dias_totales <= 30:  # Si es menos de un mes
-        # Formato: Día Mes (ej: "11 Nov")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-    else:  # Si es más de un mes
-        # Formato: Mes (ej: "Nov 2025")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-        ax.xaxis.set_major_locator(mdates.MonthLocator())
-
+    # Configurar formato de fechas - MANEJO SEGURO
+    try:
+        # Intentar determinar el formato basado en el rango temporal
+        fecha_min = series.index.min()
+        fecha_max = media.index.max()
+        
+        if isinstance(fecha_min, pd.Timestamp) and isinstance(fecha_max, pd.Timestamp):
+            dias_totales = (fecha_max - fecha_min).days
+            
+            if dias_totales <= 7:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+            elif dias_totales <= 30:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+            else:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
+        else:
+            # Formato por defecto
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
+    except Exception as e:
+        print(f"⚠️  Advertencia al formatear fechas: {e}")
+        # Formato por defecto seguro
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    
     # Rotar etiquetas para mejor lectura
     plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
     # Agregar leyenda de separación
-    ax.text(
-        ultimo_historial + timedelta(hours=1),
-        ax.get_ylim()[1] * 0.95,
-        "Pronóstico",
-        fontsize=10,
-        color="darkred",
-        alpha=0.8,
-    )
+    try:
+        if isinstance(ultimo_historial, pd.Timestamp):
+            ax.text(
+                ultimo_historial + pd.Timedelta(hours=1),
+                ax.get_ylim()[1] * 0.95,
+                "Pronóstico",
+                fontsize=10,
+                color="darkred",
+                alpha=0.8,
+            )
+    except:
+        pass  # Si falla, continuar sin el texto
 
     # Títulos y etiquetas
     ax.set_title(f"Pronóstico SARIMA - {series.name}", fontsize=14, fontweight="bold")
@@ -677,10 +850,9 @@ def graficar_pronostico(modelo, series, pasos=48, limite=None):
 
     # Ajustar márgenes
     plt.tight_layout()
-
-    plt.show()
-
-
+    
+    # Retornar tanto la figura como los datos del pronóstico
+    return fig, media
 
 # ======================================================
 # 6. EJECUCIÓN COMPLETA POR VARIABLE
@@ -695,6 +867,7 @@ limites = {
 resultados = {}
 ecuaciones = {}
 parametros_tablas = {}
+pronosticos_guardados = {}  # Para guardar rutas de archivos JSON
 
 for var in variables:
     print(f"\n{'='*80}")
@@ -704,6 +877,10 @@ for var in variables:
     serie = df_hourly[var]
 
     modelo, orden, orden_s, aic, parametros, summary = buscar_mejor_modelo(serie)
+
+    if modelo is None:
+        print(f"❌ No se pudo ajustar un modelo para {var}")
+        continue
 
     print(f"\nMejor modelo para {var}: SARIMA{orden}{orden_s}")
     print(f"AIC = {aic:.2f}")
@@ -723,522 +900,127 @@ for var in variables:
         "orden": orden,
         "orden_estacional": orden_s,
         "aic": aic,
-        "parametros": parametros,
-        "summary": summary,
+        "parametros": parametros.to_dict() if hasattr(parametros, 'to_dict') else dict(parametros),
+        "summary": str(summary) if summary else "No disponible"
     }
 
     # Graficar pronóstico (72 horas adelante)
-    graficar_pronostico(modelo, serie, pasos=72, limite=limites[var])
+    fig, pronostico_df = graficar_pronostico(modelo, serie, pasos=72, limite=limites.get(var))
+    if fig:
+        plt.show()
+        
+        # Guardar pronóstico en JSON
+        ruta_json = guardar_pronostico_json(pronostico_df, var, PRONOSTICOS_DIR)
+        if ruta_json:
+            pronosticos_guardados[var] = ruta_json
 
 # ======================================================
-# 7. RESUMEN FINAL DE TODOS LOS MODELOS
+# 7. GUARDAR RESUMEN DE MODELOS EN JSON
+# ======================================================
+try:
+    # Crear resumen completo
+    resumen_modelos = {
+        "fecha_generacion": datetime.now().isoformat(),
+        "variables_modeladas": variables,
+        "total_variables": len(variables),
+        "modelos": {}
+    }
+    
+    for var in variables:
+        if var in resultados:
+            modelo = resultados[var]
+            resumen_modelos["modelos"][var] = {
+                "orden": str(modelo.specification.order),
+                "orden_estacional": str(modelo.specification.seasonal_order),
+                "aic": float(modelo.aic),
+                "observaciones": int(len(df_hourly[var])),
+                "ecuacion": ecuaciones.get(var, "No disponible"),
+                "archivo_json": pronosticos_guardados.get(var, "No guardado")
+            }
+    
+    # Guardar resumen
+    ruta_resumen = os.path.join(PRONOSTICOS_DIR, "resumen_modelos.json")
+    with open(ruta_resumen, 'w', encoding='utf-8') as f:
+        json.dump(resumen_modelos, f, ensure_ascii=False, indent=2)
+    
+    print(f"\n📊 Resumen de modelos guardado en: {ruta_resumen}")
+    
+except Exception as e:
+    print(f"❌ Error guardando resumen: {e}")
+
+# ======================================================
+# 8. CREAR ARCHIVO DE METADATOS
+# ======================================================
+try:
+    metadata = {
+        "proyecto": "Modelo SARIMA - Pronóstico de Calidad del Aire",
+        "fecha_ejecucion": datetime.now().isoformat(),
+        "fuente_datos": SHEET_URL if worksheet else "Datos de ejemplo",
+        "periodo_pronostico_horas": 72,
+        "frecuencia_datos": "Hora",
+        "variables": variables,
+        "archivos_generados": list(pronosticos_guardados.values()),
+        "carpeta_pronosticos": PRONOSTICOS_DIR
+    }
+    
+    ruta_metadata = os.path.join(PRONOSTICOS_DIR, "metadata.json")
+    with open(ruta_metadata, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, ensure_ascii=False, indent=2)
+    
+    print(f"📋 Metadata guardada en: {ruta_metadata}")
+    
+except Exception as e:
+    print(f"⚠️  Error guardando metadata: {e}")
+
+# ======================================================
+# 9. RESUMEN FINAL DE TODOS LOS MODELOS
 # ======================================================
 print(f"\n{'='*80}")
 print(" RESUMEN FINAL DE MODELOS SARIMA")
 print(f"{'='*80}")
 
 for var in variables:
-    print(f"\n{var}:")
-    print(f"  Modelo: SARIMA{resultados[var].specification.order}")
-    print(f"          {resultados[var].specification.seasonal_order}")
-    print(f"  AIC: {resultados[var].aic:.2f}")
-    print(f"  Ecuación: {ecuaciones[var]}")
-    print(f"  Número de observaciones: {len(df_hourly[var])}")
-
-# ======================================================
-# 9. SUBIR DATOS COMPLETOS A GITHUB (TODO EL HISTORIAL) - VERSIÓN CORREGIDA
-# ======================================================
-
-print("\n" + "=" * 80)
-print(" 📤 SUBIENDO DATOS COMPLETOS A GITHUB")
-print("=" * 80)
-
-# 1. CONFIGURAR GITHUB
-import requests
-import base64
-import json
-from datetime import datetime
-import pandas as pd
-
-# 🔴 REEMPLAZA ESTO CON TU TOKEN DE GITHUB (si es necesario)
-GITHUB_TOKEN = "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"
-GITHUB_USER = "majito0703"
-REPO_NAME = "measure_data_logger"
-BRANCH = "main"
-
-
-# 2. FUNCIÓN PARA CREAR ARCHIVOS JSON CON TODO EL HISTORIAL - CORREGIDA
-def crear_archivos_json_completos():
-    print("\n📝 Creando archivos JSON con TODOS los datos...")
-
-    json_files = {}
-
-    for var in variables:
+    if var in resultados:
         modelo = resultados[var]
-        serie = df_hourly[var]
+        print(f"\n{var}:")
+        print(f"  Modelo: SARIMA{modelo.specification.order}")
+        print(f"          {modelo.specification.seasonal_order}")
+        print(f"  AIC: {modelo.aic:.2f}")
+        print(f"  Ecuación: {ecuaciones.get(var, 'No disponible')}")
+        print(f"  Número de observaciones: {len(df_hourly[var])}")
+        if var in pronosticos_guardados:
+            print(f"  Archivo JSON: {pronosticos_guardados[var]}")
 
-        print(f"  📊 Procesando {var}...")
-        print(f"    Total de datos históricos: {len(serie)} registros")
-
-        # Obtener pronóstico
-        pasos = 72  # 72 horas
-        pred = modelo.get_forecast(steps=pasos)
-        media = pred.predicted_mean
-        conf_80 = pred.conf_int(alpha=0.20)
-        conf_95 = pred.conf_int(alpha=0.05)
-
-        # 🚨🚨🚨 DATOS HISTÓRICOS COMPLETOS 🚨🚨🚨
-        historico = []
-        for fecha, valor in serie.items():
-            historico.append(
-                {"fecha": fecha.strftime("%Y-%m-%d %H:%M:%S"), "valor": float(valor)}
-            )
-
-        print(f"    Históricos procesados: {len(historico)} registros")
-        if historico:
-            print(f"    Primer dato: {historico[0]['fecha']}")
-            print(f"    Último dato: {historico[-1]['fecha']}")
-        else:
-            print("    ⚠️  No hay datos históricos")
-
-        # 🚨🚨🚨 DATOS DE PRONÓSTICO COMPLETOS 🚨🚨🚨
-        pronosticos = []
-        for i in range(len(media)):
-            pronosticos.append(
-                {
-                    "fecha": media.index[i].strftime("%Y-%m-%d %H:%M:%S"),
-                    "pronostico": float(media.iloc[i]),
-                    "confianza_80_min": float(conf_80.iloc[i, 0]),
-                    "confianza_80_max": float(conf_80.iloc[i, 1]),
-                    "confianza_95_min": float(conf_95.iloc[i, 0]),
-                    "confianza_95_max": float(conf_95.iloc[i, 1]),
-                }
-            )
-
-        print(f"    Pronósticos generados: {len(pronosticos)} horas")
-
-        # Información del modelo
-        info_modelo = {
-            "variable": var,
-            "nombre_display": {
-                "Temperature": "Temperatura",
-                "Humidity": "Humedad",
-                "PM 2.5": "PM2.5",
-                "PM 10": "PM10",
-            }.get(var, var),
-            "unidad": (
-                "°C" if var == "Temperature" else "%" if var == "Humidity" else "µg/m³"
-            ),
-            "modelo": f"SARIMA{resultados[var].specification.order}{resultados[var].specification.seasonal_order}",
-            "aic": float(resultados[var].aic),
-            "observaciones_totales": len(serie),
-            "ecuacion": ecuaciones[var],
-            "limite_permitido": limites.get(var),
-            "parametros": {
-                "orden": resultados[var].specification.order,
-                "orden_estacional": resultados[var].specification.seasonal_order,
-                "coeficientes": {
-                    k: float(v) for k, v in resultados[var].params.items()
-                },
-            },
-        }
-
-        # 🚨🚨🚨 DATOS ESTADÍSTICOS COMPLETOS 🚨🚨🚨
-        estadisticas = {}
-        if len(serie) > 0:
-            estadisticas = {
-                "min": float(serie.min()),
-                "max": float(serie.max()),
-                "media": float(serie.mean()),
-                "mediana": float(serie.median()),
-                "desviacion_estandar": float(serie.std()),
-                "primer_registro": serie.index[0].strftime("%Y-%m-%d %H:%M:%S"),
-                "ultimo_registro": serie.index[-1].strftime("%Y-%m-%d %H:%M:%S"),
-                "rango_dias": (serie.index[-1] - serie.index[0]).days,
-            }
-
-        # 🚨🚨🚨 CREAR ESTRUCTURA COMPLETA - USAR "historico" (NO "historial_completo") 🚨🚨🚨
-        datos_completos = {
-            **info_modelo,
-            "fecha_generacion": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "estadisticas": estadisticas,
-            "historico": historico,  # 🚨 CAMBIADO DE "historial_completo" a "historico"
-            "pronosticos": pronosticos,
-            "total_pronosticos": len(pronosticos),
-            "metadata": {
-                "generado_por": "modelo_sarima.py",
-                "version": "2.0",
-                "ultima_actualizacion": datetime.now().isoformat(),
-                "resample_frecuencia": "1H",
-                "datos_fuente": "Google Sheets",
-            },
-        }
-
-        # 🚨🚨🚨 USAR NOMBRES DE ARCHIVO CONSISTENTES 🚨🚨🚨
-        # Temperatura -> temperature.json
-        # Humedad -> humidity.json
-        # PM 2.5 -> pm2.5.json
-        # PM 10 -> pm10.json
-
-        nombre_base = var.lower().replace(" ", "").replace(".", "").replace("pm", "pm")
-        if nombre_base == "temperature":
-            nombre_base = "temperature"
-        elif nombre_base == "humidity":
-            nombre_base = "humidity"
-        elif nombre_base == "pm25":
-            nombre_base = "pm2.5"  # Usar pm2.5 con punto
-        elif nombre_base == "pm10":
-            nombre_base = "pm10"
-
-        nombre_json = f"pronostico_{nombre_base}.json"
-
-        with open(nombre_json, "w", encoding="utf-8") as f:
-            json.dump(datos_completos, f, ensure_ascii=False, indent=2)
-
-        # Verificar tamaño
-        tamaño_kb = len(json.dumps(datos_completos, ensure_ascii=False)) / 1024
-        print(
-            f"    ✅ {nombre_json} ({tamaño_kb:.1f} KB, {len(historico)} registros históricos)"
-        )
-
-        json_files[nombre_json] = datos_completos
-
-    return json_files
-
-
-# 3. FUNCIÓN PARA SUBIR A GITHUB - MEJORADA CON MEJOR MANEJO DE ERRORES
-def subir_a_github_json(nombre_archivo, datos_json, mensaje_commit):
-    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/pronosticos/{nombre_archivo}"
-
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "Colab-Auto-Upload",
-    }
-
-    try:
-        # Convertir datos JSON a base64
-        contenido_str = json.dumps(datos_json, ensure_ascii=False, indent=2)
-        contenido_bytes = contenido_str.encode("utf-8")
-        contenido_base64 = base64.b64encode(contenido_bytes).decode("utf-8")
-
-        # Verificar si el archivo ya existe
-        sha = None
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                sha = response.json().get("sha")
-                print(f"    📄 Archivo existe, SHA: {sha[:8]}...")
-            elif response.status_code == 404:
-                print(f"    📄 Archivo nuevo")
-            else:
-                print(f"    ⚠️  Error HTTP {response.status_code} al verificar")
-                return False
-        except Exception as e:
-            print(f"    ⚠️  Error de conexión al verificar: {str(e)[:100]}")
-
-        # Preparar datos para subir
-        data = {
-            "message": mensaje_commit,
-            "content": contenido_base64,
-            "branch": BRANCH,
-        }
-
-        if sha:
-            data["sha"] = sha
-
-        # Subir archivo
-        response = requests.put(url, headers=headers, json=data, timeout=30)
-
-        if response.status_code in [200, 201]:
-            print(f"    ✅ Subido exitosamente")
-            return True
-        else:
-            try:
-                error_data = response.json()
-                error_msg = error_data.get("message", "Sin mensaje")
-                print(f"    ❌ Error {response.status_code}: {error_msg}")
-            except:
-                print(f"    ❌ Error {response.status_code}: {response.text[:200]}")
-            return False
-
-    except Exception as e:
-        print(f"    ❌ Error en subida: {str(e)}")
-        return False
-
-
-# 4. 🚨🚨🚨 CREAR Y SUBIR ARCHIVOS JSON CON TODOS LOS DATOS 🚨🚨🚨
-print("\n📊 Generando datos COMPLETOS de pronóstico...")
-json_files = crear_archivos_json_completos()
-
-print("\n📤 Subiendo archivos JSON a GitHub...")
-fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
-mensaje_commit = f"🤖 Actualización de pronósticos SARIMA - {fecha}"
-
-exitosos = 0
-total_archivos = len(json_files)
-
-for i, (archivo_json, datos_json) in enumerate(json_files.items(), 1):
-    try:
-        print(f"\n  [{i}/{total_archivos}] 📄 Subiendo: {archivo_json}")
-
-        # Mostrar información del archivo
-        var = datos_json["variable"]
-        total_historial = len(datos_json.get("historico", []))
-        total_pronosticos = len(datos_json.get("pronosticos", []))
-
-        print(
-            f"    📊 {var}: {total_historial} datos históricos + {total_pronosticos} pronósticos"
-        )
-
-        if total_historial > 0:
-            primer_dato = datos_json["historico"][0]["fecha"]
-            ultimo_historico = datos_json["historico"][-1]["fecha"]
-            print(f"    📅 Histórico: {primer_dato} → {ultimo_historico}")
-
-        if total_pronosticos > 0:
-            primer_pronostico = datos_json["pronosticos"][0]["fecha"]
-            ultimo_pronostico = datos_json["pronosticos"][-1]["fecha"]
-            print(f"    🔮 Pronóstico: {primer_pronostico} → {ultimo_pronostico}")
-
-        # Subir a GitHub
-        if subir_a_github_json(archivo_json, datos_json, mensaje_commit):
-            exitosos += 1
-        else:
-            print(f"    ⚠️  Falló la subida, continuando...")
-
-    except Exception as e:
-        print(f"    ❌ Error procesando {archivo_json}: {str(e)}")
-
-# 5. CREAR ARCHIVO CSV COMPLEMENTARIO (PARA FÁCIL ANÁLISIS)
-print("\n📝 Creando archivos CSV complementarios...")
-
-for var in variables:
-    try:
-        # Crear DataFrame con todos los datos históricos
-        serie = df_hourly[var]
-        df_historial = pd.DataFrame({"fecha": serie.index, "valor": serie.values})
-        df_historial["fecha"] = df_historial["fecha"].dt.strftime("%Y-%m-%d %H:%M:%S")
-
-        # Determinar nombre de archivo consistente
-        nombre_base = var.lower().replace(" ", "").replace(".", "").replace("pm", "pm")
-        if nombre_base == "temperature":
-            nombre_base = "temperature"
-        elif nombre_base == "humidity":
-            nombre_base = "humidity"
-        elif nombre_base == "pm25":
-            nombre_base = "pm2.5"
-        elif nombre_base == "pm10":
-            nombre_base = "pm10"
-
-        csv_nombre = f"datos_{nombre_base}.csv"
-        df_historial.to_csv(csv_nombre, index=False, encoding="utf-8")
-
-        print(f"  ✅ {var}: {csv_nombre} ({len(df_historial)} registros)")
-
-        # También subir CSV a GitHub
-        with open(csv_nombre, "r", encoding="utf-8") as f:
-            contenido = f.read()
-            contenido_bytes = contenido.encode("utf-8")
-            contenido_base64 = base64.b64encode(contenido_bytes).decode("utf-8")
-
-        csv_github_nombre = f"pronosticos/datos_{nombre_base}.csv"
-        if subir_a_github_json(
-            f"datos_{nombre_base}.csv", {"contenido": contenido}, mensaje_commit
-        ):
-            exitosos += 1
-
-    except Exception as e:
-        print(f"  ⚠️  Error creando CSV para {var}: {str(e)}")
-
-# 6. CREAR ARCHIVO ÍNDICE CON METADATOS COMPLETOS
-print("\n📋 Creando archivo índice con metadatos...")
-
-indice_pronosticos = {
-    "fecha_actualizacion": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    "total_variables": len(variables),
-    "pronosticos_disponibles": [],
-    "estadisticas_generales": {},
-    "endpoints": {},
-}
-
-for var in variables:
-    # Determinar nombre base consistente
-    nombre_base = var.lower().replace(" ", "").replace(".", "").replace("pm", "pm")
-    if nombre_base == "temperature":
-        nombre_base = "temperature"
-    elif nombre_base == "humidity":
-        nombre_base = "humidity"
-    elif nombre_base == "pm25":
-        nombre_base = "pm2.5"
-    elif nombre_base == "pm10":
-        nombre_base = "pm10"
-
-    serie = df_hourly[var]
-
-    indice_pronosticos["pronosticos_disponibles"].append(
-        {
-            "variable": var,
-            "nombre_mostrar": {
-                "Temperature": "Temperatura",
-                "Humidity": "Humedad",
-                "PM 2.5": "PM2.5",
-                "PM 10": "PM10",
-            }.get(var, var),
-            "archivo_json": f"pronostico_{nombre_base}.json",
-            "archivo_csv": f"datos_{nombre_base}.csv",
-            "unidad": (
-                "°C" if var == "Temperature" else "%" if var == "Humidity" else "µg/m³"
-            ),
-            "limite": limites.get(var),
-            "estadisticas": {
-                "total_datos": len(serie),
-                "primer_dato": serie.index[0].strftime("%Y-%m-%d %H:%M:%S"),
-                "ultimo_dato": serie.index[-1].strftime("%Y-%m-%d %H:%M:%S"),
-                "min": float(serie.min()),
-                "max": float(serie.max()),
-                "media": float(serie.mean()),
-            },
-        }
-    )
-
-    indice_pronosticos["endpoints"][nombre_base] = {
-        "json": f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/pronosticos/pronostico_{nombre_base}.json",
-        "csv": f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/pronosticos/datos_{nombre_base}.csv",
-        "raw_json": f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/pronosticos/pronostico_{nombre_base}.json",
-    }
-
-# Estadísticas generales
-fechas_todas = []
-for var in variables:
-    fechas_todas.extend(df_hourly[var].index)
-
-if fechas_todas:
-    fechas_todas = pd.Series(fechas_todas)
-    indice_pronosticos["estadisticas_generales"] = {
-        "rango_completo": {
-            "inicio": fechas_todas.min().strftime("%Y-%m-%d %H:%M:%S"),
-            "fin": fechas_todas.max().strftime("%Y-%m-%d %H:%M:%S"),
-            "total_dias": (fechas_todas.max() - fechas_todas.min()).days,
-        },
-        "total_registros_por_hora": len(df_hourly),
-        "fecha_ultima_actualizacion": datetime.now().isoformat(),
-    }
-
-# Guardar y subir índice
-with open("index.json", "w", encoding="utf-8") as f:
-    json.dump(indice_pronosticos, f, ensure_ascii=False, indent=2)
-
-print("  📄 Procesando: index.json")
-if subir_a_github_json("index.json", indice_pronosticos, mensaje_commit):
-    exitosos += 1
-    print("    ✅ Índice subido exitosamente")
-
-# 7. 🎯 RESUMEN COMPLETO
+print(f"\n📁 Archivos JSON guardados en: {PRONOSTICOS_DIR}")
+print(f"📊 Total archivos generados: {len(pronosticos_guardados)}")
 print(f"\n{'='*80}")
-print("🎯 RESUMEN FINAL DE DATOS GENERADOS")
+print("✅ PROCESO COMPLETADO EXITOSAMENTE")
 print(f"{'='*80}")
 
-for var in variables:
-    serie = df_hourly[var]
-
-    # Determinar nombre base consistente
-    nombre_base = var.lower().replace(" ", "").replace(".", "").replace("pm", "pm")
-    if nombre_base == "temperature":
-        nombre_base = "temperature"
-    elif nombre_base == "humidity":
-        nombre_base = "humidity"
-    elif nombre_base == "pm25":
-        nombre_base = "pm2.5"
-    elif nombre_base == "pm10":
-        nombre_base = "pm10"
-
-    print(f"\n📊 {var}:")
-    print(f"   • Datos históricos: {len(serie)} registros")
-    print(f"   • Desde: {serie.index[0].strftime('%d/%m/%Y %H:%M')}")
-    print(f"   • Hasta: {serie.index[-1].strftime('%d/%m/%Y %H:%M')}")
-    print(f"   • Rango: {(serie.index[-1] - serie.index[0]).days} días")
-    print(f"   • Archivo JSON: pronostico_{nombre_base}.json")
-    print(f"   • Archivo CSV: datos_{nombre_base}.csv")
-
-print(
-    f"\n📁 Total de archivos generados: {len(variables) * 2 + 1}"
-)  # JSON + CSV + índice
-print(f"✅ Subidos exitosamente: {exitosos}")
-
-print(f"\n🌐 Tus datos COMPLETOS están en:")
-print(f"   https://github.com/{GITHUB_USER}/{REPO_NAME}/tree/main/pronosticos")
-
-print(f"\n🔗 Endpoints principales:")
-for var in variables:
-    # Determinar nombre base consistente
-    nombre_base = var.lower().replace(" ", "").replace(".", "").replace("pm", "pm")
-    if nombre_base == "temperature":
-        nombre_base = "temperature"
-    elif nombre_base == "humidity":
-        nombre_base = "humidity"
-    elif nombre_base == "pm25":
-        nombre_base = "pm2.5"
-    elif nombre_base == "pm10":
-        nombre_base = "pm10"
-
-    print(
-        f"   • {var}: https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/pronosticos/pronostico_{nombre_base}.json"
-    )
-
-print(f"\n📊 Para verificar los datos:")
-print(f"   1. Ve a: https://github.com/{GITHUB_USER}/{REPO_NAME}/tree/main/pronosticos")
-print(f"   2. Click en cualquier archivo .json")
-print(f"   3. Click en 'Raw' para ver los datos completos")
-
-print(f"\n🚀 Tu página web se actualizará automáticamente en:")
-print(f"   https://{GITHUB_USER}.github.io/{REPO_NAME}/")
-
-print("\n" + "=" * 80)
-print(" ✅ PROCESO COMPLETADO - TODOS LOS DATOS INCLUIDOS")
-print("=" * 80)
-
-# 8. VERIFICACIÓN FINAL (MUESTRA EJEMPLO)
-print(f"\n🔍 Verificación de datos incluidos:")
-
-if len(variables) > 0:
-    primera_var = variables[0]
-
-    # Determinar nombre base consistente
-    nombre_base = (
-        primera_var.lower().replace(" ", "").replace(".", "").replace("pm", "pm")
-    )
-    if nombre_base == "temperature":
-        nombre_base = "temperature"
-    elif nombre_base == "humidity":
-        nombre_base = "humidity"
-    elif nombre_base == "pm25":
-        nombre_base = "pm2.5"
-    elif nombre_base == "pm10":
-        nombre_base = "pm10"
-
-    primer_json = f"pronostico_{nombre_base}.json"
-
-    if os.path.exists(primer_json):
-        with open(primer_json, "r", encoding="utf-8") as f:
-            datos = json.load(f)
-
-        print(f"\n📋 Ejemplo de datos en {primer_json}:")
-        print(f"  Variable: {datos['variable']}")
-        print(f"  Total histórico: {len(datos.get('historico', []))} registros")
-
-        if datos.get("historico"):
-            print(f"  Primer dato: {datos['historico'][0]['fecha']}")
-            print(f"  Último histórico: {datos['historico'][-1]['fecha']}")
-
-        if datos.get("pronosticos"):
-            print(f"  Primer pronóstico: {datos['pronosticos'][0]['fecha']}")
-            print(f"  Último pronóstico: {datos['pronosticos'][-1]['fecha']}")
-            print(f"  Total pronósticos: {datos['total_pronosticos']} horas")
-
-        # Verificar estructura
-        print(f"  ✅ Estructura correcta: 'historico' en lugar de 'historial_completo'")
-
-print("\n⚠️  IMPORTANTE: Asegúrate de que tu dashboard JavaScript use:")
-print("   - 'historico' en lugar de 'historial_completo'")
-print("   - Los mismos nombres de archivo: pronostico_temperature.json, etc.")
+# ======================================================
+# 10. MOSTRAR EJEMPLO DEL CONTENIDO JSON
+# ======================================================
+if pronosticos_guardados:
+    # Tomar el primer archivo como ejemplo
+    primera_var = list(pronosticos_guardados.keys())[0]
+    ruta_ejemplo = pronosticos_guardados[primera_var]
+    
+    try:
+        with open(ruta_ejemplo, 'r', encoding='utf-8') as f:
+            ejemplo = json.load(f)
+        
+        print(f"\n📄 Ejemplo de estructura JSON para {primera_var}:")
+        print(f"   Variable: {ejemplo['variable']}")
+        print(f"   Unidad: {ejemplo['unidad']}")
+        print(f"   Total puntos: {ejemplo['total_puntos']}")
+        print(f"   Primeros 3 puntos del pronóstico:")
+        
+        # Mostrar primeros 3 puntos
+        pronostico = ejemplo['pronostico']
+        fechas = list(pronostico.keys())[:3]
+        for fecha in fechas:
+            valor = pronostico[fecha]
+            print(f"     {fecha}: {valor:.2f} {ejemplo['unidad']}")
+            
+    except Exception as e:
+        print(f"⚠️  Error leyendo ejemplo JSON: {e}")
