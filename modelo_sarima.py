@@ -882,3 +882,239 @@ def graficar_pronostico(modelo, serie, variable, pasos=48, limite=None):
             print(f"⚠️  Pronóstico para {variable} no tiene fechas, usando índice numérico")
             
             # Crear fechas para el pronóstico
+            ultima_fecha = serie.index[-1]
+            frec = pd.infer_freq(serie.index) or 'H'
+            fechas_pronostico = pd.date_range(
+                start=ultima_fecha + pd.Timedelta(hours=1), 
+                periods=pasos, 
+                freq=frec
+            )
+            
+            # Pronóstico
+            ax.plot(
+                fechas_pronostico,
+                media.values,
+                label=f"Pronóstico {variable}",
+                color="red",
+                linewidth=2,
+            )
+
+            # Línea vertical para separar historial de pronóstico
+            ax.axvline(x=ultima_fecha, color="gray", linestyle="--", alpha=0.7, linewidth=1)
+
+            # Formato de fechas para todo el gráfico
+            todas_fechas = list(serie.index) + list(fechas_pronostico)
+            fecha_min = min(todas_fechas)
+            fecha_max = max(todas_fechas)
+            
+            dias_totales = (fecha_max - fecha_min).days
+            
+            if dias_totales <= 7:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+            elif dias_totales <= 30:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+            else:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
+
+        # Línea de norma o límite permitido
+        if limite is not None:
+            ax.axhline(
+                y=limite,
+                color="blue",
+                linestyle="--",
+                linewidth=2,
+                label="Nivel máximo permitido (24H) en Colombia",
+            )
+
+        # Rotar etiquetas para mejor lectura
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
+
+        # Títulos y etiquetas
+        ax.set_title(f"Pronóstico SARIMA - {variable}", fontsize=14, fontweight="bold")
+        ax.set_xlabel("Fecha y Hora", fontsize=12)
+
+        # Etiqueta del eje Y dependiendo de la variable
+        if variable == "Temperature":
+            ax.set_ylabel("Temperatura (°C)", fontsize=12)
+        elif variable == "Humidity":
+            ax.set_ylabel("Humedad (%)", fontsize=12)
+        elif variable in ["PM 2.5", "PM 10"]:
+            ax.set_ylabel(f"{variable} (µg/m³)", fontsize=12)
+        else:
+            ax.set_ylabel(variable, fontsize=12)
+
+        # Cuadrícula
+        ax.grid(True, alpha=0.3, linestyle="--")
+
+        # Leyenda
+        ax.legend(loc="upper left", fontsize=10)
+
+        # Ajustar márgenes
+        plt.tight_layout()
+        
+        return fig
+        
+    except Exception as e:
+        print(f"⚠️  Error al graficar pronóstico para {variable}: {e}")
+        return None
+
+# ======================================================
+# 7. EJECUCIÓN COMPLETA POR VARIABLE CON MANEJO DE ERRORES
+# ======================================================
+limites = {
+    "Temperature": None,
+    "Humidity": None,
+    "PM 2.5": 37,  # valor OMS o Colombia
+    "PM 10": 75,
+}
+
+resultados = {}
+ecuaciones = {}
+parametros_tablas = {}
+archivos_guardados = []
+
+print(f"\n{'='*80}")
+print("🚀 INICIANDO PROCESO DE MODELADO SARIMA")
+print(f"{'='*80}")
+
+for var in variables:
+    print(f"\n{'='*80}")
+    print(f" OPTIMIZANDO: {var}")
+    print(f"{'='*80}")
+
+    serie = df_hourly[var]
+
+    try:
+        modelo, orden, orden_s, aic, parametros, summary = buscar_mejor_modelo(serie)
+
+        print(f"\nMejor modelo para {var}: SARIMA{orden}{orden_s}")
+        print(f"AIC = {aic:.2f}")
+
+        # Obtener y mostrar ecuación matemática
+        try:
+            ecuacion = obtener_ecuacion_sarima(modelo, orden, orden_s)
+            print(f"\nEcuación matemática:")
+            print(f"{ecuacion}")
+        except Exception as e:
+            print(f"⚠️  Error obteniendo ecuación: {e}")
+            ecuacion = "No disponible"
+
+        # Mostrar parámetros en formato de tabla
+        try:
+            mostrar_parametros_tabla(modelo, orden, orden_s, aic)
+        except Exception as e:
+            print(f"⚠️  Error mostrando parámetros: {e}")
+
+        # Guardar resultados en diccionarios
+        resultados[var] = modelo
+        ecuaciones[var] = ecuacion
+        parametros_tablas[var] = {
+            "orden": orden,
+            "orden_estacional": orden_s,
+            "aic": aic,
+            "parametros": parametros,
+            "summary": summary,
+        }
+
+        # Graficar pronóstico (72 horas adelante)
+        try:
+            fig = graficar_pronostico(modelo, serie, var, pasos=72, limite=limites[var])
+            if fig is not None:
+                # Guardar gráfico
+                ruta_grafico = guardar_grafico_pronostico(fig, var)
+                if ruta_grafico:
+                    archivos_guardados.append(("Gráfico", var, ruta_grafico))
+                plt.close(fig)
+        except Exception as e:
+            print(f"⚠️  Error graficando pronóstico: {e}")
+        
+        # Guardar pronóstico en CSV
+        try:
+            ruta_csv = guardar_pronostico_csv(modelo, serie, var, pasos=72)
+            if ruta_csv:
+                archivos_guardados.append(("CSV", var, ruta_csv))
+        except Exception as e:
+            print(f"⚠️  Error guardando CSV para {var}: {e}")
+        
+        # Guardar modelo
+        try:
+            ruta_modelo = guardar_modelo(modelo, var, orden, orden_s, aic)
+            if ruta_modelo:
+                archivos_guardados.append(("Modelo", var, ruta_modelo))
+        except Exception as e:
+            print(f"⚠️  Error guardando modelo para {var}: {e}")
+            
+    except Exception as e:
+        print(f"❌ Error procesando {var}: {e}")
+        print(f"⚠️  Saltando variable {var}...")
+
+# ======================================================
+# 8. CREAR RESUMEN GENERAL
+# ======================================================
+try:
+    ruta_resumen = crear_resumen_general(resultados, ecuaciones, df_hourly, variables)
+    if ruta_resumen:
+        archivos_guardados.append(("Resumen", "General", ruta_resumen))
+except Exception as e:
+    print(f"⚠️  Error creando resumen general: {e}")
+
+# ======================================================
+# 9. RESUMEN FINAL DE TODOS LOS MODELOS
+# ======================================================
+print(f"\n{'='*80}")
+print(" 📊 RESUMEN FINAL DE MODELOS SARIMA")
+print(f"{'='*80}")
+
+for var in variables:
+    if var in resultados:
+        print(f"\n{var}:")
+        print(f"  Modelo: SARIMA{resultados[var].specification.order}")
+        print(f"          {resultados[var].specification.seasonal_order}")
+        print(f"  AIC: {resultados[var].aic:.2f}")
+        print(f"  Ecuación: {ecuaciones.get(var, 'No disponible')}")
+        print(f"  Número de observaciones: {len(df_hourly[var])}")
+        print(f"  Último dato: {df_hourly[var].iloc[-1]:.2f} ({df_hourly.index[-1].strftime('%Y-%m-%d %H:%M')})")
+    else:
+        print(f"\n{var}: No se pudo ajustar modelo")
+
+# ======================================================
+# 10. RESUMEN DE ARCHIVOS GUARDADOS
+# ======================================================
+print(f"\n{'='*80}")
+print(" 💾 ARCHIVOS GUARDADOS")
+print(f"{'='*80}")
+
+if archivos_guardados:
+    for tipo, variable, ruta in archivos_guardados:
+        print(f"  {tipo} - {variable}: {ruta}")
+else:
+    print("  No se guardaron archivos.")
+
+print(f"\n{'='*80}")
+print(" ✅ PROCESO COMPLETADO EXITOSAMENTE")
+print(f"{'='*80}")
+
+# Mostrar ubicación de las carpetas
+if carpetas:
+    print(f"\n📁 Carpetas creadas:")
+    for nombre, ruta in carpetas.items():
+        print(f"  {nombre}: {ruta}")
+        
+    # Verificar contenido
+    print(f"\n📋 Contenido de las carpetas:")
+    for nombre, ruta in carpetas.items():
+        if os.path.exists(ruta):
+            archivos = os.listdir(ruta)
+            if archivos:
+                print(f"  {nombre} ({len(archivos)} archivos):")
+                for archivo in archivos[:5]:  # Mostrar solo primeros 5
+                    print(f"    - {archivo}")
+                if len(archivos) > 5:
+                    print(f"    ... y {len(archivos) - 5} más")
+            else:
+                print(f"  {nombre}: vacía")
+else:
+    print("⚠️  No se pudieron crear carpetas para guardar resultados")
