@@ -173,18 +173,37 @@ def parse_datetime_index(df, date_column="date", format="%d/%m/%Y %H:%M:%S"):
     return df_copy
 
 
-def plot_time_series(df, variable, units="", time_unit="Day"):
+def plot_time_series_with_forecast(df_historico, df_pronostico, variable, units="", time_unit="Day", pasos_pronostico=72):
     """
-    Grafica una serie de tiempo
-    (Versión simplificada de la función original)
+    Grafica una serie de tiempo con datos históricos y pronóstico
     """
-    fig, ax = plt.subplots(figsize=(12, 5))
+    fig, ax = plt.subplots(figsize=(14, 6))
 
-    ax.plot(df.index, df[variable], linewidth=1)
-    ax.set_title(f"Serie de Tiempo - {variable}")
+    # Plot datos históricos (últimas 1200 - 2 días)
+    ax.plot(df_historico.index, df_historico[variable], 
+            linewidth=1.5, color='blue', alpha=0.7, label='Datos históricos')
+    
+    # Plot datos de pronóstico (72 horas)
+    ax.plot(df_pronostico.index, df_pronostico['pronostico'], 
+            linewidth=2, color='red', label='Pronóstico 72h')
+    
+    # Sombrear intervalo de confianza 80%
+    ax.fill_between(df_pronostico.index, 
+                    df_pronostico['limite_inferior_80'], 
+                    df_pronostico['limite_superior_80'],
+                    alpha=0.2, color='orange', label='Intervalo confianza 80%')
+    
+    # Sombrear intervalo de confianza 95%
+    ax.fill_between(df_pronostico.index, 
+                    df_pronostico['limite_inferior_95'], 
+                    df_pronostico['limite_superior_95'],
+                    alpha=0.1, color='gray', label='Intervalo confianza 95%')
+    
+    ax.set_title(f"Serie de Tiempo y Pronóstico - {variable}")
     ax.set_xlabel(f"Tiempo ({time_unit})")
     ax.set_ylabel(f"{variable} {units}")
     ax.grid(True, alpha=0.3)
+    ax.legend(loc='best')
 
     # Formato de fechas
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m %H:%M"))
@@ -379,6 +398,30 @@ print(f"📊 Nueva forma después del resample: {df1.shape[0]} filas × {df1.sha
 print("\n📈 Estadísticas descriptivas:")
 print(df1.describe().transpose())
 
+# ======================================================
+# FUNCIONES ORIGINALES DE GRAFICADO (sin pronóstico aún)
+# ======================================================
+def plot_time_series(df, variable, units="", time_unit="Day"):
+    """
+    Grafica una serie de tiempo
+    (Versión simplificada de la función original)
+    """
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    ax.plot(df.index, df[variable], linewidth=1)
+    ax.set_title(f"Serie de Tiempo - {variable}")
+    ax.set_xlabel(f"Tiempo ({time_unit})")
+    ax.set_ylabel(f"{variable} {units}")
+    ax.grid(True, alpha=0.3)
+
+    # Formato de fechas
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m %H:%M"))
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
+
+    plt.tight_layout()
+    return fig
+
+# Graficar series originales
 fig = plot_time_series(df1, variable="Temperature", units="°C", time_unit="Day")
 plt.show()
 
@@ -507,6 +550,12 @@ print(f"\n🔍 Primeras 3 filas:")
 print(df3.head(3))
 print(f"\n🔍 Últimas 3 filas:")
 print(df3.tail(3))
+
+# ======================================================
+# GUARDAR DF3 PARA USO POSTERIOR EN GRÁFICAS
+# ======================================================
+# Este df3 contiene los datos históricos sin los últimos 2 días
+df_historico = df3.copy()
 
 # ======================================================
 # CONFIGURAR CARPETA DE SALIDA SIMPLIFICADA
@@ -734,16 +783,17 @@ def mostrar_parametros_tabla(modelo, orden, orden_seas, aic):
     print("-" * 60)
 
 # ======================================================
-# 5. FUNCIÓN SIMPLIFICADA PARA GUARDAR PRONÓSTICO COMO JSON
+# 5. FUNCIÓN CORREGIDA PARA GUARDAR PRONÓSTICO COMO JSON
+# (AHORA GUARDA TODAS LAS 72 HORAS)
 # ======================================================
-def guardar_pronostico_json(modelo, serie, variable, pasos=72):
-    """Guarda el pronóstico completo en un archivo JSON"""
+def guardar_pronostico_json(modelo, serie, variable, df_historico, pasos=72):
+    """Guarda el pronóstico completo (72 horas) en un archivo JSON"""
     try:
         if carpeta_pronosticos is None:
             print("⚠️  No se pudo crear carpeta, no se guardará el pronóstico")
             return None
         
-        # Obtener pronóstico
+        # Obtener pronóstico de 72 horas
         pred = modelo.get_forecast(steps=pasos)
         media = pred.predicted_mean
         conf_80 = pred.conf_int(alpha=0.20)
@@ -752,20 +802,17 @@ def guardar_pronostico_json(modelo, serie, variable, pasos=72):
         # Obtener última fecha histórica
         ultima_fecha_historica = serie.index[-1]
         
-        # Inferir frecuencia
+        # Inferir frecuencia (debe ser 'H' para horas)
         freq = pd.infer_freq(serie.index) or 'H'
         
-        # Crear fechas para el pronóstico
-        if isinstance(freq, str):
-            fechas_pronostico = pd.date_range(
-                start=ultima_fecha_historica + pd.Timedelta(hours=1), 
-                periods=pasos, 
-                freq=freq
-            )
-        else:
-            fechas_pronostico = [ultima_fecha_historica + (i+1) * freq for i in range(pasos)]
+        # Crear fechas para el pronóstico (72 horas)
+        fechas_pronostico = pd.date_range(
+            start=ultima_fecha_historica + pd.Timedelta(hours=1), 
+            periods=pasos, 
+            freq=freq
+        )
         
-        # Preparar datos del pronóstico
+        # Preparar datos del pronóstico (TODAS LAS 72 HORAS)
         pronostico_data = []
         for i in range(pasos):
             pronostico_data.append({
@@ -775,6 +822,22 @@ def guardar_pronostico_json(modelo, serie, variable, pasos=72):
                 'limite_superior_80': float(conf_80.iloc[i, 1]),
                 'limite_inferior_95': float(conf_95.iloc[i, 0]),
                 'limite_superior_95': float(conf_95.iloc[i, 1])
+            })
+        
+        # Preparar datos históricos recientes (últimas 24 horas para contexto)
+        ultimas_24h = 24
+        datos_historicos = []
+        
+        # Verificar que haya suficientes datos históricos
+        if len(serie) >= ultimas_24h:
+            datos_recientes = serie.tail(ultimas_24h)
+        else:
+            datos_recientes = serie.tail(len(serie))
+        
+        for i, (fecha, valor) in enumerate(zip(datos_recientes.index, datos_recientes.values)):
+            datos_historicos.append({
+                'fecha': fecha.strftime('%Y-%m-%d %H:%M:%S'),
+                'valor_real': float(valor)
             })
         
         # Información del modelo
@@ -790,7 +853,7 @@ def guardar_pronostico_json(modelo, serie, variable, pasos=72):
                 'variable': variable,
                 'modelo': f'SARIMA{orden}{orden_seas}',
                 'fecha_entrenamiento': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'fecha_ultimo_dato': ultima_fecha_historica.strftime('%Y-%m-%d %H:%M:%S'),
+                'fecha_ultimo_dato_historico': ultima_fecha_historica.strftime('%Y-%m-%d %H:%M:%S'),
                 'valor_ultimo_dato': float(serie.iloc[-1]),
                 'horizonte_pronostico': pasos,
                 'unidades': get_units(variable),
@@ -804,7 +867,8 @@ def guardar_pronostico_json(modelo, serie, variable, pasos=72):
                 }
             },
             'parametros': {str(k): float(v) for k, v in modelo.params.items()},
-            'pronostico': pronostico_data
+            'datos_historicos_recientes': datos_historicos,  # Últimas 24 horas
+            'pronostico': pronostico_data  # TODAS LAS 72 HORAS
         }
         
         # Guardar en JSON
@@ -816,14 +880,16 @@ def guardar_pronostico_json(modelo, serie, variable, pasos=72):
             json.dump(datos_completos, f, indent=2, ensure_ascii=False)
         
         print(f"✅ Pronóstico JSON guardado en: {ruta_completa}")
+        print(f"   - 72 horas de pronóstico guardadas")
+        print(f"   - {len(datos_historicos)} horas históricas incluidas")
         
-        return ruta_completa
+        return ruta_completa, pronostico_data
         
     except Exception as e:
         print(f"⚠️  Error guardando pronóstico JSON para {variable}: {e}")
         import traceback
         traceback.print_exc()
-        return None
+        return None, None
 
 def get_units(variable):
     """Obtiene las unidades para cada variable"""
@@ -909,7 +975,8 @@ limites = {
 
 resultados = {}
 ecuaciones = {}
-archivos_guardados = []
+archivos_guardados = {}
+pronosticos_data = {}  # Para almacenar datos de pronóstico para graficar
 
 print(f"\n{'='*80}")
 print("🚀 INICIANDO PROCESO DE MODELADO SARIMA")
@@ -947,13 +1014,15 @@ for var in variables:
         resultados[var] = modelo
         ecuaciones[var] = ecuacion
         
-        # Guardar pronóstico como JSON
+        # Guardar pronóstico como JSON (CORREGIDO: ahora guarda todas las 72 horas)
         try:
-            ruta_json = guardar_pronostico_json(modelo, serie, var, pasos=72)
+            ruta_json, datos_pronostico = guardar_pronostico_json(modelo, serie, var, df_historico, pasos=72)
             if ruta_json:
-                archivos_guardados.append(("JSON", var, ruta_json))
+                archivos_guardados[var] = ruta_json
+                pronosticos_data[var] = datos_pronostico
         except Exception as e:
             print(f"⚠️  Error guardando JSON para {var}: {e}")
+            pronosticos_data[var] = None
             
     except Exception as e:
         print(f"❌ Error procesando {var}: {e}")
@@ -965,12 +1034,57 @@ for var in variables:
 try:
     ruta_resumen = crear_resumen_general_json(resultados, ecuaciones, df_hourly, variables)
     if ruta_resumen:
-        archivos_guardados.append(("Resumen JSON", "General", ruta_resumen))
+        archivos_guardados["resumen"] = ruta_resumen
 except Exception as e:
     print(f"⚠️  Error creando resumen general JSON: {e}")
 
 # ======================================================
-# 9. RESUMEN FINAL DE TODOS LOS MODELOS
+# 9. GRAFICAR DATOS HISTÓRICOS + PRONÓSTICO 72 HORAS
+# ======================================================
+print(f"\n{'='*80}")
+print("📈 GENERANDO GRÁFICAS CON HISTÓRICO Y PRONÓSTICO")
+print(f"{'='*80}")
+
+for var in variables:
+    if var in resultados and var in pronosticos_data and pronosticos_data[var] is not None:
+        try:
+            # Preparar DataFrame de pronóstico para graficar
+            df_pronostico = pd.DataFrame(pronosticos_data[var])
+            
+            # Convertir fecha a datetime
+            df_pronostico['fecha'] = pd.to_datetime(df_pronostico['fecha'])
+            df_pronostico.set_index('fecha', inplace=True)
+            
+            # Obtener datos históricos para esta variable
+            # Usar df_historico (sin los últimos 2 días) en resolución horaria para consistencia
+            df_historico_hourly = df_historico.resample("H").mean()[var].dropna()
+            
+            # Graficar
+            fig = plot_time_series_with_forecast(
+                df_historico=df_historico_hourly,
+                df_pronostico=df_pronostico,
+                variable=var,
+                units=get_units(var),
+                time_unit="Day",
+                pasos_pronostico=72
+            )
+            
+            plt.show()
+            
+            # También guardar la gráfica
+            if carpeta_pronosticos:
+                nombre_grafica = f"grafica_{var}.png"
+                ruta_grafica = os.path.join(carpeta_pronosticos, nombre_grafica)
+                fig.savefig(ruta_grafica, dpi=150, bbox_inches='tight')
+                print(f"✅ Gráfica guardada: {ruta_grafica}")
+                
+        except Exception as e:
+            print(f"⚠️  Error generando gráfica para {var}: {e}")
+    else:
+        print(f"⚠️  No se pudo generar gráfica para {var}: faltan datos")
+
+# ======================================================
+# 10. RESUMEN FINAL DE TODOS LOS MODELOS
 # ======================================================
 print(f"\n{'='*80}")
 print(" 📊 RESUMEN FINAL DE MODELOS SARIMA")
@@ -985,32 +1099,55 @@ for var in variables:
         print(f"  Ecuación: {ecuaciones.get(var, 'No disponible')}")
         print(f"  Número de observaciones: {len(df_hourly[var])}")
         print(f"  Último dato: {df_hourly[var].iloc[-1]:.2f} ({df_hourly.index[-1].strftime('%Y-%m-%d %H:%M')})")
+        print(f"  Horas pronosticadas: 72")
     else:
         print(f"\n{var}: No se pudo ajustar modelo")
 
 # ======================================================
-# 10. RESUMEN DE ARCHIVOS GUARDADOS
+# 11. RESUMEN DE ARCHIVOS GUARDADOS
 # ======================================================
 print(f"\n{'='*80}")
 print(" 💾 ARCHIVOS GUARDADOS EN pronosticos/")
 print(f"{'='*80}")
 
 if archivos_guardados:
-    for tipo, variable, ruta in archivos_guardados:
-        print(f"  {tipo} - {variable}: {os.path.basename(ruta)}")
+    for variable, ruta in archivos_guardados.items():
+        if variable != "resumen":
+            print(f"  JSON - {variable}: {os.path.basename(ruta)}")
+    
+    if "resumen" in archivos_guardados:
+        print(f"  Resumen General: {os.path.basename(archivos_guardados['resumen'])}")
     
     print(f"\n📊 Total de archivos JSON generados: {len(archivos_guardados)}")
     
     # Mostrar contenido real de la carpeta
     if carpeta_pronosticos and os.path.exists(carpeta_pronosticos):
         archivos_en_carpeta = os.listdir(carpeta_pronosticos)
+        archivos_json = [f for f in archivos_en_carpeta if f.endswith('.json')]
+        archivos_png = [f for f in archivos_en_carpeta if f.endswith('.png')]
+        
         print(f"\n📂 Contenido actual de {carpeta_pronosticos}:")
-        for archivo in archivos_en_carpeta:
-            if archivo.endswith('.json'):
+        
+        print("  Archivos JSON:")
+        for archivo in archivos_json:
+            ruta_completa = os.path.join(carpeta_pronosticos, archivo)
+            tamaño = os.path.getsize(ruta_completa)
+            tamaño_kb = tamaño / 1024
+            
+            # Verificar que contenga 72 horas de pronóstico
+            with open(ruta_completa, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+                horas_pronostico = len(datos.get('pronostico', []))
+            
+            print(f"    📄 {archivo} ({tamaño_kb:.1f} KB) - {horas_pronostico} horas pronóstico")
+        
+        if archivos_png:
+            print("\n  Archivos PNG (gráficas):")
+            for archivo in archivos_png:
                 ruta_completa = os.path.join(carpeta_pronosticos, archivo)
                 tamaño = os.path.getsize(ruta_completa)
                 tamaño_kb = tamaño / 1024
-                print(f"  📄 {archivo} ({tamaño_kb:.1f} KB)")
+                print(f"    🖼️  {archivo} ({tamaño_kb:.1f} KB)")
 else:
     print("  No se guardaron archivos.")
 
@@ -1026,19 +1163,14 @@ if carpeta_pronosticos:
     if os.path.exists(carpeta_pronosticos):
         archivos = os.listdir(carpeta_pronosticos)
         if archivos:
-            print(f"📋 Archivos JSON en la carpeta ({len(archivos)} total):")
-            json_files = [f for f in archivos if f.endswith('.json')]
-            for archivo in json_files:
-                tamaño = os.path.getsize(os.path.join(carpeta_pronosticos, archivo))
-                tamaño_kb = tamaño / 1024
-                print(f"  ✅ {archivo} ({tamaño_kb:.1f} KB)")
+            print(f"📋 Total archivos en carpeta: {len(archivos)}")
         else:
             print("  📭 La carpeta está vacía")
 else:
     print("⚠️  No se pudo crear la carpeta 'pronosticos'")
 
 # ======================================================
-# 11. RESUMEN DE ACTUALIZACIÓN DE DATOS
+# 12. RESUMEN DE ACTUALIZACIÓN DE DATOS
 # ======================================================
 print(f"\n{'='*80}")
 print(" 🔄 RESUMEN DE ACTUALIZACIÓN DE DATOS")
@@ -1069,40 +1201,31 @@ if 'df0' in locals() and not df0.empty:
         print(f"  ⚠️  Error analizando fechas: {e}")
 
 # ======================================================
-# 12. LIMPIAR ARCHIVOS TEMPORALES GRANDES
+# 13. VERIFICACIÓN DE PRONÓSTICO COMPLETO
 # ======================================================
 print(f"\n{'='*80}")
-print(" 🧹 LIMPIANDO ARCHIVOS TEMPORALES")
-print("=" * 80)
+print(" ✅ VERIFICACIÓN DE PRONÓSTICO COMPLETO (72 HORAS)")
+print(f"{'='*80}")
 
-# Listar archivos temporales grandes y eliminarlos si existen
-archivos_a_eliminar = []
-for root, dirs, files in os.walk('.'):
-    for file in files:
-        if file.endswith('.pkl'):
-            ruta_completa = os.path.join(root, file)
-            archivos_a_eliminar.append(ruta_completa)
-
-if archivos_a_eliminar:
-    print(f"⚠️  Encontrados {len(archivos_a_eliminar)} archivos .pkl grandes:")
-    for archivo in archivos_a_eliminar:
+for var in variables:
+    if var in archivos_guardados and archivos_guardados[var]:
         try:
-            tamaño = os.path.getsize(archivo)
-            tamaño_mb = tamaño / (1024 * 1024)
-            print(f"  - {archivo} ({tamaño_mb:.2f} MB)")
-            
-            # Eliminar automáticamente
-            os.remove(archivo)
-            print(f"    ✅ Eliminado")
-        except:
-            pass
-    print("✅ Archivos temporales grandes eliminados")
-else:
-    print("✅ No se encontraron archivos .pkl grandes")
+            with open(archivos_guardados[var], 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+                horas_pronostico = len(datos.get('pronostico', []))
+                
+                if horas_pronostico == 72:
+                    print(f"✅ {var}: {horas_pronostico} horas de pronóstico (CORRECTO)")
+                else:
+                    print(f"⚠️  {var}: Solo {horas_pronostico} horas de pronóstico (DEBERÍAN SER 72)")
+                    
+        except Exception as e:
+            print(f"❌ Error leyendo JSON de {var}: {e}")
 
 print(f"\n{'='*80}")
 print(" 🎯 CONFIGURACIÓN SIMPLIFICADA COMPLETADA")
-print("    • Solo archivos JSON en carpeta pronosticos/")
+print("    • Gráficas con histórico y pronóstico 72h")
+print("    • JSON con 72 horas completas de pronóstico")
 print("    • Últimos 1200 datos procesados")
 print("    • Últimos 2 días eliminados")
 print(f"{'='*80}")
