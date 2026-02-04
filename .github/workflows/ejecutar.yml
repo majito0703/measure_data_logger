@@ -2,9 +2,7 @@ name: 🤖 Ejecutar SARIMA Automático
 
 on:
   schedule:
-    # Se ejecuta cada 12 horas (00:00 y 12:00 UTC)
     - cron: '0 */12 * * *'
-  # También se puede ejecutar manualmente
   workflow_dispatch:
 
 jobs:
@@ -15,44 +13,43 @@ jobs:
     # 1. 📥 Descargar el código
     - name: Descargar código
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # IMPORTANTE: Trae todo el historial
     
-    # 2. 🐍 Instalar Python
+    # 2. 🔍 Verificar el archivo ANTES de ejecutar
+    - name: Verificar archivo modelo_sarima.py
+      run: |
+        echo "🔍 Verificando línea 132 del archivo..."
+        echo "=== Contenido líneas 130-135 ==="
+        sed -n '130,135p' modelo_sarima.py
+        echo "=== Buscando líneas con '!' ==="
+        grep -n "!" modelo_sarima.py || echo "✅ No hay líneas con '!'"
+    
+    # 3. 🐍 Instalar Python
     - name: Instalar Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
     
-    # 3. 📦 Instalar programas necesarios
+    # 4. 📦 Instalar programas necesarios
     - name: Instalar dependencias
       run: |
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    # 4. 🚀 Ejecutar tu código
+    # 5. 🚀 Ejecutar tu código
     - name: Ejecutar modelo SARIMA
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GOOGLE_SHEETS_CREDS: ${{ secrets.GOOGLE_SHEETS_CREDS }}
       run: |
         echo "🚀 Iniciando modelo SARIMA..."
+        echo "📄 Ejecutando: $(which python) modelo_sarima.py"
         python modelo_sarima.py
     
-    # 5. 📤 Subir resultados automáticamente
-    - name: Subir archivos generados
+    # 6. 📋 Verificar resultados
+    - name: Verificar archivos generados
       run: |
-        echo "📁 Verificando archivos generados..."
-        
-        # Configurar git
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        
-        # Agregar todos los cambios
-        git add .
-        
-        # Verificar si hay cambios
-        if git diff --cached --quiet; then
-          echo "ℹ️ No hay cambios para subir"
-        else
-          echo "💾 Guardando cambios..."
-          git commit -m "🤖 Actualización automática $(date '+%Y-%m-%d %H:%M')"
-          git push
-          echo "✅ Cambios subidos a GitHub"
-        fi
+        echo "📁 Archivos generados:"
+        ls -la *.json *.csv 2>/dev/null || echo "No se encontraron archivos JSON/CSV"
+        ls -la pronosticos/ 2>/dev/null && echo "✅ Carpeta 'pronosticos' creada"
