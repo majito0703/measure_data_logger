@@ -1,0 +1,48 @@
+{
+  "proyecto": "Modelo SARIMA - Pronóstico de Calidad del Aire y Variables Ambientales",
+  "fecha_ejecucion": "2026-02-04T21:48:11.080734",
+  "fecha_ejecucion_formateada": "04/02/2026 21:48:11",
+  "fuente_datos": "https://docs.google.com/spreadsheets/d/1x1FeUolFWlR07tgrc6F4cgeUhJYV7uQ5yuRTBHO8jWI/edit?gid=0#gid=0",
+  "periodo_pronostico_horas": 72,
+  "frecuencia_datos": "Horaria",
+  "variables_procesadas": [
+    "Temperature",
+    "Humidity",
+    "PM 2.5",
+    "PM 10"
+  ],
+  "archivos_generados": {
+    "Temperature": {
+      "archivo": "pronostico_temperature.json",
+      "ruta_completa": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_temperature.json",
+      "modelo": "SARIMA(1, 1, 1)(1, 0, 1, 12)",
+      "aic": -3025.2584985011044,
+      "observaciones": 1923
+    },
+    "Humidity": {
+      "archivo": "pronostico_humidity.json",
+      "ruta_completa": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_humidity.json",
+      "modelo": "SARIMA(1, 1, 1)(1, 0, 1, 12)",
+      "aic": 2341.3393308278773,
+      "observaciones": 1923
+    },
+    "PM 2.5": {
+      "archivo": "pronostico_pm25.json",
+      "ruta_completa": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_pm25.json",
+      "modelo": "SARIMA(1, 1, 1)(1, 0, 1, 12)",
+      "aic": 7488.784620326961,
+      "observaciones": 1923
+    },
+    "PM 10": {
+      "archivo": "pronostico_pm10.json",
+      "ruta_completa": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos/pronostico_pm10.json",
+      "modelo": "SARIMA(1, 1, 1)(1, 0, 1, 12)",
+      "aic": 8497.961203786708,
+      "observaciones": 1923
+    }
+  },
+  "carpeta_pronosticos": "/home/runner/work/measure_data_logger/measure_data_logger/pronosticos",
+  "modelos_ajustados": 4,
+  "rango_temporal_datos": "09/11/2025 a 04/02/2026",
+  "ano_datos": 2025
+}
