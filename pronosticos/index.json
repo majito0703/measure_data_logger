@@ -1,12 +1,12 @@
 {
-  "fecha_actualizacion": "2026-02-04 01:48:44",
+  "fecha_actualizacion": "2026-02-04 04:07:42",
   "total_variables": 4,
   "pronosticos_disponibles": [
     {
       "variable": "Temperature",
       "nombre_mostrar": "Temperatura",
-      "archivo_json": "pronostico_temperature.json",
-      "archivo_csv": "datos_temperature.csv",
+      "archivo_json": "pronosticos/pronostico_temperature.json",
+      "archivo_csv": "pronosticos/datos_temperature.csv",
       "unidad": "°C",
       "limite": null,
       "estadisticas": {
@@ -21,8 +21,8 @@
     {
       "variable": "Humidity",
       "nombre_mostrar": "Humedad",
-      "archivo_json": "pronostico_humidity.json",
-      "archivo_csv": "datos_humidity.csv",
+      "archivo_json": "pronosticos/pronostico_humidity.json",
+      "archivo_csv": "pronosticos/datos_humidity.csv",
       "unidad": "%",
       "limite": null,
       "estadisticas": {
@@ -37,8 +37,8 @@
     {
       "variable": "PM 2.5",
       "nombre_mostrar": "PM2.5",
-      "archivo_json": "pronostico_pm2.5.json",
-      "archivo_csv": "datos_pm2.5.csv",
+      "archivo_json": "pronosticos/pronostico_pm2.5.json",
+      "archivo_csv": "pronosticos/datos_pm2.5.csv",
       "unidad": "µg/m³",
       "limite": 37,
       "estadisticas": {
@@ -53,8 +53,8 @@
     {
       "variable": "PM 10",
       "nombre_mostrar": "PM10",
-      "archivo_json": "pronostico_pm10.json",
-      "archivo_csv": "datos_pm10.csv",
+      "archivo_json": "pronosticos/pronostico_pm10.json",
+      "archivo_csv": "pronosticos/datos_pm10.csv",
       "unidad": "µg/m³",
       "limite": 75,
       "estadisticas": {
@@ -74,7 +74,7 @@
       "total_dias": 14
     },
     "total_registros_por_hora": 338,
-    "fecha_ultima_actualizacion": "2026-02-04T01:48:44.372300"
+    "fecha_ultima_actualizacion": "2026-02-04T04:07:42.443987"
   },
   "endpoints": {
     "temperature": {
