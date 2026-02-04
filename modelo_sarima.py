@@ -398,9 +398,15 @@ print(df3.head())
 print(df3.tail())
 
 # ======================================================
-# 1. RESAMPLEO A DATOS POR HORA
+# 1. RESAMPLEO A DATOS POR HORA CON FRECUENCIA EXPLÍCITA
 # ======================================================
+# Asegurar que el índice tenga frecuencia para SARIMA
 df_hourly = df3.resample("H").mean().dropna()
+
+# Asignar frecuencia explícita al índice (IMPORTANTE PARA SARIMA)
+if not df_hourly.index.freq:
+    print("⚠️  Asignando frecuencia horaria al índice...")
+    df_hourly = df_hourly.asfreq('H')
 
 variables = ["Temperature", "Humidity", "PM 2.5", "PM 10"]
 
@@ -608,124 +614,187 @@ def mostrar_parametros_tabla(modelo, orden, orden_seas, aic):
     print("-" * 60)
 
 # ======================================================
-# 5. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON FECHAS MEJORADAS
+# 5. FUNCIÓN PARA GRAFICAR PRONÓSTICO CON MANEJO DE FECHAS
 # ======================================================
 def graficar_pronostico(modelo, series, pasos=48, limite=None):
-    pred = modelo.get_forecast(steps=pasos)
-    media = pred.predicted_mean
-    conf_80 = pred.conf_int(alpha=0.20)
-    conf_95 = pred.conf_int(alpha=0.05)
+    try:
+        pred = modelo.get_forecast(steps=pasos)
+        media = pred.predicted_mean
+        conf_80 = pred.conf_int(alpha=0.20)
+        conf_95 = pred.conf_int(alpha=0.05)
 
-    # Crear figura con tamaño adecuado
-    fig, ax = plt.subplots(figsize=(15, 6))
+        # Crear figura con tamaño adecuado
+        fig, ax = plt.subplots(figsize=(15, 6))
 
-    # Datos históricos
-    ax.plot(series.index, series.values, label="Medido", color="black", linewidth=1.5)
+        # Datos históricos
+        ax.plot(series.index, series.values, label="Medido", color="black", linewidth=1.5)
 
-    # Pronóstico
-    ax.plot(
-        media.index,
-        media.values,
-        label=f"Pronóstico {series.name}",
-        color="red",
-        linewidth=2,
-    )
+        # Verificar si el pronóstico tiene índice de fechas
+        if hasattr(media.index, 'freq') and media.index.freq is not None:
+            # El pronóstico tiene fechas
+            fecha_min = series.index.min()
+            fecha_max = media.index.max()
+            
+            # Pronóstico
+            ax.plot(
+                media.index,
+                media.values,
+                label=f"Pronóstico {series.name}",
+                color="red",
+                linewidth=2,
+            )
 
-    # Bandas de confianza
-    ax.fill_between(
-        conf_80.index,
-        conf_80.iloc[:, 0],
-        conf_80.iloc[:, 1],
-        color="green",
-        alpha=0.3,
-        label="Confianza 80%",
-    )
-    ax.fill_between(
-        conf_95.index,
-        conf_95.iloc[:, 0],
-        conf_95.iloc[:, 1],
-        color="yellow",
-        alpha=0.2,
-        label="Confianza 95%",
-    )
+            # Bandas de confianza
+            ax.fill_between(
+                conf_80.index,
+                conf_80.iloc[:, 0],
+                conf_80.iloc[:, 1],
+                color="green",
+                alpha=0.3,
+                label="Confianza 80%",
+            )
+            ax.fill_between(
+                conf_95.index,
+                conf_95.iloc[:, 0],
+                conf_95.iloc[:, 1],
+                color="yellow",
+                alpha=0.2,
+                label="Confianza 95%",
+            )
 
-    # Línea vertical para separar historial de pronóstico
-    ultimo_historial = series.index[-1]
-    ax.axvline(x=ultimo_historial, color="gray", linestyle="--", alpha=0.7, linewidth=1)
+            # Línea vertical para separar historial de pronóstico
+            ultimo_historial = series.index[-1]
+            ax.axvline(x=ultimo_historial, color="gray", linestyle="--", alpha=0.7, linewidth=1)
 
-    # Línea de norma o límite permitido
-    if limite is not None:
-        ax.axhline(
-            y=limite,
-            color="blue",
-            linestyle="--",
-            linewidth=2,
-            label="Nivel máximo permitido (24H) en Colombia",
-        )
+            # Configurar formato de fechas
+            # Calcular diferencia de días para determinar el formato
+            dias_totales = (fecha_max - fecha_min).days
 
-    # Configurar formato de fechas
-    # Determinar el rango de fechas
-    fecha_min = series.index.min()
-    fecha_max = media.index.max()
+            if dias_totales <= 7:  # Si es menos de una semana
+                # Formato: Día Hora (ej: "11 Nov 10:00")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+            elif dias_totales <= 30:  # Si es menos de un mes
+                # Formato: Día Mes (ej: "11 Nov")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+            else:  # Si es más de un mes
+                # Formato: Mes (ej: "Nov 2025")
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
 
-    # Calcular diferencia de días para determinar el formato
-    dias_totales = (fecha_max - fecha_min).days
+            # Agregar leyenda de separación
+            ax.text(
+                ultimo_historial + timedelta(hours=1),
+                ax.get_ylim()[1] * 0.95,
+                "Pronóstico",
+                fontsize=10,
+                color="darkred",
+                alpha=0.8,
+            )
+        else:
+            # El pronóstico no tiene fechas, usar índice numérico
+            print(f"⚠️  Pronóstico para {series.name} no tiene fechas, usando índice numérico")
+            
+            # Crear fechas para el pronóstico
+            ultima_fecha = series.index[-1]
+            frec = pd.infer_freq(series.index) or 'H'
+            fechas_pronostico = pd.date_range(
+                start=ultima_fecha + pd.Timedelta(hours=1), 
+                periods=pasos, 
+                freq=frec
+            )
+            
+            # Pronóstico
+            ax.plot(
+                fechas_pronostico,
+                media.values,
+                label=f"Pronóstico {series.name}",
+                color="red",
+                linewidth=2,
+            )
 
-    if dias_totales <= 7:  # Si es menos de una semana
-        # Formato: Día Hora (ej: "11 Nov 10:00")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
-        ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
-    elif dias_totales <= 30:  # Si es menos de un mes
-        # Formato: Día Mes (ej: "11 Nov")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
-    else:  # Si es más de un mes
-        # Formato: Mes (ej: "Nov 2025")
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-        ax.xaxis.set_major_locator(mdates.MonthLocator())
+            # Línea vertical para separar historial de pronóstico
+            ax.axvline(x=ultima_fecha, color="gray", linestyle="--", alpha=0.7, linewidth=1)
 
-    # Rotar etiquetas para mejor lectura
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
+            # Formato de fechas para todo el gráfico
+            todas_fechas = list(series.index) + list(fechas_pronostico)
+            fecha_min = min(todas_fechas)
+            fecha_max = max(todas_fechas)
+            
+            dias_totales = (fecha_max - fecha_min).days
+            
+            if dias_totales <= 7:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b %H:%M"))
+                ax.xaxis.set_major_locator(mdates.HourLocator(interval=6))
+            elif dias_totales <= 30:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+            else:
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+                ax.xaxis.set_major_locator(mdates.MonthLocator())
 
-    # Agregar leyenda de separación
-    ax.text(
-        ultimo_historial + timedelta(hours=1),
-        ax.get_ylim()[1] * 0.95,
-        "Pronóstico",
-        fontsize=10,
-        color="darkred",
-        alpha=0.8,
-    )
+        # Línea de norma o límite permitido
+        if limite is not None:
+            ax.axhline(
+                y=limite,
+                color="blue",
+                linestyle="--",
+                linewidth=2,
+                label="Nivel máximo permitido (24H) en Colombia",
+            )
 
-    # Títulos y etiquetas
-    ax.set_title(f"Pronóstico SARIMA - {series.name}", fontsize=14, fontweight="bold")
-    ax.set_xlabel("Fecha y Hora", fontsize=12)
+        # Rotar etiquetas para mejor lectura
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
-    # Etiqueta del eje Y dependiendo de la variable
-    if series.name == "Temperature":
-        ax.set_ylabel("Temperatura (°C)", fontsize=12)
-    elif series.name == "Humidity":
-        ax.set_ylabel("Humedad (%)", fontsize=12)
-    elif series.name in ["PM 2.5", "PM 10"]:
-        ax.set_ylabel(f"{series.name} (µg/m³)", fontsize=12)
-    else:
-        ax.set_ylabel(series.name, fontsize=12)
+        # Títulos y etiquetas
+        ax.set_title(f"Pronóstico SARIMA - {series.name}", fontsize=14, fontweight="bold")
+        ax.set_xlabel("Fecha y Hora", fontsize=12)
 
-    # Cuadrícula
-    ax.grid(True, alpha=0.3, linestyle="--")
+        # Etiqueta del eje Y dependiendo de la variable
+        if series.name == "Temperature":
+            ax.set_ylabel("Temperatura (°C)", fontsize=12)
+        elif series.name == "Humidity":
+            ax.set_ylabel("Humedad (%)", fontsize=12)
+        elif series.name in ["PM 2.5", "PM 10"]:
+            ax.set_ylabel(f"{series.name} (µg/m³)", fontsize=12)
+        else:
+            ax.set_ylabel(series.name, fontsize=12)
 
-    # Leyenda
-    ax.legend(loc="upper left", fontsize=10)
+        # Cuadrícula
+        ax.grid(True, alpha=0.3, linestyle="--")
 
-    # Ajustar márgenes
-    plt.tight_layout()
+        # Leyenda
+        ax.legend(loc="upper left", fontsize=10)
 
-    plt.show()
+        # Ajustar márgenes
+        plt.tight_layout()
 
-
+        plt.show()
+        
+    except Exception as e:
+        print(f"⚠️  Error al graficar pronóstico para {series.name}: {e}")
+        # Intentar método alternativo simple
+        try:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            ax.plot(series.index, series.values, label="Medido", color="black")
+            
+            # Mostrar al menos los resultados del modelo
+            print(f"  Modelo ajustado para {series.name}")
+            print(f"  AIC: {modelo.aic:.2f}")
+            
+            plt.title(f"Serie histórica - {series.name}")
+            plt.xlabel("Fecha")
+            plt.ylabel(series.name)
+            plt.grid(True, alpha=0.3)
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+        except:
+            pass
 
 # ======================================================
-# 6. EJECUCIÓN COMPLETA POR VARIABLE
+# 6. EJECUCIÓN COMPLETA POR VARIABLE CON MANEJO DE ERRORES
 # ======================================================
 limites = {
     "Temperature": None,
@@ -745,32 +814,47 @@ for var in variables:
 
     serie = df_hourly[var]
 
-    modelo, orden, orden_s, aic, parametros, summary = buscar_mejor_modelo(serie)
+    try:
+        modelo, orden, orden_s, aic, parametros, summary = buscar_mejor_modelo(serie)
 
-    print(f"\nMejor modelo para {var}: SARIMA{orden}{orden_s}")
-    print(f"AIC = {aic:.2f}")
+        print(f"\nMejor modelo para {var}: SARIMA{orden}{orden_s}")
+        print(f"AIC = {aic:.2f}")
 
-    # Obtener y mostrar ecuación matemática
-    ecuacion = obtener_ecuacion_sarima(modelo, orden, orden_s)
-    print(f"\nEcuación matemática:")
-    print(f"{ecuacion}")
+        # Obtener y mostrar ecuación matemática
+        try:
+            ecuacion = obtener_ecuacion_sarima(modelo, orden, orden_s)
+            print(f"\nEcuación matemática:")
+            print(f"{ecuacion}")
+        except Exception as e:
+            print(f"⚠️  Error obteniendo ecuación: {e}")
+            ecuacion = "No disponible"
 
-    # Mostrar parámetros en formato de tabla
-    mostrar_parametros_tabla(modelo, orden, orden_s, aic)
+        # Mostrar parámetros en formato de tabla
+        try:
+            mostrar_parametros_tabla(modelo, orden, orden_s, aic)
+        except Exception as e:
+            print(f"⚠️  Error mostrando parámetros: {e}")
 
-    # Guardar resultados
-    resultados[var] = modelo
-    ecuaciones[var] = ecuacion
-    parametros_tablas[var] = {
-        "orden": orden,
-        "orden_estacional": orden_s,
-        "aic": aic,
-        "parametros": parametros,
-        "summary": summary,
-    }
+        # Guardar resultados
+        resultados[var] = modelo
+        ecuaciones[var] = ecuacion
+        parametros_tablas[var] = {
+            "orden": orden,
+            "orden_estacional": orden_s,
+            "aic": aic,
+            "parametros": parametros,
+            "summary": summary,
+        }
 
-    # Graficar pronóstico (72 horas adelante)
-    graficar_pronostico(modelo, serie, pasos=72, limite=limites[var])
+        # Graficar pronóstico (72 horas adelante)
+        try:
+            graficar_pronostico(modelo, serie, pasos=72, limite=limites[var])
+        except Exception as e:
+            print(f"⚠️  Error graficando pronóstico: {e}")
+            
+    except Exception as e:
+        print(f"❌ Error procesando {var}: {e}")
+        print(f"⚠️  Saltando variable {var}...")
 
 # ======================================================
 # 7. RESUMEN FINAL DE TODOS LOS MODELOS
@@ -780,9 +864,14 @@ print(" RESUMEN FINAL DE MODELOS SARIMA")
 print(f"{'='*80}")
 
 for var in variables:
-    print(f"\n{var}:")
-    print(f"  Modelo: SARIMA{resultados[var].specification.order}")
-    print(f"          {resultados[var].specification.seasonal_order}")
-    print(f"  AIC: {resultados[var].aic:.2f}")
-    print(f"  Ecuación: {ecuaciones[var]}")
-    print(f"  Número de observaciones: {len(df_hourly[var])}")
+    if var in resultados:
+        print(f"\n{var}:")
+        print(f"  Modelo: SARIMA{resultados[var].specification.order}")
+        print(f"          {resultados[var].specification.seasonal_order}")
+        print(f"  AIC: {resultados[var].aic:.2f}")
+        print(f"  Ecuación: {ecuaciones.get(var, 'No disponible')}")
+        print(f"  Número de observaciones: {len(df_hourly[var])}")
+    else:
+        print(f"\n{var}: No se pudo ajustar modelo")
+
+print(f"\n✅ Proceso completado exitosamente")
