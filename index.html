@@ -47,16 +47,6 @@
   100% { transform: rotate(360deg); }
 }
 
-@keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 /* Base */
 * { box-sizing: border-box; }
 
@@ -242,23 +232,6 @@ header {
   display: flex;
   align-items: baseline;
   gap: 8px;
-}
-
-.kpi-trend {
-  font-size: 14px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.kpi-trend.up {
-  color: #10b981;
-  background: #d1fae5;
-}
-
-.kpi-trend.down {
-  color: #ef4444;
-  background: #fee2e2;
 }
 
 .kpi-meta {
@@ -721,60 +694,80 @@ header {
   box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
 }
 
+/* ========== PAGINACIÓN ========== */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 2px solid var(--gris);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid var(--gris-oscuro);
+  background: #fff;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  font-size: 14px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--ucc-azul);
+  background: #f9fafb;
+}
+
+.pagination-btn.active {
+  background: var(--ucc-azul);
+  color: #fff;
+  border-color: var(--ucc-azul);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-size-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-size-selector select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--gris-oscuro);
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   min-width: 100%;
-}
-
-/* Tabla responsive mejorada para móviles */
-@media (max-width: 560px) {
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  thead {
-    display: table-header-group;
-  }
-  
-  tbody {
-    display: table-row-group;
-  }
-  
-  tr {
-    display: table-row;
-  }
-  
-  th, td {
-    display: table-cell;
-    min-width: 80px;
-  }
-  
-  /* Hacer primera columna sticky en móviles */
-  th:first-child,
-  td:first-child {
-    position: sticky;
-    left: 0;
-    background: inherit;
-    z-index: 10;
-    min-width: 120px;
-  }
-  
-  th:first-child {
-    background: linear-gradient(135deg, var(--ucc-azul), #0a2b5a);
-    z-index: 11;
-  }
-  
-  body.dark th:first-child {
-    background: linear-gradient(135deg, #1e3a5f, #0f2744);
-  }
-  
-  body.dark td:first-child {
-    background: #1a1f2e;
-  }
 }
 
 th, td {
@@ -840,73 +833,6 @@ tbody tr:hover {
   box-shadow: var(--shadow);
 }
 
-/* ========== PARÁMETROS DEL MODELO ========== */
-.model-params-card {
-  background: var(--card-bg);
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
-  display: none;
-  border: 1px solid rgba(0,0,0,0.05);
-}
-
-.params-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.param-group {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  padding: 16px;
-  border-radius: 12px;
-  border-left: 4px solid var(--ucc-azul);
-  box-shadow: var(--shadow);
-}
-
-.param-title {
-  font-weight: 700;
-  color: var(--ucc-azul);
-  margin-bottom: 12px;
-  font-size: 15px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.param-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 13px;
-  padding: 6px 0;
-}
-
-.param-label {
-  color: #64748b;
-  font-weight: 500;
-}
-
-.param-value {
-  font-weight: 700;
-  color: var(--text);
-}
-
-.equation-box {
-  background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
-  padding: 16px;
-  border-radius: 12px;
-  border: 2px solid #bae6fd;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  margin-top: 12px;
-  white-space: pre-wrap;
-  word-break: break-all;
-  box-shadow: var(--shadow);
-}
-
 /* ========== BADGES ========== */
 .badge {
   display: inline-block;
@@ -933,32 +859,14 @@ tbody tr:hover {
   color: #2563eb;
 }
 
-.badge.warning {
-  background: #fef3c7;
-  color: #d97706;
-}
-
 /* ========== RESPONSIVE ========== */
 @media (max-width:900px) {
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   header { padding: 16px; }
   #pdfBtn { display: none; }
-  .params-grid { grid-template-columns: 1fr; }
   .quick-stats { grid-template-columns: 1fr; }
   .header-title { font-size: 16px; }
   .container { padding: 0 16px; }
-  
-  /* Mejorar controles en tablet */
-  .controls-group {
-    width: 100%;
-  }
-  
-  .controls-group input[type="datetime-local"] {
-    flex: 1;
-    min-width: 150px;
-  }
-  
-  /* Ajustar cards de pronóstico en tablet */
   .hour-card {
     min-width: 120px;
     max-width: 140px;
@@ -966,7 +874,6 @@ tbody tr:hover {
 }
 
 @media (max-width:560px) {
-  /* Header móvil optimizado */
   header {
     flex-direction: column;
     align-items: flex-start;
@@ -990,7 +897,6 @@ tbody tr:hover {
     justify-content: flex-start;
   }
   
-  /* KPI Cards en móvil */
   .kpi-row { 
     grid-template-columns: 1fr;
     gap: 12px;
@@ -1009,7 +915,6 @@ tbody tr:hover {
     font-size: 24px;
   }
   
-  /* Controles móvil */
   .controls {
     flex-direction: column;
     align-items: stretch;
@@ -1023,21 +928,12 @@ tbody tr:hover {
     gap: 8px;
   }
   
-  .controls-group label {
-    font-size: 12px !important;
-  }
-  
-  .controls-group input[type="datetime-local"] {
-    width: 100%;
-  }
-  
   .range-btn {
     width: 100%;
     padding: 12px;
     font-size: 13px;
   }
   
-  /* Variable selector móvil */
   .variable-selector {
     flex-direction: column;
     padding: 10px;
@@ -1049,7 +945,6 @@ tbody tr:hover {
     padding: 12px;
   }
   
-  /* Charts móvil */
   .charts-panel { 
     gap: 12px;
   }
@@ -1063,7 +958,6 @@ tbody tr:hover {
     height: 250px !important;
   }
   
-  /* Forecast tabs móvil */
   .forecast-tabs {
     flex-direction: column;
     gap: 6px;
@@ -1076,19 +970,13 @@ tbody tr:hover {
     border-radius: 8px;
   }
   
-  /* Quick stats móvil */
   .quick-stats {
     grid-template-columns: 1fr;
     gap: 10px;
   }
   
-  /* Hourly forecast móvil */
   .hourly-forecast-container {
     padding: 12px;
-  }
-  
-  .hourly-forecast {
-    justify-content: flex-start;
   }
   
   .hour-card {
@@ -1106,15 +994,6 @@ tbody tr:hover {
     font-size: 22px;
   }
   
-  .hour-day {
-    font-size: 12px;
-  }
-  
-  .hour-time {
-    font-size: 10px;
-  }
-  
-  /* Tabla móvil */
   .table-card {
     padding: 12px;
     margin-bottom: 20px;
@@ -1136,12 +1015,6 @@ tbody tr:hover {
     width: 100%;
   }
   
-  .input {
-    padding: 10px;
-    font-size: 14px;
-  }
-  
-  /* Tabla responsive */
   table {
     font-size: 11px;
   }
@@ -1151,39 +1024,29 @@ tbody tr:hover {
     font-size: 11px;
   }
   
-  th {
-    font-size: 10px;
+  .pagination-container {
+    flex-direction: column;
+    align-items: stretch;
   }
   
-  /* Botones móvil */
+  .pagination-controls {
+    justify-content: center;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+  
   .btn {
     padding: 10px 14px;
     font-size: 13px;
   }
   
-  .icon-btn {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-  
-  /* Container móvil */
   .container { 
     padding: 0 10px;
     margin: 16px auto;
   }
   
-  /* Canvas title móvil */
-  .canvas-title {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .canvas-title strong {
-    font-size: 16px;
-  }
-  
-  /* Notificaciones móvil */
   .notification {
     top: 10px;
     right: 10px;
@@ -1192,42 +1055,11 @@ tbody tr:hover {
     font-size: 13px;
   }
   
-  /* Legend móvil */
   .chart-legend {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
     font-size: 12px;
-  }
-}
-
-/* Móviles muy pequeños */
-@media (max-width:380px) {
-  .header-title {
-    font-size: 12px;
-  }
-  
-  .kpi-value {
-    font-size: 20px;
-  }
-  
-  .kpi-title {
-    font-size: 11px;
-  }
-  
-  .hour-card {
-    min-width: 100px;
-    max-width: 110px;
-    padding: 10px 12px;
-  }
-  
-  table {
-    font-size: 10px;
-  }
-  
-  th, td {
-    padding: 6px 2px;
-    font-size: 10px;
   }
 }
 
@@ -1244,7 +1076,6 @@ body.dark {
 body.dark .kpi-card,
 body.dark .canvas-card,
 body.dark .table-card,
-body.dark .model-params-card,
 body.dark .controls,
 body.dark .variable-selector,
 body.dark .hourly-forecast-container {
@@ -1261,16 +1092,10 @@ body.dark .kpi-value {
   color: var(--ucc-verde-claro);
 }
 
-body.dark .param-group,
 body.dark .stat-card,
 body.dark .hour-card {
   background: linear-gradient(135deg, #1e293b 0%, #1a1f2e 100%);
   border-left-color: var(--ucc-verde);
-}
-
-body.dark .equation-box {
-  background: linear-gradient(135deg, #1e293b 0%, #1a1f2e 100%);
-  border-color: #334155;
 }
 
 body.dark .forecast-tab:not(.active) {
@@ -1278,13 +1103,10 @@ body.dark .forecast-tab:not(.active) {
   color: #e2e8f0;
 }
 
-body.dark .variable-btn {
-  background: #1e293b;
-  color: #e2e8f0;
-  border-color: #334155;
-}
-
-body.dark .input {
+body.dark .variable-btn,
+body.dark .input,
+body.dark .range-btn,
+body.dark .pagination-btn {
   background: #1e293b;
   color: #e2e8f0;
   border-color: #334155;
@@ -1294,21 +1116,8 @@ body.dark tbody tr:hover {
   background: #1e293b;
 }
 
-body.dark .range-btn {
-  background: #1e293b;
-  color: #e2e8f0;
-  border-color: #334155;
-}
-
 body.dark .chart-legend {
   background: #1e293b;
-}
-
-body.dark .canvas-title,
-body.dark .hourly-forecast-title,
-body.dark .forecast-tabs,
-body.dark .table-controls {
-  border-color: #334155;
 }
 
 body.dark .notification {
@@ -1316,25 +1125,7 @@ body.dark .notification {
   color: #e2e8f0;
 }
 
-/* ========== UTILIDADES ========== */
 html { scroll-behavior: smooth; }
-
-:focus-visible {
-  outline: 3px solid var(--ucc-verde);
-  outline-offset: 2px;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border-width: 0;
-}
 </style>
 </head>
 <body>
@@ -1345,8 +1136,8 @@ html { scroll-behavior: smooth; }
     MEASURE DATA LOGGER – DASHBOARD
   </div>
   <div class="header-actions">
-    <button id="pdfBtn" class="btn">Exportar PDF</button>
-    <button id="csvBtn" class="btn secondary">Descargar CSV</button>
+    <button id="pdfBtn" class="btn">📄 Exportar PDF</button>
+    <button id="csvBtn" class="btn secondary">📥 Descargar CSV</button>
     <button id="modoOscuroBtn" class="icon-btn">🌙 Modo oscuro</button>
   </div>
 </header>
@@ -1355,13 +1146,7 @@ html { scroll-behavior: smooth; }
   <!-- KPI Cards -->
   <div class="kpi-row">
     <div class="kpi-card">
-      <div class="kpi-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="9" y="3" width="6" height="18" rx="3" stroke="#fff" stroke-width="2" fill="none"/>
-          <circle cx="12" cy="19" r="2" fill="#fff"/>
-          <line x1="12" y1="8" x2="12" y2="16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">🌡️</div>
       <div class="kpi-body">
         <div class="kpi-title">Temperatura</div>
         <div class="kpi-value">
@@ -1373,11 +1158,7 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="#fff" stroke-width="2" fill="none"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">💧</div>
       <div class="kpi-body">
         <div class="kpi-title">Humedad</div>
         <div class="kpi-value">
@@ -1389,19 +1170,7 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="4" fill="#fff"/>
-          <line x1="12" y1="3" x2="12" y2="5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="12" y1="19" x2="12" y2="21" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="3" y1="12" x2="5" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="19" y1="12" x2="21" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">☀️</div>
       <div class="kpi-body">
         <div class="kpi-title">Radiación</div>
         <div class="kpi-value">
@@ -1413,15 +1182,7 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="7" cy="18" r="2" fill="#fff"/>
-          <circle cx="12" cy="14" r="2" fill="#fff"/>
-          <circle cx="17" cy="10" r="2" fill="#fff"/>
-          <circle cx="9" cy="8" r="1.5" fill="#fff"/>
-          <circle cx="14" cy="17" r="1.5" fill="#fff"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">🌫️</div>
       <div class="kpi-body">
         <div class="kpi-title">PM10</div>
         <div class="kpi-value">
@@ -1433,17 +1194,7 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="6" cy="17" r="1.5" fill="#fff"/>
-          <circle cx="11" cy="13" r="1.5" fill="#fff"/>
-          <circle cx="16" cy="9" r="1.5" fill="#fff"/>
-          <circle cx="8" cy="10" r="1" fill="#fff"/>
-          <circle cx="13" cy="16" r="1" fill="#fff"/>
-          <circle cx="18" cy="15" r="1" fill="#fff"/>
-          <circle cx="9" cy="19" r="1" fill="#fff"/>
-        </svg>
-      </div>
+      <div class="kpi-icon">💨</div>
       <div class="kpi-body">
         <div class="kpi-title">PM2.5</div>
         <div class="kpi-value">
@@ -1459,9 +1210,9 @@ html { scroll-behavior: smooth; }
   <div class="charts-panel">
     <div class="controls">
       <div class="controls-group">
-        <button class="range-btn active" data-range="24h">Últimas 24h</button>
-        <button class="range-btn" data-range="7d">Última semana</button>
-        <button class="range-btn" data-range="all">Todo</button>
+        <button class="range-btn active" data-range="24h">⏰ Últimas 24h</button>
+        <button class="range-btn" data-range="7d">📅 Última semana</button>
+        <button class="range-btn" data-range="all">📊 Todo</button>
         <button class="range-btn" data-range="forecast" id="forecastBtn">📈 Pronósticos</button>
       </div>
       
@@ -1504,7 +1255,7 @@ html { scroll-behavior: smooth; }
       <canvas id="mainChart"></canvas>
     </div>
 
-    <!-- Pronósticos por día (cada 24h) -->
+    <!-- Pronósticos por día -->
     <div class="hourly-forecast-container" id="hourlyForecastContainer">
       <div class="hourly-forecast-title">
         📅 Pronóstico Diario (24 horas)
@@ -1512,15 +1263,6 @@ html { scroll-behavior: smooth; }
       <div class="hourly-forecast-scroll">
         <div class="hourly-forecast" id="hourlyForecast"></div>
       </div>
-    </div>
-    
-    <!-- Parámetros del modelo OCULTOS -->
-    <div class="model-params-card" id="modelParamsCard" style="display: none !important;">
-      <div class="canvas-title">
-        <strong>Parámetros del Modelo SARIMA</strong>
-        <small id="modelInfo">Selecciona una variable</small>
-      </div>
-      <div class="params-grid" id="paramsGrid"></div>
     </div>
     
     <!-- Gráfica de pronósticos -->
@@ -1577,14 +1319,14 @@ html { scroll-behavior: smooth; }
     </div>
   </div>
 
-  <!-- Tabla -->
+  <!-- Tabla con Paginación -->
   <div class="table-card">
     <div class="table-controls">
       <div class="table-search">
         <input id="searchInput" class="input" placeholder="🔍 Buscar en la tabla..." />
         <input id="filterFrom" type="date" class="input" />
         <input id="filterTo" type="date" class="input" />
-        <button id="clearFilters" class="range-btn">Limpiar</button>
+        <button id="clearFilters" class="range-btn">🗑️ Limpiar</button>
       </div>
       <div class="table-search">
         <button id="exportCSV" class="range-btn">📥 Exportar CSV</button>
@@ -1613,6 +1355,31 @@ html { scroll-behavior: smooth; }
         </tbody>
       </table>
     </div>
+    
+    <!-- Paginación -->
+    <div class="pagination-container" id="paginationContainer" style="display: none;">
+      <div class="pagination-info" id="paginationInfo">
+        Mostrando 0-0 de 0 registros
+      </div>
+      
+      <div class="pagination-controls">
+        <button class="pagination-btn" id="firstPage" title="Primera página">⏮️</button>
+        <button class="pagination-btn" id="prevPage" title="Página anterior">◀️</button>
+        <div id="pageNumbers" style="display: flex; gap: 4px;"></div>
+        <button class="pagination-btn" id="nextPage" title="Página siguiente">▶️</button>
+        <button class="pagination-btn" id="lastPage" title="Última página">⏭️</button>
+      </div>
+      
+      <div class="page-size-selector">
+        <label style="font-size: 14px; color: #64748b;">Registros por página:</label>
+        <select id="pageSize">
+          <option value="10" selected>10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1632,6 +1399,11 @@ let forecastChart = null;
 let currentForecastVariable = 'temperature';
 let forecastUpdateInterval = null;
 const charts = {};
+
+// Variables de paginación
+let currentPage = 1;
+let pageSize = 10;
+let filteredTableData = [];
 
 /* ============================
    UTILIDADES
@@ -1698,15 +1470,13 @@ function updateKPI() {
   if (!rawData.length) return;
   
   const last = rawData[rawData.length - 1];
-  const prevIndex = Math.max(0, rawData.length - 2);
-  const prev = rawData[prevIndex];
   
   const updates = [
-    { id: 'temp', value: last.temperatura, prev: prev.temperatura },
-    { id: 'hum', value: last.humedad, prev: prev.humedad },
-    { id: 'rad', value: last.radiacion, prev: prev.radiacion },
-    { id: 'pm10', value: last.pm10, prev: prev.pm10 },
-    { id: 'pm25', value: last.pm25, prev: prev.pm25 }
+    { id: 'temp', value: last.temperatura },
+    { id: 'hum', value: last.humedad },
+    { id: 'rad', value: last.radiacion },
+    { id: 'pm10', value: last.pm10 },
+    { id: 'pm25', value: last.pm25 }
   ];
   
   const timeStr = new Date(last.fecha).toLocaleString('es-ES', {
@@ -1717,7 +1487,7 @@ function updateKPI() {
     minute: '2-digit'
   });
   
-  updates.forEach(({ id, value, prev }) => {
+  updates.forEach(({ id, value }) => {
     const el = document.getElementById(`card_${id}`);
     const meta = document.getElementById(`meta_${id}`);
     
@@ -1727,26 +1497,43 @@ function updateKPI() {
 }
 
 /* ============================
-   TABLA
+   TABLA CON PAGINACIÓN
    ============================ */
 function updateHistoricalTable() {
+  filteredTableData = [...rawData].reverse();
+  currentPage = 1;
+  renderTable();
+}
+
+function renderTable() {
   const tbody = document.getElementById('dataTableBody');
+  const paginationContainer = document.getElementById('paginationContainer');
+  
   if (!tbody) return;
   
   tbody.innerHTML = '';
   
-  if (!rawData.length) {
+  if (filteredTableData.length === 0) {
     tbody.innerHTML = `
       <tr><td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
         No hay datos disponibles
       </td></tr>
     `;
+    paginationContainer.style.display = 'none';
     return;
   }
   
-  const rows = [...rawData].slice(-200).reverse();
+  // Calcular paginación
+  const totalItems = filteredTableData.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
   
-  rows.forEach(r => {
+  // Obtener datos de la página actual
+  const pageData = filteredTableData.slice(startIndex, endIndex);
+  
+  // Renderizar filas
+  pageData.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${new Date(r.fecha).toLocaleString('es-ES', {
@@ -1764,6 +1551,56 @@ function updateHistoricalTable() {
     `;
     tbody.appendChild(tr);
   });
+  
+  // Actualizar controles de paginación
+  updatePaginationControls(totalItems, totalPages, startIndex, endIndex);
+  paginationContainer.style.display = 'flex';
+}
+
+function updatePaginationControls(totalItems, totalPages, startIndex, endIndex) {
+  // Actualizar info
+  document.getElementById('paginationInfo').textContent = 
+    `Mostrando ${startIndex + 1}-${endIndex} de ${totalItems} registros`;
+  
+  // Botones de navegación
+  document.getElementById('firstPage').disabled = currentPage === 1;
+  document.getElementById('prevPage').disabled = currentPage === 1;
+  document.getElementById('nextPage').disabled = currentPage === totalPages;
+  document.getElementById('lastPage').disabled = currentPage === totalPages;
+  
+  // Números de página
+  const pageNumbers = document.getElementById('pageNumbers');
+  pageNumbers.innerHTML = '';
+  
+  // Mostrar máximo 5 números de página
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, currentPage + 2);
+  
+  if (currentPage <= 2) {
+    endPage = Math.min(5, totalPages);
+  }
+  if (currentPage >= totalPages - 1) {
+    startPage = Math.max(1, totalPages - 4);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'pagination-btn' + (i === currentPage ? ' active' : '');
+    btn.textContent = i;
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      renderTable();
+    });
+    pageNumbers.appendChild(btn);
+  }
+}
+
+function goToPage(page) {
+  const totalPages = Math.ceil(filteredTableData.length / pageSize);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  currentPage = page;
+  renderTable();
 }
 
 /* ============================
@@ -1894,7 +1731,7 @@ function renderChart(id, label, labels, data, color) {
 }
 
 /* ============================
-   PRONÓSTICOS POR DÍA (CADA 24H)
+   PRONÓSTICOS POR DÍA
    ============================ */
 async function loadHourlyForecast() {
   const container = document.getElementById('hourlyForecastContainer');
@@ -1943,13 +1780,13 @@ async function loadHourlyForecast() {
     
     const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
     
-    // CAMBIO PRINCIPAL: Filtrar pronósticos cada 24 horas
+    // Filtrar pronósticos cada 24 horas
     const dailyForecasts = [];
     for (let i = 0; i < data.pronosticos.length; i += 24) {
       dailyForecasts.push(data.pronosticos[i]);
     }
     
-    const daysToShow = Math.min(7, dailyForecasts.length); // Mostrar hasta 7 días
+    const daysToShow = Math.min(7, dailyForecasts.length);
     let cardsHTML = '';
     
     if (lastHistorical) {
@@ -2079,6 +1916,16 @@ function getUnit(variable) {
   return units[variable] || '';
 }
 
+function getForecastFileName(variable) {
+  const fileMap = {
+    'temperature': 'pronostico_Temperature.json',
+    'humidity': 'pronostico_Humidity.json',
+    'pm2.5': 'pronostico_PM_2_5.json',
+    'pm10': 'pronostico_PM_10.json'
+  };
+  return fileMap[variable] || `pronostico_${variable}.json`;
+}
+
 /* ============================
    MODO PRONÓSTICOS
    ============================ */
@@ -2096,7 +1943,6 @@ function showForecastMode() {
 
 function hideForecastMode() {
   document.getElementById('forecastChartContainer').style.display = 'none';
-  document.getElementById('modelParamsCard').style.display = 'none';
   document.getElementById('mainChartCard').style.display = 'block';
   document.getElementById('variableSelector').style.display = 'flex';
   
@@ -2129,7 +1975,6 @@ async function loadAllForecasts() {
     
     if (forecastData['temperature']) {
       updateForecastChart();
-      updateModelParams();
       updateQuickStats();
     }
     
@@ -2140,16 +1985,6 @@ async function loadAllForecasts() {
       <span class="badge error">Error</span>
     `;
   }
-}
-
-function getForecastFileName(variable) {
-  const fileMap = {
-    'temperature': 'pronostico_Temperature.json',
-    'humidity': 'pronostico_Humidity.json',
-    'pm2.5': 'pronostico_PM_2_5.json',
-    'pm10': 'pronostico_PM_10.json'
-  };
-  return fileMap[variable] || `pronostico_${variable}.json`;
 }
 
 async function loadForecastData(variable) {
@@ -2292,12 +2127,12 @@ function updateForecastChart() {
     });
   }
   
-  if (data.Limite_permitido_24H_en_colombia&& data.Limite_permitido_24H_en_colombia> 0) {
+  if (data.limite_permitido && data.limite_permitido > 0) {
     datasets.push({
       label: 'Límite',
       data: [
-        { x: allDates[0], y: data.Limite_permitido_24H_en_colombia},
-        { x: allDates[allDates.length - 1], y: data.Limite_permitido_24H_en_colombia}
+        { x: allDates[0], y: data.limite_permitido },
+        { x: allDates[allDates.length - 1], y: data.limite_permitido }
       ],
       borderColor: 'blue',
       borderWidth: 1,
@@ -2440,63 +2275,6 @@ function updateQuickStats() {
   statsContainer.style.display = 'grid';
 }
 
-function updateModelParams() {
-  const data = forecastData[currentForecastVariable];
-  if (!data) return;
-  
-  const paramsGrid = document.getElementById('paramsGrid');
-  const modelInfo = document.getElementById('modelInfo');
-  
-  if (!paramsGrid || !modelInfo) return;
-  
-  modelInfo.innerHTML = `
-    ${getVariableDisplayName(currentForecastVariable)} | 
-    ${data.modelo || 'SARIMA'} | 
-    AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}
-  `;
-  
-  paramsGrid.innerHTML = `
-    <div class="param-group">
-      <div class="param-title">📋 General</div>
-      <div class="param-item">
-        <span class="param-label">Variable:</span>
-        <span class="param-value">${getVariableDisplayName(currentForecastVariable)}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Modelo:</span>
-        <span class="param-value">${data.modelo || 'SARIMA'}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">AIC:</span>
-        <span class="param-value">${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
-      </div>
-    </div>
-    
-    <div class="param-group">
-      <div class="param-title">📊 Datos</div>
-      <div class="param-item">
-        <span class="param-label">Históricos:</span>
-        <span class="param-value">${data.historico.length}</span>
-      </div>
-      <div class="param-item">
-        <span class="param-label">Pronósticos:</span>
-        <span class="param-value">${data.pronosticos.length} horas</span>
-      </div>
-      ${data.Limite_permitido_24H_en_colombia? `
-      <div class="param-item">
-        <span class="param-label">Límite:</span>
-        <span class="param-value">${data.Limite_permitido_24H_en_colombia} ${getUnit(currentForecastVariable)}</span>
-      </div>
-      ` : ''}
-    </div>
-    
-    <div class="param-group" style="grid-column: 1 / -1;">
-      <div class="param-title">🔢 Ecuación</div>
-      <div class="equation-box">${data.modelo || 'Modelo SARIMA'}</div>
-    </div>
-  `;
-}
-
 function getVariableDisplayName(variable) {
   const names = {
     'temperature': 'Temperatura (°C)',
@@ -2528,7 +2306,7 @@ document.querySelectorAll('.range-btn[data-range]').forEach(btn => {
       showForecastMode();
     } else {
       hideForecastMode();
-	  applyRange(btn.dataset.range);
+      applyRange(btn.dataset.range);
     }
   });
 });
@@ -2544,48 +2322,95 @@ document.getElementById('applyRange').addEventListener('click', () => {
   showNotification('✓ Rango aplicado', 'success');
 });
 
+// Búsqueda en tabla
 document.getElementById('searchInput').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
-  const tbody = document.querySelector('#dataTableBody');
-  Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
-    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
-  });
+  if (q === '') {
+    filteredTableData = [...rawData].reverse();
+  } else {
+    filteredTableData = [...rawData].reverse().filter(r => {
+      const rowText = [
+        new Date(r.fecha).toLocaleString('es-ES'),
+        r.temperatura,
+        r.humedad,
+        r.radiacion,
+        r.pm10,
+        r.pm25
+      ].join(' ').toLowerCase();
+      return rowText.includes(q);
+    });
+  }
+  currentPage = 1;
+  renderTable();
 });
 
+// Filtros de fecha
 document.getElementById('filterFrom').addEventListener('change', applyDateFilter);
 document.getElementById('filterTo').addEventListener('change', applyDateFilter);
 document.getElementById('clearFilters').addEventListener('click', () => {
   document.getElementById('filterFrom').value = '';
   document.getElementById('filterTo').value = '';
-  renderMainChart();
+  document.getElementById('searchInput').value = '';
+  filteredTableData = [...rawData].reverse();
+  currentPage = 1;
+  renderTable();
   showNotification('✓ Filtros eliminados', 'success');
 });
 
 function applyDateFilter() {
   const f = document.getElementById('filterFrom').value;
   const t = document.getElementById('filterTo').value;
-  if (!f && !t) return renderMainChart();
   
-  const from = f ? new Date(f) : new Date(0);
-  const to = t ? new Date(t + 'T23:59:59') : new Date();
+  if (!f && !t) {
+    filteredTableData = [...rawData].reverse();
+  } else {
+    const from = f ? new Date(f) : new Date(0);
+    const to = t ? new Date(t + 'T23:59:59') : new Date();
+    
+    filteredTableData = [...rawData].reverse().filter(r => {
+      const d = parseDate(r.fecha);
+      return d >= from && d <= to;
+    });
+  }
   
-  filtered = rawData.filter(r => {
-    const d = parseDate(r.fecha);
-    return d >= from && d <= to;
-  });
-  
-  renderMainChart();
+  currentPage = 1;
+  renderTable();
   showNotification('✓ Filtro aplicado', 'success');
 }
 
+// Controles de paginación
+document.getElementById('firstPage').addEventListener('click', () => goToPage(1));
+document.getElementById('prevPage').addEventListener('click', () => goToPage(currentPage - 1));
+document.getElementById('nextPage').addEventListener('click', () => goToPage(currentPage + 1));
+document.getElementById('lastPage').addEventListener('click', () => {
+  const totalPages = Math.ceil(filteredTableData.length / pageSize);
+  goToPage(totalPages);
+});
+
+document.getElementById('pageSize').addEventListener('change', (e) => {
+  pageSize = parseInt(e.target.value);
+  currentPage = 1;
+  renderTable();
+});
+
+// Exportar CSV
 function exportToCSV(filename) {
-  const rows = document.querySelectorAll('#dataTable tr');
-  let csv = [];
-  rows.forEach(r => {
-    const cols = Array.from(r.querySelectorAll('th,td')).map(c => '"' + c.innerText.replace(/"/g, '""') + '"');
-    csv.push(cols.join(','));
+  const headers = ['Fecha', 'Temp (°C)', 'Humedad (%)', 'Radiación (W/m²)', 'PM10 (µg/m³)', 'PM2.5 (µg/m³)'];
+  let csv = [headers.join(',')];
+  
+  rawData.forEach(r => {
+    const row = [
+      `"${new Date(r.fecha).toLocaleString('es-ES')}"`,
+      r.temperatura !== null ? r.temperatura.toFixed(2) : '',
+      r.humedad !== null ? r.humedad.toFixed(2) : '',
+      r.radiacion !== null ? r.radiacion.toFixed(2) : '',
+      r.pm10 !== null ? r.pm10.toFixed(2) : '',
+      r.pm25 !== null ? r.pm25.toFixed(2) : ''
+    ];
+    csv.push(row.join(','));
   });
-  const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+  
+  const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -2595,16 +2420,10 @@ function exportToCSV(filename) {
   showNotification('📥 CSV descargado', 'success');
 }
 
-function exportToXLSX(filename) {
-  const table = document.getElementById('dataTable');
-  const wb = XLSX.utils.table_to_book(table, { sheet: "Lecturas" });
-  XLSX.writeFile(wb, filename);
-  showNotification('📥 Excel descargado', 'success');
-}
-
 document.getElementById('exportCSV').addEventListener('click', () => exportToCSV('datos.csv'));
 document.getElementById('csvBtn').addEventListener('click', () => exportToCSV('datos.csv'));
 
+// Exportar PDF
 document.getElementById('pdfBtn').addEventListener('click', () => {
   showNotification('📄 Generando PDF...', 'info');
   html2canvas(document.querySelector('#contentPDF'), { scale: 2 }).then(canvas => {
@@ -2619,6 +2438,7 @@ document.getElementById('pdfBtn').addEventListener('click', () => {
   });
 });
 
+// Modo oscuro
 document.getElementById('modoOscuroBtn').addEventListener('click', () => {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
@@ -2632,6 +2452,7 @@ if (localStorage.getItem('darkMode') === 'true') {
   document.getElementById('modoOscuroBtn').innerHTML = '☀️ Modo claro';
 }
 
+// Tabs de pronóstico
 document.querySelectorAll('.forecast-tab').forEach(tab => {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active'));
@@ -2641,13 +2462,11 @@ document.querySelectorAll('.forecast-tab').forEach(tab => {
     
     if (forecastData[currentForecastVariable]) {
       updateForecastChart();
-      updateModelParams();
       updateQuickStats();
     } else {
       loadForecastData(currentForecastVariable).then(() => {
         if (forecastData[currentForecastVariable]) {
           updateForecastChart();
-          updateModelParams();
           updateQuickStats();
         }
       });
@@ -2665,9 +2484,10 @@ setTimeout(() => {
   showNotification('✓ Dashboard cargado correctamente', 'success');
 }, 1000);
 
-console.log('%c📊 Dashboard Pro v2.1', 'color: #7AC043; font-size: 20px; font-weight: bold;');
+console.log('%c📊 Dashboard Pro v2.1 - Con Paginación', 'color: #7AC043; font-size: 20px; font-weight: bold;');
 console.log('%c✨ Pronósticos cada 24 horas', 'color: #003366; font-size: 14px;');
 console.log('%c📱 Responsive mejorado', 'color: #003366; font-size: 14px;');
+console.log('%c📄 Paginación implementada (10 registros por página)', 'color: #003366; font-size: 14px;');
 </script>
 </body>
 </html>
