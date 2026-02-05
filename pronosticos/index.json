@@ -5,7 +5,7 @@
     "PM 2.5",
     "PM 10"
   ],
-  "ultima_actualizacion": "2026-02-05 02:58:53",
+  "ultima_actualizacion": "2026-02-05 14:25:31",
   "archivos": {
     "Temperature": "pronostico_Temperature.json",
     "Humidity": "pronostico_Humidity.json",
