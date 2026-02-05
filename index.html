@@ -2292,12 +2292,12 @@ function updateForecastChart() {
     });
   }
   
-  if (data.limite_permitido && data.limite_permitido > 0) {
+  if (data.Limite_permitido_24H_en_colombia&& data.Limite_permitido_24H_en_colombia> 0) {
     datasets.push({
       label: 'Límite',
       data: [
-        { x: allDates[0], y: data.limite_permitido },
-        { x: allDates[allDates.length - 1], y: data.limite_permitido }
+        { x: allDates[0], y: data.Limite_permitido_24H_en_colombia},
+        { x: allDates[allDates.length - 1], y: data.Limite_permitido_24H_en_colombia}
       ],
       borderColor: 'blue',
       borderWidth: 1,
@@ -2482,10 +2482,10 @@ function updateModelParams() {
         <span class="param-label">Pronósticos:</span>
         <span class="param-value">${data.pronosticos.length} horas</span>
       </div>
-      ${data.limite_permitido ? `
+      ${data.Limite_permitido_24H_en_colombia? `
       <div class="param-item">
         <span class="param-label">Límite:</span>
-        <span class="param-value">${data.limite_permitido} ${getUnit(currentForecastVariable)}</span>
+        <span class="param-value">${data.Limite_permitido_24H_en_colombia} ${getUnit(currentForecastVariable)}</span>
       </div>
       ` : ''}
     </div>
