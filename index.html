@@ -1311,13 +1311,13 @@ html { scroll-behavior: smooth; }
 
 <header>
   <div class="header-title">
-    <div class="header-logo">📊</div>
-    MEASURE DATA LOGGER – DASHBOARD PRO
+    <div class="header-logo"></div>
+    MEASURE DATA LOGGER – DASHBOARD
   </div>
   <div class="header-actions">
-    <button id="pdfBtn" class="btn">📄 Exportar PDF</button>
-    <button id="csvBtn" class="btn secondary">📋 Descargar CSV</button>
-    <button id="modoOscuroBtn" class="icon-btn">🌙 Modo oscuro</button>
+    <button id="pdfBtn" class="btn">Exportar PDF</button>
+    <button id="csvBtn" class="btn secondary">Descargar CSV</button>
+    <button id="modoOscuroBtn" class="icon-btn">Modo oscuro</button>
   </div>
 </header>
 
@@ -1429,10 +1429,10 @@ html { scroll-behavior: smooth; }
   <div class="charts-panel">
     <div class="controls">
       <div class="controls-group">
-        <button class="range-btn active" data-range="24h">⏱️ Últimas 24h</button>
-        <button class="range-btn" data-range="7d">📅 Última semana</button>
-        <button class="range-btn" data-range="all">📊 Todo</button>
-        <button class="range-btn" data-range="forecast" id="forecastBtn">🔮 Pronósticos</button>
+        <button class="range-btn active" data-range="24h">Últimas 24h</button>
+        <button class="range-btn" data-range="7d">Última semana</button>
+        <button class="range-btn" data-range="all">Todo</button>
+        <button class="range-btn" data-range="forecast" id="forecastBtn">Pronósticos</button>
       </div>
       
       <div class="controls-group" style="margin-left: auto;">
@@ -1447,19 +1447,19 @@ html { scroll-behavior: smooth; }
     <!-- Selector de variables -->
     <div class="variable-selector" id="variableSelector">
       <button class="variable-btn active" data-variable="temp">
-        🌡️ Temperatura
+        Temperatura
       </button>
       <button class="variable-btn" data-variable="hum">
-        💧 Humedad
+        Humedad
       </button>
       <button class="variable-btn" data-variable="rad">
-        ☀️ Radiación
+        Radiación
       </button>
       <button class="variable-btn" data-variable="pm10">
-        🌫️ PM10
+        PM10
       </button>
       <button class="variable-btn" data-variable="pm25">
-        💨 PM2.5
+        PM2.5
       </button>
     </div>
 
@@ -1467,7 +1467,7 @@ html { scroll-behavior: smooth; }
     <div class="canvas-card" id="mainChartCard">
       <div class="canvas-title">
         <strong id="mainChartTitle">
-          🌡️ Temperatura (°C)
+          Temperatura (°C)
         </strong>
         <small id="main-note" style="color: #64748b;"></small>
       </div>
@@ -1477,7 +1477,7 @@ html { scroll-behavior: smooth; }
     <!-- Pronósticos por hora -->
     <div class="hourly-forecast-container" id="hourlyForecastContainer">
       <div class="hourly-forecast-title">
-        🔮 Pronóstico por Hora
+        Pronóstico por Hora
       </div>
       <div class="hourly-forecast-scroll">
         <div class="hourly-forecast" id="hourlyForecast"></div>
@@ -1487,7 +1487,7 @@ html { scroll-behavior: smooth; }
     <!-- Parámetros del modelo OCULTOS -->
     <div class="model-params-card" id="modelParamsCard" style="display: none !important;">
       <div class="canvas-title">
-        <strong>⚙️ Parámetros del Modelo SARIMA</strong>
+        <strong>Parámetros del Modelo SARIMA</strong>
         <small id="modelInfo">Selecciona una variable</small>
       </div>
       <div class="params-grid" id="paramsGrid"></div>
@@ -1496,7 +1496,7 @@ html { scroll-behavior: smooth; }
     <!-- Gráfica de pronósticos -->
     <div class="canvas-card" id="forecastChartContainer" style="display: none;">
       <div class="canvas-title">
-        <strong id="forecastTitle">🔮 Pronósticos SARIMA</strong>
+        <strong id="forecastTitle">Pronósticos SARIMA</strong>
         <div>
           <span class="loading-spinner" id="forecastLoading" style="display: none;"></span>
           <small id="forecastInfo" style="color: #64748b;">Selecciona una variable</small>
@@ -1505,16 +1505,16 @@ html { scroll-behavior: smooth; }
       
       <div class="forecast-tabs" id="forecastTabs">
         <button class="forecast-tab active" data-variable="temperature">
-          🌡️ Temperatura
+          Temperatura
         </button>
         <button class="forecast-tab" data-variable="humidity">
-          💧 Humedad
+          Humedad
         </button>
         <button class="forecast-tab" data-variable="pm2.5">
-          💨 PM2.5
+          PM2.5
         </button>
         <button class="forecast-tab" data-variable="pm10">
-          🌫️ PM10
+          PM10
         </button>
       </div>
       
@@ -1554,10 +1554,10 @@ html { scroll-behavior: smooth; }
         <input id="searchInput" class="input" placeholder="🔍 Buscar en la tabla..." />
         <input id="filterFrom" type="date" class="input" />
         <input id="filterTo" type="date" class="input" />
-        <button id="clearFilters" class="range-btn">🗑️ Limpiar</button>
+        <button id="clearFilters" class="range-btn">Limpiar</button>
       </div>
       <div class="table-search">
-        <button id="exportCSV" class="range-btn">📋 Exportar CSV</button>
+        <button id="exportCSV" class="range-btn">Exportar CSV</button>
       </div>
     </div>
 
@@ -1565,12 +1565,12 @@ html { scroll-behavior: smooth; }
       <table id="dataTable">
         <thead>
           <tr>
-            <th>📅 Fecha</th>
-            <th>🌡️ Temp (°C)</th>
-            <th>💧 Humedad (%)</th>
-            <th>☀️ Radiación (W/m²)</th>
-            <th>🌫️ PM10 (µg/m³)</th>
-            <th>💨 PM2.5 (µg/m³)</th>
+            <th>Fecha</th>
+            <th>Temp (°C)</th>
+            <th>Humedad (%)</th>
+            <th>Radiación (W/m²)</th>
+            <th>PM10 (µg/m³)</th>
+            <th>PM2.5 (µg/m³)</th>
           </tr>
         </thead>
         <tbody id="dataTableBody">
@@ -1708,7 +1708,7 @@ function updateHistoricalTable() {
   if (!rawData.length) {
     tbody.innerHTML = `
       <tr><td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
-        📊 No hay datos disponibles
+        No hay datos disponibles
       </td></tr>
     `;
     return;
@@ -1792,7 +1792,7 @@ function renderMainChart() {
       break;
   }
   
-  const emojis = { 'temp': '🌡️', 'hum': '💧', 'rad': '☀️', 'pm10': '🌫️', 'pm25': '💨' };
+  const emojis = { 'temp': '', 'hum': '', 'rad': '', 'pm10': '', 'pm25': '' };
   document.getElementById('mainChartTitle').innerHTML = `${emojis[currentVariable]} ${label}`;
   
   renderChart('mainChart', label, times, data, color);
@@ -1905,7 +1905,7 @@ async function loadHourlyForecast() {
     if (!data.pronosticos || data.pronosticos.length === 0) {
       forecastDiv.innerHTML = `
         <div style="padding: 40px; text-align: center; color: #64748b;">
-          📊 No hay pronósticos disponibles
+          No hay pronósticos disponibles
         </div>
       `;
       return;
@@ -2309,10 +2309,10 @@ function updateForecastChart() {
               if (label === 'Datos') {
                 const index = context.dataIndex;
                 const type = datasetTypes[index];
-                return `${type === 'historical' ? '📊 Histórico' : '🔮 Pronóstico'}: ${value.toFixed(2)}`;
+                return `${type === 'historical' ? ' Histórico' : ' Pronóstico'}: ${value.toFixed(2)}`;
               }
               
-              if (label === 'Límite') return `⚠️ Límite: ${value.toFixed(2)}`;
+              if (label === 'Límite') return ` Límite: ${value.toFixed(2)}`;
               if (label.includes('Conf') || label.startsWith('_')) return null;
               
               return `${label}: ${value.toFixed(2)}`;
@@ -2336,7 +2336,7 @@ function updateForecastChart() {
           },
           title: {
             display: true,
-            text: '📅 Fecha',
+            text: 'Fecha',
             color: '#64748b'
           },
           grid: { color: 'rgba(0,0,0,0.05)' }
@@ -2354,7 +2354,7 @@ function updateForecastChart() {
     }
   });
   
-  document.getElementById('forecastTitle').innerHTML = `🔮 ${getVariableDisplayName(currentForecastVariable)}`;
+  document.getElementById('forecastTitle').innerHTML = ` ${getVariableDisplayName(currentForecastVariable)}`;
   document.getElementById('forecastInfo').innerHTML = `
     <span class="badge info">${data.modelo || 'SARIMA'}</span>
     <span class="badge success">AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
@@ -2379,22 +2379,22 @@ function updateQuickStats() {
   
   statsContainer.innerHTML = `
     <div class="stat-card">
-      <div class="stat-title">📉 Mínimo</div>
+      <div class="stat-title">Mínimo</div>
       <div class="stat-value">${min.toFixed(2)} ${unidad}</div>
       <div class="stat-subtitle">Valor más bajo</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">📈 Máximo</div>
+      <div class="stat-title">Máximo</div>
       <div class="stat-value">${max.toFixed(2)} ${unidad}</div>
       <div class="stat-subtitle">Valor más alto</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">📊 Promedio</div>
+      <div class="stat-title">Promedio</div>
       <div class="stat-value">${avg.toFixed(2)} ${unidad}</div>
       <div class="stat-subtitle">Media</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">⏰ Período</div>
+      <div class="stat-title">Período</div>
       <div class="stat-value">${valores.length}</div>
       <div class="stat-subtitle">Horas</div>
     </div>
@@ -2420,7 +2420,7 @@ function updateModelParams() {
   
   paramsGrid.innerHTML = `
     <div class="param-group">
-      <div class="param-title">📊 General</div>
+      <div class="param-title">General</div>
       <div class="param-item">
         <span class="param-label">Variable:</span>
         <span class="param-value">${getVariableDisplayName(currentForecastVariable)}</span>
@@ -2436,7 +2436,7 @@ function updateModelParams() {
     </div>
     
     <div class="param-group">
-      <div class="param-title">📈 Datos</div>
+      <div class="param-title">Datos</div>
       <div class="param-item">
         <span class="param-label">Históricos:</span>
         <span class="param-value">${data.historico.length}</span>
@@ -2454,7 +2454,7 @@ function updateModelParams() {
     </div>
     
     <div class="param-group" style="grid-column: 1 / -1;">
-      <div class="param-title">🔬 Ecuación</div>
+      <div class="param-title">Ecuación</div>
       <div class="equation-box">${data.modelo || 'Modelo SARIMA'}</div>
     </div>
   `;
@@ -2585,14 +2585,14 @@ document.getElementById('pdfBtn').addEventListener('click', () => {
 document.getElementById('modoOscuroBtn').addEventListener('click', () => {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
-  document.getElementById('modoOscuroBtn').innerHTML = isDark ? '☀️ Modo claro' : '🌙 Modo oscuro';
+  document.getElementById('modoOscuroBtn').innerHTML = isDark ? 'Modo claro' : 'Modo oscuro';
   localStorage.setItem('darkMode', isDark);
   showNotification(`Modo ${isDark ? 'oscuro' : 'claro'} activado`, 'success');
 });
 
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark');
-  document.getElementById('modoOscuroBtn').innerHTML = '☀️ Modo claro';
+  document.getElementById('modoOscuroBtn').innerHTML = 'Modo claro';
 }
 
 document.querySelectorAll('.forecast-tab').forEach(tab => {
@@ -2625,10 +2625,10 @@ loadData();
 setInterval(loadData, 30000);
 
 setTimeout(() => {
-  showNotification('Dashboard cargado 🎉', 'success');
+  showNotification('Dashboard cargado', 'success');
 }, 1000);
 
-console.log('%c🚀 Dashboard Pro v2.0', 'color: #7AC043; font-size: 20px; font-weight: bold;');
+console.log('%cDashboard Pro v2.0', 'color: #7AC043; font-size: 20px; font-weight: bold;');
 </script>
 </body>
 </html>
