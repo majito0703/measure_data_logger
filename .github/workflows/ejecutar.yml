@@ -67,7 +67,6 @@ jobs:
     - name: Ejecutar modelo SARIMA
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GOOGLE_SHEETS_CREDS: ${{ secrets.GOOGLE_SHEETS_CREDS }}
       run: |
         echo "🚀 Iniciando modelo SARIMA..."
         python modelo_sarima.py
