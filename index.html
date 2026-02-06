@@ -1234,7 +1234,7 @@ html { scroll-behavior: smooth; }
         💧 Humedad
       </button>
       <button class="variable-btn" data-variable="rad">
-        ☀️ Radiación
+        ☀️ Radiación Solar
       </button>
       <button class="variable-btn" data-variable="pm10">
         🌫️ PM10
@@ -1281,6 +1281,9 @@ html { scroll-behavior: smooth; }
         </button>
         <button class="forecast-tab" data-variable="humidity">
           💧 Humedad
+        </button>
+        <button class="forecast-tab" data-variable="radiation">
+          ☀️ Radiación Solar
         </button>
         <button class="forecast-tab" data-variable="pm2.5">
           💨 PM2.5
@@ -1644,7 +1647,7 @@ function renderMainChart() {
       break;
     case 'rad':
       data = filtered.map(r => r.radiacion);
-      label = 'Radiación (W/m²)';
+      label = 'Radiación Solar (W/m²)';
       color = '#f59e0b';
       break;
     case 'pm10':
@@ -1742,13 +1745,14 @@ async function loadHourlyForecast() {
   const variableMap = {
     'temp': 'temperature',
     'hum': 'humidity',
+    'rad': 'radiation',
     'pm10': 'pm10',
     'pm25': 'pm2.5'
   };
   
   const forecastVariable = variableMap[currentVariable];
   
-  if (!forecastVariable || currentVariable === 'rad') {
+  if (!forecastVariable) {
     container.style.display = 'none';
     return;
   }
@@ -1884,6 +1888,23 @@ function getVariableIcon(variable, value) {
       `;
       break;
       
+    case 'rad':
+      color = '#FF9800';
+      icon = `
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="5" stroke="${color}" stroke-width="2" fill="${color}" fill-opacity="0.3"/>
+          <line x1="12" y1="1" x2="12" y2="4" stroke="${color}" stroke-width="2"/>
+          <line x1="12" y1="20" x2="12" y2="23" stroke="${color}" stroke-width="2"/>
+          <line x1="1" y1="12" x2="4" y2="12" stroke="${color}" stroke-width="2"/>
+          <line x1="20" y1="12" x2="23" y2="12" stroke="${color}" stroke-width="2"/>
+          <line x1="4.22" y1="19.78" x2="6.36" y2="17.64" stroke="${color}" stroke-width="2"/>
+          <line x1="17.64" y1="6.36" x2="19.78" y2="4.22" stroke="${color}" stroke-width="2"/>
+          <line x1="4.22" y1="4.22" x2="6.36" y2="6.36" stroke="${color}" stroke-width="2"/>
+          <line x1="17.64" y1="17.64" x2="19.78" y2="19.78" stroke="${color}" stroke-width="2"/>
+        </svg>
+      `;
+      break;
+      
     case 'pm10':
     case 'pm25':
       if (value < 50) color = '#4CAF50';
@@ -1910,6 +1931,7 @@ function getUnit(variable) {
   const units = {
     'temperature': '°C',
     'humidity': '%',
+    'radiation': 'W/m²',
     'pm2.5': 'µg/m³',
     'pm10': 'µg/m³'
   };
@@ -1920,6 +1942,7 @@ function getForecastFileName(variable) {
   const fileMap = {
     'temperature': 'pronostico_Temperature.json',
     'humidity': 'pronostico_Humidity.json',
+    'radiation': 'pronostico_radiacion.json',
     'pm2.5': 'pronostico_PM_2_5.json',
     'pm10': 'pronostico_PM_10.json'
   };
@@ -1961,7 +1984,7 @@ async function loadAllForecasts() {
     
     forecastData = {};
     
-    const variables = ['temperature', 'humidity', 'pm2.5', 'pm10'];
+    const variables = ['temperature', 'humidity', 'radiation', 'pm2.5', 'pm10'];
     const promises = variables.map(variable => loadForecastData(variable));
     
     await Promise.allSettled(promises);
@@ -1970,7 +1993,7 @@ async function loadAllForecasts() {
     
     const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
     document.getElementById('forecastInfo').innerHTML = `
-      <span class="badge success">${loadedCount}/4 cargados</span>
+      <span class="badge success">${loadedCount}/5 cargados</span>
     `;
     
     if (forecastData['temperature']) {
@@ -2279,6 +2302,7 @@ function getVariableDisplayName(variable) {
   const names = {
     'temperature': 'Temperatura (°C)',
     'humidity': 'Humedad (%)',
+    'radiation': 'Radiación Solar (W/m²)',
     'pm2.5': 'PM2.5 (µg/m³)',
     'pm10': 'PM10 (µg/m³)'
   };
@@ -2488,6 +2512,7 @@ console.log('%c📊 Dashboard Pro v2.1 - Con Paginación', 'color: #7AC043; font
 console.log('%c✨ Pronósticos cada 24 horas', 'color: #003366; font-size: 14px;');
 console.log('%c📱 Responsive mejorado', 'color: #003366; font-size: 14px;');
 console.log('%c📄 Paginación implementada (10 registros por página)', 'color: #003366; font-size: 14px;');
+console.log('%c☀️ Radiación Solar agregada a pronósticos', 'color: #FF9800; font-size: 14px; font-weight: bold;');
 </script>
 </body>
 </html>
