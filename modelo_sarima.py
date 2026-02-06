@@ -483,9 +483,9 @@ def main():
     os.makedirs("pronosticos", exist_ok=True)
     
     # 8. Obtener token de GitHub (de variable de entorno)
-    token_github = os.environ.get("GITHUB_TOKEN", "")
+    token_github = os.environ.get("GH_TOKEN", "")
     if not token_github:
-        print("\n⚠️  ADVERTENCIA: No se encontró GITHUB_TOKEN en variables de entorno")
+        print("\n⚠️  ADVERTENCIA: No se encontró GH_TOKEN en variables de entorno")
         print("   Los archivos se guardarán solo localmente")
     
     # 9. Exportar pronósticos a JSON
