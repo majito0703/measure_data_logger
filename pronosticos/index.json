@@ -6,12 +6,13 @@
     "PM 10",
     "Radiacion Solar"
   ],
-  "ultima_actualizacion": "2026-02-06 03:13:53",
+  "ultima_actualizacion": "2026-02-06 04:16:59",
   "archivos": {
     "Temperature": "pronostico_Temperature.json",
     "Humidity": "pronostico_Humidity.json",
     "PM 2.5": "pronostico_PM_2_5.json",
     "PM 10": "pronostico_PM_10.json",
     "Radiacion Solar": "pronostico_radiacion.json"
-  }
+  },
+  "total_archivos": 5
 }
