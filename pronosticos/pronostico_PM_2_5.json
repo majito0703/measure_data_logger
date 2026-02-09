@@ -1,6 +1,6 @@
 {
   "variable": "PM 2.5",
-  "fecha_generacion": "2026-02-09 02:04:36",
+  "fecha_generacion": "2026-02-09 13:19:24",
   "modelo": "SARIMA(1, 0, 1)(1, 1, 1, 12)",
   "aic": 1767.8272912607288,
   "observaciones_historicas": 325,
