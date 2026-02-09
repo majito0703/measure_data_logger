@@ -16,6 +16,10 @@
 <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.0/build/global/luxon.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.min.js"></script>
 
+<!-- Ionicons -->
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
 <style>
 /* ========== VARIABLES Y BASE ========== */
 :root {
@@ -95,6 +99,11 @@ header {
   box-shadow: var(--shadow);
 }
 
+.header-logo ion-icon {
+  font-size: 24px;
+  color: white;
+}
+
 .header-actions {
   display: flex;
   gap: 10px;
@@ -114,6 +123,13 @@ header {
   transition: var(--transition);
   box-shadow: var(--shadow);
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn ion-icon {
+  font-size: 18px;
 }
 
 .btn:hover {
@@ -145,6 +161,13 @@ header {
   cursor: pointer;
   transition: var(--transition);
   backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn ion-icon {
+  font-size: 18px;
 }
 
 .icon-btn:hover {
@@ -210,6 +233,10 @@ header {
   flex-shrink: 0;
 }
 
+.kpi-icon ion-icon {
+  font-size: 32px;
+}
+
 .kpi-body {
   flex: 1;
   min-width: 0;
@@ -258,12 +285,32 @@ header {
   border-left: 4px solid var(--ucc-verde);
 }
 
+.notification ion-icon {
+  font-size: 24px;
+}
+
 .notification.error {
   border-left-color: #ef4444;
 }
 
+.notification.error ion-icon {
+  color: #ef4444;
+}
+
 .notification.warning {
   border-left-color: #f59e0b;
+}
+
+.notification.warning ion-icon {
+  color: #f59e0b;
+}
+
+.notification.success ion-icon {
+  color: var(--ucc-verde);
+}
+
+.notification.info ion-icon {
+  color: #2196F3;
 }
 
 /* ========== CONTROLES ========== */
@@ -302,6 +349,13 @@ header {
   transition: var(--transition);
   font-weight: 500;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.range-btn ion-icon {
+  font-size: 16px;
 }
 
 .range-btn:hover {
@@ -340,6 +394,10 @@ header {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.variable-btn ion-icon {
+  font-size: 18px;
 }
 
 .variable-btn:hover {
@@ -387,6 +445,10 @@ header {
   gap: 8px;
 }
 
+.canvas-title strong ion-icon {
+  font-size: 22px;
+}
+
 .canvas-card canvas {
   max-height: 300px !important;
   height: 300px !important;
@@ -416,6 +478,10 @@ header {
   gap: 10px;
   padding-bottom: 12px;
   border-bottom: 2px solid var(--gris);
+}
+
+.hourly-forecast-title ion-icon {
+  font-size: 22px;
 }
 
 .hourly-forecast-scroll {
@@ -583,6 +649,13 @@ header {
   font-weight: 600;
   transition: var(--transition);
   border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.forecast-tab ion-icon {
+  font-size: 18px;
 }
 
 .forecast-tab:hover {
@@ -637,6 +710,13 @@ header {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-card .stat-title ion-icon {
+  font-size: 16px;
 }
 
 .stat-card .stat-value {
@@ -730,6 +810,14 @@ header {
   font-size: 14px;
   min-width: 40px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pagination-btn ion-icon {
+  font-size: 16px;
 }
 
 .pagination-btn:hover:not(:disabled) {
@@ -892,6 +980,10 @@ tbody tr:hover {
     font-size: 16px;
   }
   
+  .header-logo ion-icon {
+    font-size: 20px;
+  }
+  
   .header-actions {
     width: 100%;
     justify-content: flex-start;
@@ -909,6 +1001,10 @@ tbody tr:hover {
   .kpi-icon {
     width: 52px;
     height: 52px;
+  }
+  
+  .kpi-icon ion-icon {
+    font-size: 28px;
   }
   
   .kpi-value {
@@ -932,6 +1028,7 @@ tbody tr:hover {
     width: 100%;
     padding: 12px;
     font-size: 13px;
+    justify-content: center;
   }
   
   .variable-selector {
@@ -968,6 +1065,7 @@ tbody tr:hover {
     text-align: center;
     padding: 10px;
     border-radius: 8px;
+    justify-content: center;
   }
   
   .quick-stats {
@@ -1132,13 +1230,24 @@ html { scroll-behavior: smooth; }
 
 <header>
   <div class="header-title">
-    <div class="header-logo">📊</div>
+    <div class="header-logo">
+      <ion-icon name="analytics"></ion-icon>
+    </div>
     MEASURE DATA LOGGER – DASHBOARD
   </div>
   <div class="header-actions">
-    <button id="pdfBtn" class="btn">📄 Exportar PDF</button>
-    <button id="csvBtn" class="btn secondary">📥 Descargar CSV</button>
-    <button id="modoOscuroBtn" class="icon-btn">🌙 Modo oscuro</button>
+    <button id="pdfBtn" class="btn">
+      <ion-icon name="document-text"></ion-icon>
+      Exportar PDF
+    </button>
+    <button id="csvBtn" class="btn secondary">
+      <ion-icon name="download"></ion-icon>
+      Descargar CSV
+    </button>
+    <button id="modoOscuroBtn" class="icon-btn">
+      <ion-icon name="moon"></ion-icon>
+      Modo oscuro
+    </button>
   </div>
 </header>
 
@@ -1146,7 +1255,9 @@ html { scroll-behavior: smooth; }
   <!-- KPI Cards -->
   <div class="kpi-row">
     <div class="kpi-card">
-      <div class="kpi-icon">🌡️</div>
+      <div class="kpi-icon">
+        <ion-icon name="thermometer"></ion-icon>
+      </div>
       <div class="kpi-body">
         <div class="kpi-title">Temperatura</div>
         <div class="kpi-value">
@@ -1158,7 +1269,9 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">💧</div>
+      <div class="kpi-icon">
+        <ion-icon name="water"></ion-icon>
+      </div>
       <div class="kpi-body">
         <div class="kpi-title">Humedad</div>
         <div class="kpi-value">
@@ -1170,7 +1283,9 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">☀️</div>
+      <div class="kpi-icon">
+        <ion-icon name="sunny"></ion-icon>
+      </div>
       <div class="kpi-body">
         <div class="kpi-title">Radiación</div>
         <div class="kpi-value">
@@ -1182,7 +1297,9 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">🌫️</div>
+      <div class="kpi-icon">
+        <ion-icon name="cloud"></ion-icon>
+      </div>
       <div class="kpi-body">
         <div class="kpi-title">PM10</div>
         <div class="kpi-value">
@@ -1194,7 +1311,9 @@ html { scroll-behavior: smooth; }
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-icon">💨</div>
+      <div class="kpi-icon">
+        <ion-icon name="cloudy"></ion-icon>
+      </div>
       <div class="kpi-body">
         <div class="kpi-title">PM2.5</div>
         <div class="kpi-value">
@@ -1210,10 +1329,22 @@ html { scroll-behavior: smooth; }
   <div class="charts-panel">
     <div class="controls">
       <div class="controls-group">
-        <button class="range-btn active" data-range="24h">⏰ Últimas 24h</button>
-        <button class="range-btn" data-range="7d">📅 Última semana</button>
-        <button class="range-btn" data-range="all">📊 Todo</button>
-        <button class="range-btn" data-range="forecast" id="forecastBtn">📈 Pronósticos</button>
+        <button class="range-btn active" data-range="24h">
+          <ion-icon name="time"></ion-icon>
+          Últimas 24h
+        </button>
+        <button class="range-btn" data-range="7d">
+          <ion-icon name="calendar"></ion-icon>
+          Última semana
+        </button>
+        <button class="range-btn" data-range="all">
+          <ion-icon name="stats-chart"></ion-icon>
+          Todo
+        </button>
+        <button class="range-btn" data-range="forecast" id="forecastBtn">
+          <ion-icon name="trending-up"></ion-icon>
+          Pronósticos
+        </button>
       </div>
       
       <div class="controls-group" style="margin-left: auto;">
@@ -1221,26 +1352,34 @@ html { scroll-behavior: smooth; }
         <input type="datetime-local" id="fromInput" class="input" />
         <label style="font-size: 13px; color: #64748b; font-weight: 500;">Hasta</label>
         <input type="datetime-local" id="toInput" class="input" />
-        <button id="applyRange" class="range-btn">✓ Aplicar</button>
+        <button id="applyRange" class="range-btn">
+          <ion-icon name="checkmark"></ion-icon>
+          Aplicar
+        </button>
       </div>
     </div>
 
     <!-- Selector de variables -->
     <div class="variable-selector" id="variableSelector">
       <button class="variable-btn active" data-variable="temp">
-        🌡️ Temperatura
+        <ion-icon name="thermometer"></ion-icon>
+        Temperatura
       </button>
       <button class="variable-btn" data-variable="hum">
-        💧 Humedad
+        <ion-icon name="water"></ion-icon>
+        Humedad
       </button>
       <button class="variable-btn" data-variable="rad">
-        ☀️ Radiación Solar
+        <ion-icon name="sunny"></ion-icon>
+        Radiación Solar
       </button>
       <button class="variable-btn" data-variable="pm10">
-        🌫️ PM10
+        <ion-icon name="cloud"></ion-icon>
+        PM10
       </button>
       <button class="variable-btn" data-variable="pm25">
-        💨 PM2.5
+        <ion-icon name="cloudy"></ion-icon>
+        PM2.5
       </button>
     </div>
 
@@ -1248,7 +1387,8 @@ html { scroll-behavior: smooth; }
     <div class="canvas-card" id="mainChartCard">
       <div class="canvas-title">
         <strong id="mainChartTitle">
-          🌡️ Temperatura (°C)
+          <ion-icon name="thermometer"></ion-icon>
+          Temperatura (°C)
         </strong>
         <small id="main-note" style="color: #64748b;"></small>
       </div>
@@ -1258,7 +1398,8 @@ html { scroll-behavior: smooth; }
     <!-- Pronósticos por día -->
     <div class="hourly-forecast-container" id="hourlyForecastContainer">
       <div class="hourly-forecast-title">
-        📅 Pronóstico Diario (24 horas)
+        <ion-icon name="calendar-outline"></ion-icon>
+        Pronóstico Diario (24 horas)
       </div>
       <div class="hourly-forecast-scroll">
         <div class="hourly-forecast" id="hourlyForecast"></div>
@@ -1268,7 +1409,10 @@ html { scroll-behavior: smooth; }
     <!-- Gráfica de pronósticos -->
     <div class="canvas-card" id="forecastChartContainer" style="display: none;">
       <div class="canvas-title">
-        <strong id="forecastTitle">📊 Pronósticos SARIMA</strong>
+        <strong id="forecastTitle">
+          <ion-icon name="stats-chart"></ion-icon>
+          Pronósticos SARIMA
+        </strong>
         <div>
           <span class="loading-spinner" id="forecastLoading" style="display: none;"></span>
           <small id="forecastInfo" style="color: #64748b;">Selecciona una variable</small>
@@ -1277,19 +1421,24 @@ html { scroll-behavior: smooth; }
       
       <div class="forecast-tabs" id="forecastTabs">
         <button class="forecast-tab active" data-variable="temperature">
-          🌡️ Temperatura
+          <ion-icon name="thermometer"></ion-icon>
+          Temperatura
         </button>
         <button class="forecast-tab" data-variable="humidity">
-          💧 Humedad
+          <ion-icon name="water"></ion-icon>
+          Humedad
         </button>
         <button class="forecast-tab" data-variable="radiation">
-          ☀️ Radiación Solar
+          <ion-icon name="sunny"></ion-icon>
+          Radiación Solar
         </button>
         <button class="forecast-tab" data-variable="pm2.5">
-          💨 PM2.5
+          <ion-icon name="cloudy"></ion-icon>
+          PM2.5
         </button>
         <button class="forecast-tab" data-variable="pm10">
-          🌫️ PM10
+          <ion-icon name="cloud"></ion-icon>
+          PM10
         </button>
       </div>
       
@@ -1326,13 +1475,19 @@ html { scroll-behavior: smooth; }
   <div class="table-card">
     <div class="table-controls">
       <div class="table-search">
-        <input id="searchInput" class="input" placeholder="🔍 Buscar en la tabla..." />
+        <input id="searchInput" class="input" placeholder="Buscar en la tabla..." />
         <input id="filterFrom" type="date" class="input" />
         <input id="filterTo" type="date" class="input" />
-        <button id="clearFilters" class="range-btn">🗑️ Limpiar</button>
+        <button id="clearFilters" class="range-btn">
+          <ion-icon name="trash"></ion-icon>
+          Limpiar
+        </button>
       </div>
       <div class="table-search">
-        <button id="exportCSV" class="range-btn">📥 Exportar CSV</button>
+        <button id="exportCSV" class="range-btn">
+          <ion-icon name="download"></ion-icon>
+          Exportar CSV
+        </button>
       </div>
     </div>
 
@@ -1366,11 +1521,19 @@ html { scroll-behavior: smooth; }
       </div>
       
       <div class="pagination-controls">
-        <button class="pagination-btn" id="firstPage" title="Primera página">⏮️</button>
-        <button class="pagination-btn" id="prevPage" title="Página anterior">◀️</button>
+        <button class="pagination-btn" id="firstPage" title="Primera página">
+          <ion-icon name="play-skip-back"></ion-icon>
+        </button>
+        <button class="pagination-btn" id="prevPage" title="Página anterior">
+          <ion-icon name="play-back"></ion-icon>
+        </button>
         <div id="pageNumbers" style="display: flex; gap: 4px;"></div>
-        <button class="pagination-btn" id="nextPage" title="Página siguiente">▶️</button>
-        <button class="pagination-btn" id="lastPage" title="Última página">⏭️</button>
+        <button class="pagination-btn" id="nextPage" title="Página siguiente">
+          <ion-icon name="play-forward"></ion-icon>
+        </button>
+        <button class="pagination-btn" id="lastPage" title="Última página">
+          <ion-icon name="play-skip-forward"></ion-icon>
+        </button>
       </div>
       
       <div class="page-size-selector">
@@ -1420,8 +1583,14 @@ function parseDate(s) {
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
+  
+  let iconName = 'checkmark-circle';
+  if (type === 'error') iconName = 'close-circle';
+  else if (type === 'warning') iconName = 'warning';
+  else if (type === 'info') iconName = 'information-circle';
+  
   notification.innerHTML = `
-    <div style="font-weight: 600; font-size: 18px;">${type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✓'}</div>
+    <ion-icon name="${iconName}"></ion-icon>
     <div>${message}</div>
   `;
   document.body.appendChild(notification);
@@ -1526,16 +1695,13 @@ function renderTable() {
     return;
   }
   
-  // Calcular paginación
   const totalItems = filteredTableData.length;
   const totalPages = Math.ceil(totalItems / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
   
-  // Obtener datos de la página actual
   const pageData = filteredTableData.slice(startIndex, endIndex);
   
-  // Renderizar filas
   pageData.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -1555,27 +1721,22 @@ function renderTable() {
     tbody.appendChild(tr);
   });
   
-  // Actualizar controles de paginación
   updatePaginationControls(totalItems, totalPages, startIndex, endIndex);
   paginationContainer.style.display = 'flex';
 }
 
 function updatePaginationControls(totalItems, totalPages, startIndex, endIndex) {
-  // Actualizar info
   document.getElementById('paginationInfo').textContent = 
     `Mostrando ${startIndex + 1}-${endIndex} de ${totalItems} registros`;
   
-  // Botones de navegación
   document.getElementById('firstPage').disabled = currentPage === 1;
   document.getElementById('prevPage').disabled = currentPage === 1;
   document.getElementById('nextPage').disabled = currentPage === totalPages;
   document.getElementById('lastPage').disabled = currentPage === totalPages;
   
-  // Números de página
   const pageNumbers = document.getElementById('pageNumbers');
   pageNumbers.innerHTML = '';
   
-  // Mostrar máximo 5 números de página
   let startPage = Math.max(1, currentPage - 2);
   let endPage = Math.min(totalPages, currentPage + 2);
   
@@ -1632,38 +1793,42 @@ function applyRange(range, from = null, to = null) {
    ============================ */
 function renderMainChart() {
   const times = filtered.map(r => r.fecha);
-  let data, label, color;
+  let data, label, color, iconName;
   
   switch (currentVariable) {
     case 'temp':
       data = filtered.map(r => r.temperatura);
       label = 'Temperatura (°C)';
       color = '#003366';
+      iconName = 'thermometer';
       break;
     case 'hum':
       data = filtered.map(r => r.humedad);
       label = 'Humedad (%)';
       color = '#7AC043';
+      iconName = 'water';
       break;
     case 'rad':
       data = filtered.map(r => r.radiacion);
       label = 'Radiación Solar (W/m²)';
       color = '#f59e0b';
+      iconName = 'sunny';
       break;
     case 'pm10':
       data = filtered.map(r => r.pm10);
       label = 'PM10 (µg/m³)';
       color = '#ef4444';
+      iconName = 'cloud';
       break;
     case 'pm25':
       data = filtered.map(r => r.pm25);
       label = 'PM2.5 (µg/m³)';
       color = '#8b5cf6';
+      iconName = 'cloudy';
       break;
   }
   
-  const emojis = { 'temp': '🌡️', 'hum': '💧', 'rad': '☀️', 'pm10': '🌫️', 'pm25': '💨' };
-  document.getElementById('mainChartTitle').innerHTML = `${emojis[currentVariable]} ${label}`;
+  document.getElementById('mainChartTitle').innerHTML = `<ion-icon name="${iconName}"></ion-icon> ${label}`;
   
   renderChart('mainChart', label, times, data, color);
   loadHourlyForecast();
@@ -1767,9 +1932,9 @@ async function loadHourlyForecast() {
     `;
     
     const fileName = getForecastFileName(forecastVariable);
-    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    const response = await fetch(\`\${FORECAST_BASE_URL}\${fileName}?t=\${Date.now()}\`);
     
-    if (!response.ok) throw new Error(`Error ${response.status}`);
+    if (!response.ok) throw new Error(\`Error \${response.status}\`);
     
     const data = await response.json();
     
@@ -1784,7 +1949,6 @@ async function loadHourlyForecast() {
     
     const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
     
-    // Filtrar pronósticos cada 24 horas
     const dailyForecasts = [];
     for (let i = 0; i < data.pronosticos.length; i += 24) {
       dailyForecasts.push(data.pronosticos[i]);
@@ -1797,16 +1961,16 @@ async function loadHourlyForecast() {
       const currentValue = getCurrentValue(lastHistorical);
       const now = new Date(lastHistorical.fecha);
       
-      cardsHTML += `
+      cardsHTML += \`
         <div class="hour-card current">
-          <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-          <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}</div>
-          <div class="hour-icon">${getVariableIcon(currentVariable, currentValue)}</div>
-          <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
-          <div class="hour-label">${getUnit(forecastVariable)}</div>
+          <div class="hour-time">\${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="hour-day">\${getDayName(now)} \${now.getDate()}/\${now.getMonth()+1}</div>
+          <div class="hour-icon">\${getVariableIcon(currentVariable, currentValue)}</div>
+          <div class="hour-value">\${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
+          <div class="hour-label">\${getUnit(forecastVariable)}</div>
           <div class="hour-label" style="margin-top: 6px; font-weight: 700;">HOY</div>
         </div>
-      `;
+      \`;
     }
     
     for (let i = 0; i < daysToShow; i++) {
@@ -1816,30 +1980,31 @@ async function loadHourlyForecast() {
       const conf80Min = parseFloat(forecast.confianza_80_min);
       const conf80Max = parseFloat(forecast.confianza_80_max);
       
-      const dayLabel = i === 0 ? 'MAÑANA' : `DÍA ${i + 1}`;
+      const dayLabel = i === 0 ? 'MAÑANA' : \`DÍA \${i + 1}\`;
       
-      cardsHTML += `
+      cardsHTML += \`
         <div class="hour-card">
-          <span class="forecast-badge">${dayLabel}</span>
-          <div class="hour-time">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-          <div class="hour-day">${getDayName(date)} ${date.getDate()}/${date.getMonth()+1}</div>
-          <div class="hour-icon">${getVariableIcon(currentVariable, value)}</div>
-          <div class="hour-value">${value.toFixed(1)}</div>
-          <div class="hour-label">${getUnit(forecastVariable)}</div>
-          ${conf80Min && conf80Max ? `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : ''}
+          <span class="forecast-badge">\${dayLabel}</span>
+          <div class="hour-time">\${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="hour-day">\${getDayName(date)} \${date.getDate()}/\${date.getMonth()+1}</div>
+          <div class="hour-icon">\${getVariableIcon(currentVariable, value)}</div>
+          <div class="hour-value">\${value.toFixed(1)}</div>
+          <div class="hour-label">\${getUnit(forecastVariable)}</div>
+          \${conf80Min && conf80Max ? \`<div class="hour-range">\${conf80Min.toFixed(1)} - \${conf80Max.toFixed(1)}</div>\` : ''}
         </div>
-      `;
+      \`;
     }
     
     forecastDiv.innerHTML = cardsHTML;
     
   } catch (error) {
     console.error('Error:', error);
-    forecastDiv.innerHTML = `
+    forecastDiv.innerHTML = \`
       <div style="padding: 40px; text-align: center; color: #ef4444;">
-        ❌ Error al cargar pronósticos
+        <ion-icon name="close-circle" style="font-size: 32px; margin-bottom: 10px;"></ion-icon>
+        <div>Error al cargar pronósticos</div>
       </div>
-    `;
+    \`;
   }
 }
 
@@ -1861,7 +2026,7 @@ function getDayName(date) {
 
 function getVariableIcon(variable, value) {
   let color = '#003366';
-  let icon = '';
+  let iconName = '';
   
   switch (variable) {
     case 'temp':
@@ -1869,40 +2034,17 @@ function getVariableIcon(variable, value) {
       else if (value < 25) color = '#4CAF50';
       else if (value < 30) color = '#FF9800';
       else color = '#F44336';
-      
-      icon = `
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="9" y="3" width="6" height="14" rx="3" stroke="${color}" stroke-width="2" fill="none"/>
-          <circle cx="12" cy="19" r="3" fill="${color}"/>
-          <line x1="12" y1="8" x2="12" y2="16" stroke="${color}" stroke-width="2"/>
-        </svg>
-      `;
+      iconName = 'thermometer';
       break;
       
     case 'hum':
       color = '#2196F3';
-      icon = `
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="${color}" stroke-width="2" fill="${color}" fill-opacity="0.3"/>
-        </svg>
-      `;
+      iconName = 'water';
       break;
       
     case 'rad':
       color = '#FF9800';
-      icon = `
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="5" stroke="${color}" stroke-width="2" fill="${color}" fill-opacity="0.3"/>
-          <line x1="12" y1="1" x2="12" y2="4" stroke="${color}" stroke-width="2"/>
-          <line x1="12" y1="20" x2="12" y2="23" stroke="${color}" stroke-width="2"/>
-          <line x1="1" y1="12" x2="4" y2="12" stroke="${color}" stroke-width="2"/>
-          <line x1="20" y1="12" x2="23" y2="12" stroke="${color}" stroke-width="2"/>
-          <line x1="4.22" y1="19.78" x2="6.36" y2="17.64" stroke="${color}" stroke-width="2"/>
-          <line x1="17.64" y1="6.36" x2="19.78" y2="4.22" stroke="${color}" stroke-width="2"/>
-          <line x1="4.22" y1="4.22" x2="6.36" y2="6.36" stroke="${color}" stroke-width="2"/>
-          <line x1="17.64" y1="17.64" x2="19.78" y2="19.78" stroke="${color}" stroke-width="2"/>
-        </svg>
-      `;
+      iconName = 'sunny';
       break;
       
     case 'pm10':
@@ -1911,20 +2053,11 @@ function getVariableIcon(variable, value) {
       else if (value < 100) color = '#FFEB3B';
       else if (value < 150) color = '#FF9800';
       else color = '#F44336';
-      
-      icon = `
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="7" cy="17" r="2" fill="${color}"/>
-          <circle cx="12" cy="13" r="2" fill="${color}"/>
-          <circle cx="17" cy="9" r="2" fill="${color}"/>
-          <circle cx="9" cy="9" r="1.5" fill="${color}" opacity="0.6"/>
-          <circle cx="14" cy="16" r="1.5" fill="${color}" opacity="0.6"/>
-        </svg>
-      `;
+      iconName = variable === 'pm10' ? 'cloud' : 'cloudy';
       break;
   }
   
-  return icon;
+  return \`<ion-icon name="\${iconName}" style="font-size: 36px; color: \${color};"></ion-icon>\`;
 }
 
 function getUnit(variable) {
@@ -1946,7 +2079,7 @@ function getForecastFileName(variable) {
     'pm2.5': 'pronostico_PM_2_5.json',
     'pm10': 'pronostico_PM_10.json'
   };
-  return fileMap[variable] || `pronostico_${variable}.json`;
+  return fileMap[variable] || \`pronostico_\${variable}.json\`;
 }
 
 /* ============================
@@ -1992,9 +2125,9 @@ async function loadAllForecasts() {
     document.getElementById('forecastLoading').style.display = 'none';
     
     const loadedCount = Object.keys(forecastData).filter(key => forecastData[key]).length;
-    document.getElementById('forecastInfo').innerHTML = `
-      <span class="badge success">${loadedCount}/5 cargados</span>
-    `;
+    document.getElementById('forecastInfo').innerHTML = \`
+      <span class="badge success">\${loadedCount}/5 cargados</span>
+    \`;
     
     if (forecastData['temperature']) {
       updateForecastChart();
@@ -2004,18 +2137,18 @@ async function loadAllForecasts() {
   } catch (error) {
     console.error('Error:', error);
     document.getElementById('forecastLoading').style.display = 'none';
-    document.getElementById('forecastInfo').innerHTML = `
+    document.getElementById('forecastInfo').innerHTML = \`
       <span class="badge error">Error</span>
-    `;
+    \`;
   }
 }
 
 async function loadForecastData(variable) {
   try {
     const fileName = getForecastFileName(variable);
-    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    const response = await fetch(\`\${FORECAST_BASE_URL}\${fileName}?t=\${Date.now()}\`);
     
-    if (!response.ok) throw new Error(`Error ${response.status}`);
+    if (!response.ok) throw new Error(\`Error \${response.status}\`);
     
     const data = await response.json();
     
@@ -2030,14 +2163,14 @@ async function loadForecastData(variable) {
     return forecastData[variable];
     
   } catch (error) {
-    console.error(`Error ${variable}:`, error);
+    console.error(\`Error \${variable}:\`, error);
     updateTabStatus(variable, 'error');
     return null;
   }
 }
 
 function updateTabStatus(variable, status) {
-  const tab = document.querySelector(`.forecast-tab[data-variable="${variable}"]`);
+  const tab = document.querySelector(\`.forecast-tab[data-variable="\${variable}"]\`);
   if (!tab) return;
   
   tab.classList.remove('loaded', 'error', 'active');
@@ -2204,13 +2337,13 @@ function updateForecastChart() {
               if (label === 'Datos') {
                 const index = context.dataIndex;
                 const type = datasetTypes[index];
-                return `${type === 'historical' ? '📊 Histórico' : '📈 Pronóstico'}: ${value.toFixed(2)}`;
+                return \`\${type === 'historical' ? 'Histórico' : 'Pronóstico'}: \${value.toFixed(2)}\`;
               }
               
-              if (label === 'Límite') return `⚠️ Límite: ${value.toFixed(2)}`;
+              if (label === 'Límite') return \`Límite: \${value.toFixed(2)}\`;
               if (label.includes('Conf') || label.startsWith('_')) return null;
               
-              return `${label}: ${value.toFixed(2)}`;
+              return \`\${label}: \${value.toFixed(2)}\`;
             },
             filter: item => {
               const label = item.dataset.label || '';
@@ -2249,11 +2382,22 @@ function updateForecastChart() {
     }
   });
   
-  document.getElementById('forecastTitle').innerHTML = `📊 ${getVariableDisplayName(currentForecastVariable)}`;
-  document.getElementById('forecastInfo').innerHTML = `
-    <span class="badge info">${data.modelo || 'SARIMA'}</span>
-    <span class="badge success">AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
-  `;
+  const iconMap = {
+    'temperature': 'thermometer',
+    'humidity': 'water',
+    'radiation': 'sunny',
+    'pm2.5': 'cloudy',
+    'pm10': 'cloud'
+  };
+  
+  document.getElementById('forecastTitle').innerHTML = \`
+    <ion-icon name="\${iconMap[currentForecastVariable] || 'stats-chart'}"></ion-icon>
+    \${getVariableDisplayName(currentForecastVariable)}
+  \`;
+  document.getElementById('forecastInfo').innerHTML = \`
+    <span class="badge info">\${data.modelo || 'SARIMA'}</span>
+    <span class="badge success">AIC: \${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
+  \`;
   
   updateQuickStats();
   document.getElementById('forecastChart').style.height = '350px';
@@ -2272,28 +2416,40 @@ function updateQuickStats() {
   const avg = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : 0;
   const unidad = getUnit(currentForecastVariable);
   
-  statsContainer.innerHTML = `
+  statsContainer.innerHTML = \`
     <div class="stat-card">
-      <div class="stat-title">📉 Mínimo</div>
-      <div class="stat-value">${min.toFixed(2)} ${unidad}</div>
+      <div class="stat-title">
+        <ion-icon name="trending-down"></ion-icon>
+        Mínimo
+      </div>
+      <div class="stat-value">\${min.toFixed(2)} \${unidad}</div>
       <div class="stat-subtitle">Valor más bajo</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">📈 Máximo</div>
-      <div class="stat-value">${max.toFixed(2)} ${unidad}</div>
+      <div class="stat-title">
+        <ion-icon name="trending-up"></ion-icon>
+        Máximo
+      </div>
+      <div class="stat-value">\${max.toFixed(2)} \${unidad}</div>
       <div class="stat-subtitle">Valor más alto</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">📊 Promedio</div>
-      <div class="stat-value">${avg.toFixed(2)} ${unidad}</div>
+      <div class="stat-title">
+        <ion-icon name="stats-chart"></ion-icon>
+        Promedio
+      </div>
+      <div class="stat-value">\${avg.toFixed(2)} \${unidad}</div>
       <div class="stat-subtitle">Media</div>
     </div>
     <div class="stat-card">
-      <div class="stat-title">⏱️ Período</div>
-      <div class="stat-value">${valores.length}</div>
+      <div class="stat-title">
+        <ion-icon name="time"></ion-icon>
+        Período
+      </div>
+      <div class="stat-value">\${valores.length}</div>
       <div class="stat-subtitle">Horas</div>
     </div>
-  `;
+  \`;
   
   statsContainer.style.display = 'grid';
 }
@@ -2343,7 +2499,7 @@ document.getElementById('applyRange').addEventListener('click', () => {
     return;
   }
   applyRange('custom', new Date(from), new Date(to));
-  showNotification('✓ Rango aplicado', 'success');
+  showNotification('Rango aplicado', 'success');
 });
 
 // Búsqueda en tabla
@@ -2378,7 +2534,7 @@ document.getElementById('clearFilters').addEventListener('click', () => {
   filteredTableData = [...rawData].reverse();
   currentPage = 1;
   renderTable();
-  showNotification('✓ Filtros eliminados', 'success');
+  showNotification('Filtros eliminados', 'success');
 });
 
 function applyDateFilter() {
@@ -2399,7 +2555,7 @@ function applyDateFilter() {
   
   currentPage = 1;
   renderTable();
-  showNotification('✓ Filtro aplicado', 'success');
+  showNotification('Filtro aplicado', 'success');
 }
 
 // Controles de paginación
@@ -2424,7 +2580,7 @@ function exportToCSV(filename) {
   
   rawData.forEach(r => {
     const row = [
-      `"${new Date(r.fecha).toLocaleString('es-ES')}"`,
+      \`"\${new Date(r.fecha).toLocaleString('es-ES')}"\`,
       r.temperatura !== null ? r.temperatura.toFixed(2) : '',
       r.humedad !== null ? r.humedad.toFixed(2) : '',
       r.radiacion !== null ? r.radiacion.toFixed(2) : '',
@@ -2441,7 +2597,7 @@ function exportToCSV(filename) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
-  showNotification('📥 CSV descargado', 'success');
+  showNotification('CSV descargado', 'success');
 }
 
 document.getElementById('exportCSV').addEventListener('click', () => exportToCSV('datos.csv'));
@@ -2449,7 +2605,7 @@ document.getElementById('csvBtn').addEventListener('click', () => exportToCSV('d
 
 // Exportar PDF
 document.getElementById('pdfBtn').addEventListener('click', () => {
-  showNotification('📄 Generando PDF...', 'info');
+  showNotification('Generando PDF...', 'info');
   html2canvas(document.querySelector('#contentPDF'), { scale: 2 }).then(canvas => {
     const img = canvas.toDataURL('image/png');
     const { jsPDF } = window.jspdf;
@@ -2458,7 +2614,7 @@ document.getElementById('pdfBtn').addEventListener('click', () => {
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
     pdf.save('Dashboard.pdf');
-    showNotification('✓ PDF generado', 'success');
+    showNotification('PDF generado', 'success');
   });
 });
 
@@ -2466,14 +2622,21 @@ document.getElementById('pdfBtn').addEventListener('click', () => {
 document.getElementById('modoOscuroBtn').addEventListener('click', () => {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
-  document.getElementById('modoOscuroBtn').innerHTML = isDark ? '☀️ Modo claro' : '🌙 Modo oscuro';
+  const btn = document.getElementById('modoOscuroBtn');
+  
+  if (isDark) {
+    btn.innerHTML = '<ion-icon name="sunny"></ion-icon> Modo claro';
+  } else {
+    btn.innerHTML = '<ion-icon name="moon"></ion-icon> Modo oscuro';
+  }
+  
   localStorage.setItem('darkMode', isDark);
-  showNotification(`✓ Modo ${isDark ? 'oscuro' : 'claro'} activado`, 'success');
+  showNotification(\`Modo \${isDark ? 'oscuro' : 'claro'} activado\`, 'success');
 });
 
 if (localStorage.getItem('darkMode') === 'true') {
   document.body.classList.add('dark');
-  document.getElementById('modoOscuroBtn').innerHTML = '☀️ Modo claro';
+  document.getElementById('modoOscuroBtn').innerHTML = '<ion-icon name="sunny"></ion-icon> Modo claro';
 }
 
 // Tabs de pronóstico
@@ -2505,14 +2668,13 @@ loadData();
 setInterval(loadData, 30000);
 
 setTimeout(() => {
-  showNotification('✓ Dashboard cargado correctamente', 'success');
+  showNotification('Dashboard cargado correctamente', 'success');
 }, 1000);
 
-console.log('%c📊 Dashboard Pro v2.1 - Con Paginación', 'color: #7AC043; font-size: 20px; font-weight: bold;');
-console.log('%c✨ Pronósticos cada 24 horas', 'color: #003366; font-size: 14px;');
-console.log('%c📱 Responsive mejorado', 'color: #003366; font-size: 14px;');
-console.log('%c📄 Paginación implementada (10 registros por página)', 'color: #003366; font-size: 14px;');
-console.log('%c☀️ Radiación Solar agregada a pronósticos', 'color: #FF9800; font-size: 14px; font-weight: bold;');
+console.log('%c Dashboard Pro v2.1 - Con Ionicons', 'color: #7AC043; font-size: 20px; font-weight: bold;');
+console.log('%c Todos los emojis reemplazados por iconos Ionicons', 'color: #003366; font-size: 14px;');
+console.log('%c Responsive mejorado', 'color: #003366; font-size: 14px;');
+console.log('%c Paginación implementada (10 registros por página)', 'color: #003366; font-size: 14px;');
 </script>
 </body>
 </html>
