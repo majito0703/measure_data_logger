@@ -1537,12 +1537,37 @@
               callbacks: {
                 label: function(context) {
                   return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
+                },
+                title: function(context) {
+                  // MODIFICACIÓN: Formato de fecha que incluye el año
+                  const date = new Date(context[0].parsed.x);
+                  return date.toLocaleString('es-ES', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  });
                 }
               }
             }
           },
           scales: {
-            x: { display: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+            x: { 
+              display: true, 
+              grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              // MODIFICACIÓN: Formato de fecha en el eje X que incluye el año
+              ticks: {
+                callback: function(value, index, values) {
+                  const date = new Date(this.getLabelForValue(value));
+                  return date.toLocaleDateString('es-ES', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: '2-digit'
+                  });
+                }
+              }
+            },
             y: { beginAtZero: false, grid: { color: 'rgba(0, 0, 0, 0.05)' } }
           },
           interaction: { mode: 'index', intersect: false }
@@ -1605,10 +1630,11 @@
         if (lastHistorical) {
           const currentValue = getCurrentValue(lastHistorical);
           const now = new Date(lastHistorical.fecha);
+          // MODIFICACIÓN: Tarjetas de pronóstico incluyen el año
           cardsHTML += `
             <div class="hour-card current">
               <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-              <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}</div>
+              <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}</div>
               <div class="hour-icon">
                 <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
               </div>
@@ -1627,11 +1653,12 @@
           const conf80Max = parseFloat(forecast.confianza_80_max);
           const dayLabel = i === 0 ? 'MAÑANA' : `DÍA ${i + 1}`;
 
+          // MODIFICACIÓN: Tarjetas de pronóstico incluyen el año
           cardsHTML += `
             <div class="hour-card">
               <span class="forecast-badge">${dayLabel}</span>
               <div class="hour-time">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-              <div class="hour-day">${getDayName(date)} ${date.getDate()}/${date.getMonth()+1}</div>
+              <div class="hour-day">${getDayName(date)} ${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}</div>
               <div class="hour-icon">
                 <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
               </div>
@@ -1914,7 +1941,14 @@
                 title: items => {
                   if (items.length > 0) {
                     const date = new Date(items[0].parsed.x);
-                    return date.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    // MODIFICACIÓN: Tooltip incluye el año
+                    return date.toLocaleString('es-ES', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    });
                   }
                   return '';
                 },
@@ -1940,9 +1974,28 @@
           scales: {
             x: {
               type: 'time',
-              time: { unit: 'day', displayFormats: { hour: 'dd/MM HH:mm', day: 'dd/MM' } },
+              // MODIFICACIÓN: Formato de fecha que incluye el año
+              time: { 
+                unit: 'day', 
+                displayFormats: { 
+                  hour: 'dd/MM/yy HH:mm', 
+                  day: 'dd/MM/yy',
+                  month: 'MM/yy'
+                } 
+              },
               title: { display: true, text: 'Fecha', color: '#64748b' },
-              grid: { color: 'rgba(0,0,0,0.05)' }
+              grid: { color: 'rgba(0,0,0,0.05)' },
+              ticks: {
+                // MODIFICACIÓN: Eje X muestra el año
+                callback: function(value, index, values) {
+                  const date = new Date(this.getLabelForValue(value));
+                  return date.toLocaleDateString('es-ES', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: '2-digit'
+                  });
+                }
+              }
             },
             y: {
               beginAtZero: currentForecastVariable.includes('pm'),
