@@ -1,6 +1,6 @@
 {
   "variable": "Radiacion Solar",
-  "fecha_generacion": "2026-02-10 01:54:32",
+  "fecha_generacion": "2026-02-10 02:14:16",
   "modelo": "SARIMA(1, 1, 1)(1, 1, 1, 12)",
   "aic": 3782.0434703913484,
   "observaciones_historicas": 325,
