@@ -37,14 +37,14 @@ def cargar_datos_google_sheets():
     Carga datos desde Google Sheets usando credenciales de GitHub Secrets
     """
     try:
-        sheet_id = "1pXZJPxsv9meoZqaK_GgKrdyOLyiwLkUESFq-QZ0eSaw"
+        sheet_id = "1x1FeUolFWlR07tgrc6F4cgeUhJYV7uQ5yuRTBHO8jWI"
         url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
         
         print(f"📥 Descargando datos desde Google Sheets...")
         df_full = pd.read_csv(url)
         
         # Tomar solo los últimos 1,100 datos
-        df0 = df_full.tail(1100)
+        df0 = df_full.tail(587)
         
         print(f"✅ Datos cargados exitosamente")
         print(f"   Total de filas originales: {len(df_full)}")
