@@ -45,7 +45,7 @@ def cargar_datos_google_sheets():
         df_full = pd.read_csv(url)
         
         # Tomar solo los últimos 1,100 datos
-        df0 = df_full.tail(600)
+        df0 = df_full.tail(666)
         
         print(f"✅ Datos cargados exitosamente")
         print(f"   Total de filas originales: {len(df_full)}")
