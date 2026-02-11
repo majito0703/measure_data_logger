@@ -1,6 +1,6 @@
 {
   "variable": "PM 10",
-  "fecha_generacion": "2026-02-11 02:10:50",
+  "fecha_generacion": "2026-02-11 13:07:45",
   "modelo": "SARIMA(1, 1, 1)(1, 1, 1, 12)",
   "aic": 1971.4400436092437,
   "observaciones_historicas": 331,
