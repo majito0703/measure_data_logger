@@ -1,5 +1,16 @@
 [
     {
+        "id": 4106,
+        "temperatura": 32.7,
+        "humedad": 56.8,
+        "pm1_0": 9,
+        "pm2_5": 16,
+        "pm25": 16,
+        "pm10": 17,
+        "radiacion": 0,
+        "fecha_hora": "2026-02-11 19:20:34"
+    },
+    {
         "id": 4105,
         "temperatura": 32.6,
         "humedad": 56.9,
@@ -66,17 +77,6 @@
         "fecha_hora": "2026-02-11 17:57:00"
     },
     {
-        "id": 4099,
-        "temperatura": 25,
-        "humedad": 60,
-        "pm1_0": 10,
-        "pm2_5": 15,
-        "pm25": 15,
-        "pm10": 20,
-        "radiacion": 0,
-        "fecha_hora": "2026-02-11 11:53:50"
-    },
-    {
         "id": 4096,
         "temperatura": 0,
         "humedad": 0,
@@ -106,6 +106,17 @@
         "pm2_5": 0,
         "pm25": 0,
         "pm10": 0,
+        "radiacion": 0,
+        "fecha_hora": "2026-02-11 11:53:50"
+    },
+    {
+        "id": 4099,
+        "temperatura": 25,
+        "humedad": 60,
+        "pm1_0": 10,
+        "pm2_5": 15,
+        "pm25": 15,
+        "pm10": 20,
         "radiacion": 0,
         "fecha_hora": "2026-02-11 11:53:50"
     },
@@ -10987,16 +10998,5 @@
         "pm10": 15,
         "radiacion": 0,
         "fecha_hora": "2025-12-01 19:32:27"
-    },
-    {
-        "id": 842,
-        "temperatura": 30.9,
-        "humedad": 64.8,
-        "pm1_0": 13,
-        "pm2_5": 16,
-        "pm25": 16,
-        "pm10": 18,
-        "radiacion": 0,
-        "fecha_hora": "2025-12-01 19:22:23"
     }
 ]
