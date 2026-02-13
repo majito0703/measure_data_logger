@@ -1289,64 +1289,82 @@
     let pageSize = 10;
     let filteredTableData = [];
 
-    // Función parseDate mejorada y robusta
+    // Función parseDate específica para el formato "YYYY-MM-DD HH:mm:ss"
     function parseDate(s) {
       if (!s) return null;
       
-      // Si ya es un objeto Date, devolverlo
-      if (s instanceof Date) return s;
+      // Si ya es un objeto Date válido, devolverlo
+      if (s instanceof Date && !isNaN(s)) return s;
       
-      // Intentar diferentes formatos
-      let date = null;
+      // Convertir a string
+      const dateStr = String(s).trim();
       
-      // Formato ISO (YYYY-MM-DDTHH:mm:ss)
-      if (s.includes('T')) {
-        date = new Date(s);
-        if (!isNaN(date)) return date;
+      // Si es un timestamp numérico
+      const num = Number(dateStr);
+      if (!isNaN(num) && num > 0 && num < 9999999999) {
+        const d = new Date(num * 1000);
+        if (!isNaN(d)) return d;
       }
       
-      // Formato con espacio (YYYY-MM-DD HH:mm:ss)
-      if (s.includes(' ')) {
-        // Reemplazar espacio con T para formato ISO
-        const isoString = s.replace(' ', 'T');
-        date = new Date(isoString);
-        if (!isNaN(date)) return date;
+      // Formato específico: "YYYY-MM-DD HH:mm:ss"
+      // Este es el formato que tienen tus archivos
+      if (dateStr.includes('-') && dateStr.includes(':')) {
+        // Reemplazar el espacio con T para formato ISO
+        const isoStr = dateStr.replace(' ', 'T');
+        const d = new Date(isoStr);
+        if (!isNaN(d)) return d;
         
-        // Si aún falla, intentar parsear manualmente
-        const parts = s.split(/[- :]/);
+        // Si eso falla, parsear manualmente
+        const parts = dateStr.split(/[- :]/);
         if (parts.length >= 6) {
-          // Formato: YYYY-MM-DD HH:mm:ss
-          date = new Date(
-            parseInt(parts[0]), // año
-            parseInt(parts[1]) - 1, // mes (0-11)
-            parseInt(parts[2]), // día
-            parseInt(parts[3]), // hora
-            parseInt(parts[4]), // minuto
-            parseInt(parts[5])  // segundo
-          );
-          if (!isNaN(date)) return date;
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1; // Mes es 0-11
+          const day = parseInt(parts[2], 10);
+          const hour = parseInt(parts[3], 10);
+          const minute = parseInt(parts[4], 10);
+          const second = parseInt(parts[5], 10);
+          
+          if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+            const d = new Date(year, month, day, hour, minute, second);
+            if (!isNaN(d)) return d;
+          }
         }
       }
       
-      // Formato con barras (DD/MM/YYYY HH:mm)
-      if (s.includes('/')) {
-        const parts = s.split(/[\/ :]/);
+      // Formato con T (ISO)
+      if (dateStr.includes('T')) {
+        const d = new Date(dateStr);
+        if (!isNaN(d)) return d;
+      }
+      
+      // Formato DD/MM/YYYY
+      if (dateStr.includes('/')) {
+        const parts = dateStr.split(/[\/ :]/);
         if (parts.length >= 3) {
-          // Asumimos formato DD/MM/YYYY
-          date = new Date(
-            parseInt(parts[2]), // año
-            parseInt(parts[1]) - 1, // mes
-            parseInt(parts[0]), // día
-            parseInt(parts[3] || 0), // hora
-            parseInt(parts[4] || 0)  // minuto
-          );
-          if (!isNaN(date)) return date;
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const year = parseInt(parts[2], 10);
+          const hour = parseInt(parts[3] || 0, 10);
+          const minute = parseInt(parts[4] || 0, 10);
+          const second = parseInt(parts[5] || 0, 10);
+          
+          if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+            const d = new Date(year, month, day, hour, minute, second);
+            if (!isNaN(d)) return d;
+          }
         }
       }
       
-      // Último recurso: dejar que JS lo intente
-      date = new Date(s);
-      return isNaN(date) ? null : date;
+      // Último recurso
+      try {
+        const d = new Date(dateStr);
+        if (!isNaN(d)) return d;
+      } catch (e) {
+        // Ignorar
+      }
+      
+      console.warn('No se pudo parsear la fecha:', s);
+      return null;
     }
 
     function showNotification(message, type = 'success') {
@@ -1378,6 +1396,7 @@
         })).filter(x => x.fecha).sort((a, b) => {
           const dateA = parseDate(a.fecha);
           const dateB = parseDate(b.fecha);
+          if (!dateA || !dateB) return 0;
           return dateA - dateB;
         });
 
@@ -1408,7 +1427,7 @@
       const lastDate = parseDate(last.fecha);
       const timeStr = lastDate ? lastDate.toLocaleString('es-ES', {
         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-      }) : '';
+      }) : last.fecha;
       
       updates.forEach(({ id, value }) => {
         const el = document.getElementById(`card_${id}`);
@@ -1513,7 +1532,7 @@
 
       filtered = rawData.filter(r => {
         const d = parseDate(r.fecha);
-        return d >= start && d <= end;
+        return d && d >= start && d <= end;
       });
 
       renderMainChart();
@@ -1570,10 +1589,17 @@
     function renderChart(id, label, labels, data, color) {
       const ctx = document.getElementById(id).getContext('2d');
       if (charts[id]) charts[id].destroy();
+      
+      // Convertir labels a objetos Date válidos
+      const validLabels = labels.map(l => {
+        const d = parseDate(l);
+        return d ? d : l;
+      });
+      
       charts[id] = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels: validLabels,
           datasets: [{
             label: label,
             data: data,
@@ -1608,14 +1634,26 @@
                   return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
                 },
                 title: function(context) {
-                  const date = parseDate(context[0].label);
-                  return date ? date.toLocaleString('es-ES', { 
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  }) : context[0].label;
+                  if (context[0] && context[0].label) {
+                    if (context[0].label instanceof Date) {
+                      return context[0].label.toLocaleString('es-ES', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      });
+                    }
+                    const date = parseDate(context[0].label);
+                    return date ? date.toLocaleString('es-ES', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    }) : context[0].label;
+                  }
+                  return '';
                 }
               }
             }
@@ -1624,14 +1662,23 @@
             x: { 
               display: true, 
               grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              type: 'time',
+              time: {
+                unit: 'day',
+                displayFormats: {
+                  hour: 'dd/MM/yy HH:mm',
+                  day: 'dd/MM/yy',
+                  month: 'MM/yy'
+                }
+              },
               ticks: {
                 callback: function(value, index, values) {
-                  const date = parseDate(this.getLabelForValue(value));
-                  return date ? date.toLocaleDateString('es-ES', { 
+                  const date = new Date(value);
+                  return date.toLocaleDateString('es-ES', { 
                     day: '2-digit', 
                     month: '2-digit', 
                     year: '2-digit'
-                  }) : this.getLabelForValue(value);
+                  });
                 }
               }
             },
@@ -1716,7 +1763,10 @@
         for (let i = 0; i < daysToShow; i++) {
           const forecast = dailyForecasts[i];
           const date = parseDate(forecast.fecha);
-          if (!date) continue;
+          if (!date) {
+            console.warn('Fecha de pronóstico inválida:', forecast.fecha);
+            continue;
+          }
           
           const value = parseFloat(forecast.pronostico);
           const conf80Min = parseFloat(forecast.confianza_80_min);
@@ -2014,7 +2064,7 @@
               displayColors: false,
               callbacks: {
                 title: items => {
-                  if (items.length > 0) {
+                  if (items.length > 0 && items[0].parsed && items[0].parsed.x) {
                     const date = new Date(items[0].parsed.x);
                     return date.toLocaleString('es-ES', { 
                       day: '2-digit', 
@@ -2060,7 +2110,7 @@
               grid: { color: 'rgba(0,0,0,0.05)' },
               ticks: {
                 callback: function(value, index, values) {
-                  const date = new Date(this.getLabelForValue(value));
+                  const date = new Date(value);
                   return date.toLocaleDateString('es-ES', { 
                     day: '2-digit', 
                     month: '2-digit', 
@@ -2220,7 +2270,7 @@
         const to = t ? new Date(t + 'T23:59:59') : new Date();
         filteredTableData = [...rawData].reverse().filter(r => {
           const d = parseDate(r.fecha);
-          return d >= from && d <= to;
+          return d && d >= from && d <= to;
         });
       }
       currentPage = 1;
