@@ -1,6 +1,6 @@
 {
   "variable": "Humidity",
-  "fecha_generacion": "2026-02-13 02:07:17",
+  "fecha_generacion": "2026-02-13 12:57:29",
   "modelo": "SARIMA(1, 0, 1)(1, 1, 1, 12)",
   "aic": 1186.6500361439357,
   "observaciones_historicas": 331,
