@@ -1289,10 +1289,64 @@
     let pageSize = 10;
     let filteredTableData = [];
 
+    // Función parseDate mejorada y robusta
     function parseDate(s) {
       if (!s) return null;
-      const d = new Date(s.replace(' ', 'T'));
-      return isNaN(d) ? new Date(s) : d;
+      
+      // Si ya es un objeto Date, devolverlo
+      if (s instanceof Date) return s;
+      
+      // Intentar diferentes formatos
+      let date = null;
+      
+      // Formato ISO (YYYY-MM-DDTHH:mm:ss)
+      if (s.includes('T')) {
+        date = new Date(s);
+        if (!isNaN(date)) return date;
+      }
+      
+      // Formato con espacio (YYYY-MM-DD HH:mm:ss)
+      if (s.includes(' ')) {
+        // Reemplazar espacio con T para formato ISO
+        const isoString = s.replace(' ', 'T');
+        date = new Date(isoString);
+        if (!isNaN(date)) return date;
+        
+        // Si aún falla, intentar parsear manualmente
+        const parts = s.split(/[- :]/);
+        if (parts.length >= 6) {
+          // Formato: YYYY-MM-DD HH:mm:ss
+          date = new Date(
+            parseInt(parts[0]), // año
+            parseInt(parts[1]) - 1, // mes (0-11)
+            parseInt(parts[2]), // día
+            parseInt(parts[3]), // hora
+            parseInt(parts[4]), // minuto
+            parseInt(parts[5])  // segundo
+          );
+          if (!isNaN(date)) return date;
+        }
+      }
+      
+      // Formato con barras (DD/MM/YYYY HH:mm)
+      if (s.includes('/')) {
+        const parts = s.split(/[\/ :]/);
+        if (parts.length >= 3) {
+          // Asumimos formato DD/MM/YYYY
+          date = new Date(
+            parseInt(parts[2]), // año
+            parseInt(parts[1]) - 1, // mes
+            parseInt(parts[0]), // día
+            parseInt(parts[3] || 0), // hora
+            parseInt(parts[4] || 0)  // minuto
+          );
+          if (!isNaN(date)) return date;
+        }
+      }
+      
+      // Último recurso: dejar que JS lo intente
+      date = new Date(s);
+      return isNaN(date) ? null : date;
     }
 
     function showNotification(message, type = 'success') {
@@ -1321,7 +1375,11 @@
           radiacion: r.radiacion !== undefined ? Number(r.radiacion) : null,
           pm10: r.pm10 !== undefined ? Number(r.pm10) : null,
           pm25: r.pm25 !== undefined ? Number(r.pm25) : null
-        })).filter(x => x.fecha).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+        })).filter(x => x.fecha).sort((a, b) => {
+          const dateA = parseDate(a.fecha);
+          const dateB = parseDate(b.fecha);
+          return dateA - dateB;
+        });
 
         if (rawData.length === 0) {
           showNotification('No se encontraron datos', 'warning');
@@ -1347,9 +1405,11 @@
         { id: 'pm10', value: last.pm10 },
         { id: 'pm25', value: last.pm25 }
       ];
-      const timeStr = new Date(last.fecha).toLocaleString('es-ES', {
+      const lastDate = parseDate(last.fecha);
+      const timeStr = lastDate ? lastDate.toLocaleString('es-ES', {
         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-      });
+      }) : '';
+      
       updates.forEach(({ id, value }) => {
         const el = document.getElementById(`card_${id}`);
         const meta = document.getElementById(`meta_${id}`);
@@ -1383,8 +1443,17 @@
 
       pageData.forEach(r => {
         const tr = document.createElement('tr');
+        const fechaDate = parseDate(r.fecha);
+        const fechaStr = fechaDate ? fechaDate.toLocaleString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }) : r.fecha;
+        
         tr.innerHTML = `
-          <td>${new Date(r.fecha).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+          <td>${fechaStr}</td>
           <td>${r.temperatura !== null ? r.temperatura.toFixed(2) : '--'}</td>
           <td>${r.humedad !== null ? r.humedad.toFixed(2) : '--'}</td>
           <td>${r.radiacion !== null ? r.radiacion.toFixed(2) : '--'}</td>
@@ -1539,15 +1608,14 @@
                   return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
                 },
                 title: function(context) {
-                  // MODIFICACIÓN: Formato de fecha que incluye el año
-                  const date = new Date(context[0].parsed.x);
-                  return date.toLocaleString('es-ES', { 
+                  const date = parseDate(context[0].label);
+                  return date ? date.toLocaleString('es-ES', { 
                     day: '2-digit', 
                     month: '2-digit', 
                     year: 'numeric', 
                     hour: '2-digit', 
                     minute: '2-digit' 
-                  });
+                  }) : context[0].label;
                 }
               }
             }
@@ -1556,15 +1624,14 @@
             x: { 
               display: true, 
               grid: { color: 'rgba(0, 0, 0, 0.05)' },
-              // MODIFICACIÓN: Formato de fecha en el eje X que incluye el año
               ticks: {
                 callback: function(value, index, values) {
-                  const date = new Date(this.getLabelForValue(value));
-                  return date.toLocaleDateString('es-ES', { 
+                  const date = parseDate(this.getLabelForValue(value));
+                  return date ? date.toLocaleDateString('es-ES', { 
                     day: '2-digit', 
                     month: '2-digit', 
                     year: '2-digit'
-                  });
+                  }) : this.getLabelForValue(value);
                 }
               }
             },
@@ -1629,31 +1696,33 @@
 
         if (lastHistorical) {
           const currentValue = getCurrentValue(lastHistorical);
-          const now = new Date(lastHistorical.fecha);
-          // MODIFICACIÓN: Tarjetas de pronóstico incluyen el año
-          cardsHTML += `
-            <div class="hour-card current">
-              <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-              <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}</div>
-              <div class="hour-icon">
-                <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
+          const now = parseDate(lastHistorical.fecha);
+          if (now) {
+            cardsHTML += `
+              <div class="hour-card current">
+                <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+                <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}</div>
+                <div class="hour-icon">
+                  <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
+                </div>
+                <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
+                <div class="hour-label">${getUnit(forecastVariable)}</div>
+                <div class="hour-label" style="margin-top: 6px; font-weight: 700;">HOY</div>
               </div>
-              <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
-              <div class="hour-label">${getUnit(forecastVariable)}</div>
-              <div class="hour-label" style="margin-top: 6px; font-weight: 700;">HOY</div>
-            </div>
-          `;
+            `;
+          }
         }
 
         for (let i = 0; i < daysToShow; i++) {
           const forecast = dailyForecasts[i];
-          const date = new Date(forecast.fecha);
+          const date = parseDate(forecast.fecha);
+          if (!date) continue;
+          
           const value = parseFloat(forecast.pronostico);
           const conf80Min = parseFloat(forecast.confianza_80_min);
           const conf80Max = parseFloat(forecast.confianza_80_max);
           const dayLabel = i === 0 ? 'MAÑANA' : `DÍA ${i + 1}`;
 
-          // MODIFICACIÓN: Tarjetas de pronóstico incluyen el año
           cardsHTML += `
             <div class="hour-card">
               <span class="forecast-badge">${dayLabel}</span>
@@ -1817,24 +1886,26 @@
       const datasetTypes = [];
 
       data.historico.forEach(item => {
-        const date = new Date(item.fecha);
-        if (!isNaN(date.getTime())) {
+        const date = parseDate(item.fecha);
+        if (date) {
           allDates.push(date);
           allData.push(parseFloat(item.valor) || 0);
           datasetTypes.push('historical');
         }
       });
 
-      const forecastStartDate = new Date(data.pronosticos[0].fecha);
-      if (allDates.length > 0) {
-        allDates.push(forecastStartDate);
-        allData.push(allData[allData.length - 1]);
-        datasetTypes.push('transition');
+      if (allDates.length > 0 && data.pronosticos.length > 0) {
+        const forecastStartDate = parseDate(data.pronosticos[0].fecha);
+        if (forecastStartDate) {
+          allDates.push(forecastStartDate);
+          allData.push(allData[allData.length - 1]);
+          datasetTypes.push('transition');
+        }
       }
 
       data.pronosticos.forEach(item => {
-        const date = new Date(item.fecha);
-        if (!isNaN(date.getTime())) {
+        const date = parseDate(item.fecha);
+        if (date) {
           allDates.push(date);
           allData.push(parseFloat(item.pronostico) || 0);
           datasetTypes.push('forecast');
@@ -1860,13 +1931,13 @@
         }
       }];
 
-      const forecastDates = data.pronosticos.map(i => new Date(i.fecha));
+      const forecastDates = data.pronosticos.map(i => parseDate(i.fecha)).filter(d => d !== null);
       const conf80Upper = data.pronosticos.map(i => parseFloat(i.confianza_80_max) || 0);
       const conf80Lower = data.pronosticos.map(i => parseFloat(i.confianza_80_min) || 0);
       const conf95Upper = data.pronosticos.map(i => parseFloat(i.confianza_95_max) || 0);
       const conf95Lower = data.pronosticos.map(i => parseFloat(i.confianza_95_min) || 0);
 
-      if (conf95Upper.length > 0) {
+      if (conf95Upper.length > 0 && forecastDates.length > 0) {
         datasets.push({
           label: 'Conf 95%',
           data: forecastDates.map((date, i) => ({ x: date, y: conf95Upper[i] })),
@@ -1885,7 +1956,7 @@
         });
       }
 
-      if (conf80Upper.length > 0) {
+      if (conf80Upper.length > 0 && forecastDates.length > 0) {
         datasets.push({
           label: 'Conf 80%',
           data: forecastDates.map((date, i) => ({ x: date, y: conf80Upper[i] })),
@@ -1904,19 +1975,23 @@
         });
       }
 
-      if (data.limite_permitido && data.limite_permitido > 0) {
-        datasets.push({
-          label: 'Límite',
-          data: [
-            { x: allDates[0], y: data.limite_permitido },
-            { x: allDates[allDates.length - 1], y: data.limite_permitido }
-          ],
-          borderColor: 'blue',
-          borderWidth: 1,
-          borderDash: [5, 5],
-          pointRadius: 0,
-          fill: false
-        });
+      if (data.limite_permitido && data.limite_permitido > 0 && allDates.length > 0) {
+        const firstDate = allDates[0];
+        const lastDate = allDates[allDates.length - 1];
+        if (firstDate && lastDate) {
+          datasets.push({
+            label: 'Límite',
+            data: [
+              { x: firstDate, y: data.limite_permitido },
+              { x: lastDate, y: data.limite_permitido }
+            ],
+            borderColor: 'blue',
+            borderWidth: 1,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false
+          });
+        }
       }
 
       forecastChart = new Chart(ctx, {
@@ -1941,7 +2016,6 @@
                 title: items => {
                   if (items.length > 0) {
                     const date = new Date(items[0].parsed.x);
-                    // MODIFICACIÓN: Tooltip incluye el año
                     return date.toLocaleString('es-ES', { 
                       day: '2-digit', 
                       month: '2-digit', 
@@ -1974,7 +2048,6 @@
           scales: {
             x: {
               type: 'time',
-              // MODIFICACIÓN: Formato de fecha que incluye el año
               time: { 
                 unit: 'day', 
                 displayFormats: { 
@@ -1986,7 +2059,6 @@
               title: { display: true, text: 'Fecha', color: '#64748b' },
               grid: { color: 'rgba(0,0,0,0.05)' },
               ticks: {
-                // MODIFICACIÓN: Eje X muestra el año
                 callback: function(value, index, values) {
                   const date = new Date(this.getLabelForValue(value));
                   return date.toLocaleDateString('es-ES', { 
@@ -2108,8 +2180,10 @@
         filteredTableData = [...rawData].reverse();
       } else {
         filteredTableData = [...rawData].reverse().filter(r => {
+          const fechaDate = parseDate(r.fecha);
+          const fechaStr = fechaDate ? fechaDate.toLocaleString('es-ES') : r.fecha;
           const rowText = [
-            new Date(r.fecha).toLocaleString('es-ES'),
+            fechaStr,
             r.temperatura,
             r.humedad,
             r.radiacion,
@@ -2172,8 +2246,10 @@
       const headers = ['Fecha', 'Temp (°C)', 'Humedad (%)', 'Radiación (W/m²)', 'PM10 (µg/m³)', 'PM2.5 (µg/m³)'];
       let csv = [headers.join(',')];
       rawData.forEach(r => {
+        const fechaDate = parseDate(r.fecha);
+        const fechaStr = fechaDate ? fechaDate.toLocaleString('es-ES') : r.fecha;
         const row = [
-          `"${new Date(r.fecha).toLocaleString('es-ES')}"`,
+          `"${fechaStr}"`,
           r.temperatura !== null ? r.temperatura.toFixed(2) : '',
           r.humedad !== null ? r.humedad.toFixed(2) : '',
           r.radiacion !== null ? r.radiacion.toFixed(2) : '',
