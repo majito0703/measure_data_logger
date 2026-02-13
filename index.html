@@ -2133,10 +2133,7 @@
         ${getVariableDisplayName(currentForecastVariable)}
       `;
 
-      document.getElementById('forecastInfo').innerHTML = `
-        <span class="badge info">${data.modelo || 'SARIMA'}</span>
-        <span class="badge success">AIC: ${data.aic ? data.aic.toFixed(2) : 'N/A'}</span>
-      `;
+      document.getElementById('forecastInfo').innerHTML = '';
 
       updateQuickStats();
       document.getElementById('forecastChart').style.height = '350px';
