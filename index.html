@@ -1691,113 +1691,118 @@
     }
 
     async function loadHourlyForecast() {
-      const container = document.getElementById('hourlyForecastContainer');
-      const forecastDiv = document.getElementById('hourlyForecast');
-      if (!container || !forecastDiv) return;
+  const container = document.getElementById('hourlyForecastContainer');
+  const forecastDiv = document.getElementById('hourlyForecast');
+  if (!container || !forecastDiv) return;
 
-      const variableMap = {
-        'temp': 'temperature',
-        'hum': 'humidity',
-        'rad': 'radiation',
-        'pm10': 'pm10',
-        'pm25': 'pm2.5'
-      };
+  const variableMap = {
+    'temp': 'temperature',
+    'hum': 'humidity',
+    'rad': 'radiation',
+    'pm10': 'pm10',
+    'pm25': 'pm2.5'
+  };
 
-      const forecastVariable = variableMap[currentVariable];
-      if (!forecastVariable) {
-        container.style.display = 'none';
-        return;
-      }
+  const forecastVariable = variableMap[currentVariable];
+  if (!forecastVariable) {
+    container.style.display = 'none';
+    return;
+  }
 
-      try {
-        container.style.display = 'block';
-        forecastDiv.innerHTML = `
-          <div style="padding: 40px; text-align: center; color: #64748b;">
-            <div class="loading-spinner" style="margin: 0 auto 10px;"></div>
-            Cargando pronósticos...
-          </div>
-        `;
+  try {
+    container.style.display = 'block';
+    forecastDiv.innerHTML = `
+      <div style="padding: 40px; text-align: center; color: #64748b;">
+        <div class="loading-spinner" style="margin: 0 auto 10px;"></div>
+        Cargando pronósticos...
+      </div>
+    `;
 
-        const fileName = getForecastFileName(forecastVariable);
-        const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
-        if (!response.ok) throw new Error(`Error ${response.status}`);
-        const data = await response.json();
+    const fileName = getForecastFileName(forecastVariable);
+    const response = await fetch(`${FORECAST_BASE_URL}${fileName}?t=${Date.now()}`);
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    const data = await response.json();
 
-        if (!data.pronosticos || data.pronosticos.length === 0) {
-          forecastDiv.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #64748b;">
-              No hay pronósticos disponibles
+    if (!data.pronosticos || data.pronosticos.length === 0) {
+      forecastDiv.innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #64748b;">
+          No hay pronósticos disponibles
+        </div>
+      `;
+      return;
+    }
+
+    const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
+    const dailyForecasts = [];
+    for (let i = 0; i < data.pronosticos.length; i += 24) {
+      dailyForecasts.push(data.pronosticos[i]);
+    }
+
+    const daysToShow = Math.min(7, dailyForecasts.length);
+    let cardsHTML = '';
+
+    if (lastHistorical) {
+      const currentValue = getCurrentValue(lastHistorical);
+      const now = parseDate(lastHistorical.fecha);
+      if (now) {
+        cardsHTML += `
+          <div class="hour-card current">
+            <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}</div>
+            <div class="hour-icon">
+              <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
             </div>
-          `;
-          return;
-        }
-
-        const lastHistorical = rawData.length > 0 ? rawData[rawData.length - 1] : null;
-        const dailyForecasts = [];
-        for (let i = 0; i < data.pronosticos.length; i += 24) {
-          dailyForecasts.push(data.pronosticos[i]);
-        }
-
-        const daysToShow = Math.min(7, dailyForecasts.length);
-        let cardsHTML = '';
-
-        if (lastHistorical) {
-          const currentValue = getCurrentValue(lastHistorical);
-          const now = parseDate(lastHistorical.fecha);
-          if (now) {
-            cardsHTML += `
-              <div class="hour-card current">
-                <div class="hour-time">${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-                <div class="hour-day">${getDayName(now)} ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}</div>
-                <div class="hour-icon">
-                  <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
-                </div>
-                <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
-                <div class="hour-label">${getUnit(forecastVariable)}</div>
-                <div class="hour-label" style="margin-top: 6px; font-weight: 700;">HOY</div>
-              </div>
-            `;
-          }
-        }
-
-        for (let i = 0; i < daysToShow; i++) {
-          const forecast = dailyForecasts[i];
-          const date = parseDate(forecast.fecha);
-          if (!date) {
-            console.warn('Fecha de pronóstico inválida:', forecast.fecha);
-            continue;
-          }
-          
-          const value = parseFloat(forecast.pronostico);
-          const conf80Min = parseFloat(forecast.confianza_80_min);
-          const conf80Max = parseFloat(forecast.confianza_80_max);
-          const dayLabel = i === 0 ? 'MAÑANA' : `DÍA ${i + 1}`;
-
-          cardsHTML += `
-            <div class="hour-card">
-              <span class="forecast-badge">${dayLabel}</span>
-              <div class="hour-time">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
-              <div class="hour-day">${getDayName(date)} ${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}</div>
-              <div class="hour-icon">
-                <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
-              </div>
-              <div class="hour-value">${value.toFixed(1)}</div>
-              <div class="hour-label">${getUnit(forecastVariable)}</div>
-              ${conf80Min && conf80Max ? `<div class="hour-range">${conf80Min.toFixed(1)} - ${conf80Max.toFixed(1)}</div>` : ''}
-            </div>
-          `;
-        }
-
-        forecastDiv.innerHTML = cardsHTML;
-      } catch (error) {
-        console.error('Error:', error);
-        forecastDiv.innerHTML = `
-          <div style="padding: 40px; text-align: center; color: #ef4444;">
-            Error al cargar pronósticos
+            <div class="hour-value">${currentValue !== null ? currentValue.toFixed(1) : '--'}</div>
+            <div class="hour-label">${getUnit(forecastVariable)}</div>
+            <div class="hour-label" style="margin-top: 6px; font-weight: 700;">HOY</div>
           </div>
         `;
       }
     }
+
+    for (let i = 0; i < daysToShow; i++) {
+      const forecast = dailyForecasts[i];
+      const date = parseDate(forecast.fecha);
+      if (!date) {
+        console.warn('Fecha de pronóstico inválida:', forecast.fecha);
+        continue;
+      }
+      
+      const value = parseFloat(forecast.pronostico);
+      const conf80Min = parseFloat(forecast.confianza_80_min);
+      const conf80Max = parseFloat(forecast.confianza_80_max);
+      const conf95Min = parseFloat(forecast.confianza_95_min);
+      const conf95Max = parseFloat(forecast.confianza_95_max);
+      const dayLabel = i === 0 ? 'MAÑANA' : `DÍA ${i + 1}`;
+
+      cardsHTML += `
+        <div class="hour-card">
+          <span class="forecast-badge">${dayLabel}</span>
+          <div class="hour-time">${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="hour-day">${getDayName(date)} ${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}</div>
+          <div class="hour-icon">
+            <svg class="icon-svg"><use href="#${getVariableIconId(currentVariable)}"/></svg>
+          </div>
+          <div class="hour-value">${value.toFixed(1)}</div>
+          <div class="hour-label">Pronóstico</div>
+          <div style="font-size: 10px; color: #666; margin-top: 6px; border-top: 1px dashed #ccc; padding-top: 6px;">
+            <div><strong>80%</strong> ${conf80Min ? conf80Min.toFixed(1) : '--'} - ${conf80Max ? conf80Max.toFixed(1) : '--'} ${getUnit(forecastVariable)}</div>
+            <div style="margin-top: 3px;"><strong>95%</strong> ${conf95Min ? conf95Min.toFixed(1) : '--'} - ${conf95Max ? conf95Max.toFixed(1) : '--'} ${getUnit(forecastVariable)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    forecastDiv.innerHTML = cardsHTML;
+  } catch (error) {
+    console.error('Error:', error);
+    forecastDiv.innerHTML = `
+      <div style="padding: 40px; text-align: center; color: #ef4444;">
+        Error al cargar pronósticos
+      </div>
+    `;
+  }
+}
 
     function getVariableIconId(variable) {
       const icons = {
