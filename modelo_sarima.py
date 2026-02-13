@@ -444,8 +444,6 @@ def main():
     
     # 4. Eliminar últimos 2 días para evitar datos incompletos
     df3 = df2.copy()
-    last_dates = df3.index.normalize().unique()[-2:]
-    df3 = df3[~df3.index.normalize().isin(last_dates)]
     df3 = df3.drop(columns=["PM 1"], errors='ignore')
     
     # 5. Resample a datos por hora
