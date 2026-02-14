@@ -1746,6 +1746,11 @@ async function createChartImage(variable, dataFiltered) {
   return chartImage;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// FUNCIÓN MEJORADA: addForecastSection con TODAS las variables
+// ═══════════════════════════════════════════════════════════════════════════
+// REEMPLAZA la función addForecastSection en tu código con esta versión
+
 async function addForecastSection(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress) {
   if (Object.keys(forecastData).length === 0) return;
   
@@ -1771,7 +1776,7 @@ async function addForecastSection(doc, uccAzul, uccVerde, pageWidth, pageHeight,
   doc.text('Los intervalos de confianza del 80% y 95% representan la incertidumbre del pronóstico.', 15, yPos);
   yPos += 15;
   
-  // Tabla resumen
+  // ═══ TABLA RESUMEN DE TODAS LAS VARIABLES ═══
   const forecastSummary = [['Variable', 'Próx. 24h', 'Mín. 7 días', 'Máx. 7 días', 'Tendencia']];
   
   Object.keys(forecastData).forEach(varKey => {
@@ -1814,23 +1819,333 @@ async function addForecastSection(doc, uccAzul, uccVerde, pageWidth, pageHeight,
     yPos = doc.lastAutoTable.finalY + 15;
   }
   
-  // Capturar gráfico de pronóstico
-  if (forecastChart && document.getElementById('forecastChartContainer').style.display !== 'none') {
-    const forecastCanvas = document.getElementById('forecastChart');
-    const forecastImage = forecastCanvas.toDataURL('image/png');
+  // ═══════════════════════════════════════════════════════════════════
+  // ✨ NUEVO: GRÁFICOS DE PRONÓSTICO PARA CADA VARIABLE ✨
+  // ═══════════════════════════════════════════════════════════════════
+  
+  const forecastVariables = [
+    { key: 'temperature', name: 'Temperatura', unit: '°C', color: '#003366' },
+    { key: 'humidity', name: 'Humedad', unit: '%', color: '#7AC043' },
+    { key: 'radiation', name: 'Radiación Solar', unit: 'W/m²', color: '#f59e0b' },
+    { key: 'pm10', name: 'PM10', unit: 'µg/m³', color: '#ef4444' },
+    { key: 'pm2.5', name: 'PM2.5', unit: 'µg/m³', color: '#8b5cf6' }
+  ];
+  
+  for (let i = 0; i < forecastVariables.length; i++) {
+    const variable = forecastVariables[i];
+    const forecast = forecastData[variable.key];
     
-    if (yPos > pageHeight - 120) {
-      doc.addPage();
-      yPos = 20;
+    // Verificar si hay datos de pronóstico para esta variable
+    if (!forecast || !forecast.pronosticos || forecast.pronosticos.length === 0) {
+      continue; // Saltar si no hay pronósticos
     }
     
+    status.textContent = `Generando gráfico de pronóstico: ${variable.name}...`;
+    progress.style.width = `${85 + (i * 2)}%`;
+    
+    // Crear nueva página para cada variable
+    doc.addPage();
+    yPos = 20;
+    
+    // Título de la sección
+    doc.setFillColor(...uccVerde);
+    doc.rect(0, yPos - 5, pageWidth, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Pronóstico: ${variable.name.toUpperCase()}`, 15, yPos + 3);
+    yPos += 15;
+    
+    // Crear gráfico de pronóstico
+    const forecastChartImage = await createForecastChartImage(variable, forecast);
+    
+    if (forecastChartImage) {
+      doc.addImage(forecastChartImage, 'PNG', 15, yPos, pageWidth - 30, 100);
+      yPos += 110;
+    }
+    
+    // Estadísticas del pronóstico
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`, 15, yPos);
-    yPos += 10;
+    doc.text(`Estadísticas del Pronóstico - ${variable.name}`, 15, yPos);
+    yPos += 8;
     
-    doc.addImage(forecastImage, 'PNG', 15, yPos, pageWidth - 30, 100);
+    const forecastValues = forecast.pronosticos.map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
+    
+    if (forecastValues.length > 0) {
+      const forecastStats = calculateStats(forecastValues);
+      
+      if (forecastStats) {
+        const statsTableData = [
+          ['Métrica', 'Valor'],
+          ['Período de pronóstico', `${forecastValues.length} horas`],
+          ['Valor mínimo pronosticado', `${forecastStats.min.toFixed(2)} ${variable.unit}`],
+          ['Valor máximo pronosticado', `${forecastStats.max.toFixed(2)} ${variable.unit}`],
+          ['Promedio pronosticado', `${forecastStats.mean.toFixed(2)} ${variable.unit}`],
+          ['Desviación estándar', `${forecastStats.stdDev.toFixed(2)} ${variable.unit}`]
+        ];
+        
+        doc.autoTable({
+          head: [statsTableData[0]],
+          body: statsTableData.slice(1),
+          startY: yPos,
+          theme: 'striped',
+          headStyles: { fillColor: uccAzul, fontSize: 10, fontStyle: 'bold' },
+          bodyStyles: { fontSize: 9 },
+          columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 80 },
+            1: { cellWidth: 'auto' }
+          },
+          margin: { left: 15, right: 15 }
+        });
+        
+        yPos = doc.lastAutoTable.finalY + 10;
+      }
+    }
+    
+    // Pronóstico próximas 24 horas (tabla detallada)
+    if (yPos < pageHeight - 60) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Pronóstico Próximas 24 Horas', 15, yPos);
+      yPos += 8;
+      
+      const next24Hours = forecast.pronosticos.slice(0, 24);
+      const hourlyData = [['Hora', 'Pronóstico', 'Conf 80% Min', 'Conf 80% Max']];
+      
+      next24Hours.forEach((item, idx) => {
+        if (idx % 4 === 0) { // Mostrar cada 4 horas para que quepa
+          const fecha = parseDate(item.fecha);
+          const horaStr = fecha ? fecha.toLocaleString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }) : item.fecha;
+          
+          hourlyData.push([
+            horaStr,
+            `${parseFloat(item.pronostico).toFixed(2)} ${variable.unit}`,
+            parseFloat(item.confianza_80_min).toFixed(2),
+            parseFloat(item.confianza_80_max).toFixed(2)
+          ]);
+        }
+      });
+      
+      if (hourlyData.length > 1) {
+        doc.autoTable({
+          head: [hourlyData[0]],
+          body: hourlyData.slice(1),
+          startY: yPos,
+          theme: 'grid',
+          headStyles: { fillColor: uccVerde, fontSize: 8, fontStyle: 'bold' },
+          bodyStyles: { fontSize: 7 },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          margin: { left: 15, right: 15 },
+          columnStyles: {
+            0: { cellWidth: 40 },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 'auto' },
+            3: { cellWidth: 'auto' }
+          }
+        });
+      }
+    }
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NUEVA FUNCIÓN: Crear imagen de gráfico de pronóstico
+// ═══════════════════════════════════════════════════════════════════════════
+// AGREGA esta función DESPUÉS de la función createChartImage
+
+async function createForecastChartImage(variable, forecastDataVar) {
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = 800;
+  tempCanvas.height = 400;
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  // Preparar datos históricos
+  const historicalDates = [];
+  const historicalValues = [];
+  
+  if (forecastDataVar.historico && forecastDataVar.historico.length > 0) {
+    forecastDataVar.historico.forEach(item => {
+      const date = parseDate(item.fecha);
+      if (date) {
+        historicalDates.push(date);
+        historicalValues.push(parseFloat(item.valor) || 0);
+      }
+    });
+  }
+  
+  // Preparar datos de pronóstico
+  const forecastDates = [];
+  const forecastValues = [];
+  const conf80Upper = [];
+  const conf80Lower = [];
+  const conf95Upper = [];
+  const conf95Lower = [];
+  
+  if (forecastDataVar.pronosticos && forecastDataVar.pronosticos.length > 0) {
+    forecastDataVar.pronosticos.forEach(item => {
+      const date = parseDate(item.fecha);
+      if (date) {
+        forecastDates.push(date);
+        forecastValues.push(parseFloat(item.pronostico) || 0);
+        conf80Upper.push(parseFloat(item.confianza_80_max) || 0);
+        conf80Lower.push(parseFloat(item.confianza_80_min) || 0);
+        conf95Upper.push(parseFloat(item.confianza_95_max) || 0);
+        conf95Lower.push(parseFloat(item.confianza_95_min) || 0);
+      }
+    });
+  }
+  
+  // Punto de transición (último histórico = primer pronóstico)
+  if (historicalDates.length > 0 && forecastDates.length > 0) {
+    forecastDates.unshift(historicalDates[historicalDates.length - 1]);
+    forecastValues.unshift(historicalValues[historicalValues.length - 1]);
+  }
+  
+  const datasets = [
+    // Datos históricos
+    {
+      label: 'Histórico',
+      data: historicalDates.map((date, i) => ({ x: date, y: historicalValues[i] })),
+      borderColor: 'black',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      tension: 0.2,
+      pointRadius: 0
+    },
+    // Pronóstico
+    {
+      label: 'Pronóstico',
+      data: forecastDates.map((date, i) => ({ x: date, y: forecastValues[i] })),
+      borderColor: 'red',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      tension: 0.2,
+      pointRadius: 0
+    }
+  ];
+  
+  // Agregar bandas de confianza si existen
+  if (conf95Upper.length > 0) {
+    // Rellenar al inicio para la transición
+    conf95Upper.unshift(conf95Upper[0]);
+    conf95Lower.unshift(conf95Lower[0]);
+    
+    datasets.push({
+      label: 'Confianza 95%',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf95Upper[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(255, 255, 0, 0.15)',
+      fill: '+1',
+      pointRadius: 0
+    });
+    datasets.push({
+      label: '_conf95_lower',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf95Lower[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      pointRadius: 0
+    });
+  }
+  
+  if (conf80Upper.length > 0) {
+    conf80Upper.unshift(conf80Upper[0]);
+    conf80Lower.unshift(conf80Lower[0]);
+    
+    datasets.push({
+      label: 'Confianza 80%',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf80Upper[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'rgba(0, 255, 0, 0.2)',
+      fill: '+1',
+      pointRadius: 0
+    });
+    datasets.push({
+      label: '_conf80_lower',
+      data: forecastDates.map((date, i) => ({ x: date, y: conf80Lower[i] })),
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      pointRadius: 0
+    });
+  }
+  
+  // Línea de límite permitido si existe
+  if (forecastDataVar.limite_permitido && forecastDataVar.limite_permitido > 0) {
+    const allDates = [...historicalDates, ...forecastDates];
+    if (allDates.length > 0) {
+      datasets.push({
+        label: 'Límite Permitido',
+        data: [
+          { x: allDates[0], y: forecastDataVar.limite_permitido },
+          { x: allDates[allDates.length - 1], y: forecastDataVar.limite_permitido }
+        ],
+        borderColor: 'blue',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        fill: false
+      });
+    }
+  }
+  
+  const tempChart = new Chart(tempCtx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: {
+        legend: { 
+          display: true,
+          position: 'top',
+          labels: { 
+            font: { size: 11 },
+            filter: (item) => !item.text.startsWith('_') // Ocultar datasets auxiliares
+          }
+        },
+        title: {
+          display: true,
+          text: `Pronóstico SARIMA - ${variable.name}`,
+          font: { size: 16, weight: 'bold' }
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'day',
+            displayFormats: { 
+              hour: 'dd/MM HH:mm',
+              day: 'dd/MM' 
+            }
+          },
+          ticks: { font: { size: 9 } }
+        },
+        y: {
+          beginAtZero: variable.key.includes('pm'),
+          title: {
+            display: true,
+            text: `${variable.name} (${variable.unit})`,
+            font: { size: 11 }
+          },
+          ticks: { font: { size: 9 } }
+        }
+      }
+    }
+  });
+  
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const chartImage = tempCanvas.toDataURL('image/png');
+  tempChart.destroy();
+  
+  return chartImage;
 }
 
 async function addDataTable(doc, uccAzul, pageWidth, pageHeight, status, progress) {
