@@ -13,6 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.0/build/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.1.0/dist/chartjs-adapter-luxon.min.js"></script>
 
@@ -877,10 +878,69 @@
       width: 36px;
       height: 36px;
     }
+
+    .pdf-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.pdf-modal.active {
+  display: flex;
+}
+
+.pdf-modal-content {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+}
+
+.pdf-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--gris);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.pdf-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ucc-verde), var(--ucc-verde-claro));
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}
+
+body.dark .pdf-modal-content { 
+  background: #1a1f2e; 
+  color: #e2e8f0; 
+}
   </style>
 </head>
 <body>
-
+  <!-- ═══ MODAL DE PROGRESO PDF ═══ -->
+  <div class="pdf-modal" id="pdfModal">
+    <div class="pdf-modal-content">
+      <h2 style="color: var(--ucc-azul); margin-bottom: 10px;">Generando Reporte PDF</h2>
+      <p id="pdfStatus">Inicializando...</p>
+      <div class="pdf-progress-bar">
+        <div class="pdf-progress-fill" id="pdfProgress"></div>
+      </div>
+      <p style="font-size: 12px; color: #64748b;">Por favor espere, esto puede tomar unos segundos</p>
+    </div>
+  </div>
   <!-- Definición de iconos SVG reutilizables -->
   <svg style="display: none;">
     <!-- Dashboard / Analítica -->
@@ -1279,6 +1339,585 @@
     const FORECAST_BASE_URL = "https://raw.githubusercontent.com/majito0703/measure_data_logger/main/pronosticos/";
     let rawData = [];
     let filtered = [];
+    function calculateStats(data) {
+  if (!data || data.length === 0) return null;
+  
+  const values = data.filter(v => v !== null && !isNaN(v));
+  if (values.length === 0) return null;
+  
+  const sorted = [...values].sort((a, b) => a - b);
+  const sum = values.reduce((a, b) => a + b, 0);
+  const mean = sum / values.length;
+  
+  const squaredDiffs = values.map(v => Math.pow(v - mean, 2));
+  const variance = squaredDiffs.reduce((a, b) => a + b, 0) / values.length;
+  const stdDev = Math.sqrt(variance);
+  
+  const median = sorted.length % 2 === 0
+    ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+    : sorted[Math.floor(sorted.length / 2)];
+  
+  const q1Index = Math.floor(sorted.length * 0.25);
+  const q3Index = Math.floor(sorted.length * 0.75);
+  
+  return {
+    count: values.length,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    mean: mean,
+    median: median,
+    stdDev: stdDev,
+    q1: sorted[q1Index],
+    q3: sorted[q3Index]
+  };
+}
+    // ============================================
+// MÓDULO DE GENERACIÓN PDF PROFESIONAL
+// ============================================
+
+async function generateProfessionalPDF() {
+  const modal = document.getElementById('pdfModal');
+  const progress = document.getElementById('pdfProgress');
+  const status = document.getElementById('pdfStatus');
+  
+  modal.classList.add('active');
+  
+  try {
+    // Paso 1: Inicializar PDF
+    status.textContent = 'Inicializando documento PDF...';
+    progress.style.width = '10%';
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPos = 20;
+    
+    // Colores UCC
+    const uccAzul = [0, 51, 102];
+    const uccVerde = [122, 192, 67];
+    
+    // ===== PORTADA =====
+    status.textContent = 'Creando portada...';
+    progress.style.width = '20%';
+    
+    // Fondo de portada
+    doc.setFillColor(...uccAzul);
+    doc.rect(0, 0, pageWidth, 80, 'F');
+    
+    // Logo simulado (círculo verde)
+    doc.setFillColor(...uccVerde);
+    doc.circle(pageWidth / 2, 40, 15, 'F');
+    
+    // Título principal
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REPORTE DE SENSORES', pageWidth / 2, 90, { align: 'center' });
+    
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Measure Data Logger - Dashboard Profesional', pageWidth / 2, 100, { align: 'center' });
+    
+    // Información de fecha
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    const now = new Date();
+    const fechaReporte = now.toLocaleString('es-ES', { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Fecha de generación: ${fechaReporte}`, pageWidth / 2, 120, { align: 'center' });
+    
+    // Rango de datos
+    if (rawData.length > 0) {
+      const firstDate = parseDate(rawData[0].fecha);
+      const lastDate = parseDate(rawData[rawData.length - 1].fecha);
+      const rangoTexto = `Período analizado: ${firstDate.toLocaleDateString('es-ES')} - ${lastDate.toLocaleDateString('es-ES')}`;
+      doc.text(rangoTexto, pageWidth / 2, 130, { align: 'center' });
+      doc.text(`Total de registros: ${rawData.length}`, pageWidth / 2, 140, { align: 'center' });
+    }
+    
+    // Pie de portada
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Universidad Cooperativa de Colombia', pageWidth / 2, pageHeight - 20, { align: 'center' });
+    doc.text('Sistema de Monitoreo Ambiental', pageWidth / 2, pageHeight - 15, { align: 'center' });
+    
+    await addExecutiveSummary(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress);
+    await addVariableCharts(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress);
+    await addForecastSection(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress);
+    await addDataTable(doc, uccAzul, pageWidth, pageHeight, status, progress);
+    
+    // Agregar números de página
+    addPageNumbers(doc, pageWidth, pageHeight);
+    
+    // Finalizar
+    status.textContent = 'Finalizando documento...';
+    progress.style.width = '100%';
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Guardar PDF
+    const fileName = `Reporte_Sensores_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.pdf`;
+    doc.save(fileName);
+    
+    showNotification('PDF generado exitosamente', 'success');
+    
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    showNotification('Error al generar PDF: ' + error.message, 'error');
+  } finally {
+    setTimeout(() => {
+      modal.classList.remove('active');
+      progress.style.width = '0%';
+    }, 1000);
+  }
+}
+
+async function addExecutiveSummary(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress) {
+  doc.addPage();
+  let yPos = 20;
+  
+  status.textContent = 'Generando resumen ejecutivo...';
+  progress.style.width = '30%';
+  
+  // Título de sección
+  doc.setFillColor(...uccAzul);
+  doc.rect(0, yPos - 5, pageWidth, 12, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('1. RESUMEN EJECUTIVO', 15, yPos + 4);
+  yPos += 20;
+  
+  // KPIs actuales
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Valores Actuales', 15, yPos);
+  yPos += 10;
+  
+  if (rawData.length > 0) {
+    const lastData = rawData[rawData.length - 1];
+    const lastDate = parseDate(lastData.fecha);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Última actualización: ${lastDate.toLocaleString('es-ES')}`, 15, yPos);
+    yPos += 10;
+    
+    const kpiData = [
+      ['Variable', 'Valor Actual', 'Unidad'],
+      ['Temperatura', lastData.temperatura?.toFixed(2) || 'N/A', '°C'],
+      ['Humedad', lastData.humedad?.toFixed(2) || 'N/A', '%'],
+      ['Radiación Solar', lastData.radiacion?.toFixed(2) || 'N/A', 'W/m²'],
+      ['PM10', lastData.pm10?.toFixed(2) || 'N/A', 'µg/m³'],
+      ['PM2.5', lastData.pm25?.toFixed(2) || 'N/A', 'µg/m³']
+    ];
+    
+    doc.autoTable({
+      head: [kpiData[0]],
+      body: kpiData.slice(1),
+      startY: yPos,
+      theme: 'grid',
+      headStyles: { fillColor: uccAzul, fontSize: 10, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 9 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 15, right: 15 }
+    });
+    
+    yPos = doc.lastAutoTable.finalY + 15;
+  }
+  
+  // Estadísticas generales
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Estadísticas del Período', 15, yPos);
+  yPos += 10;
+  
+  const variables = [
+    { name: 'Temperatura', key: 'temperatura', unit: '°C' },
+    { name: 'Humedad', key: 'humedad', unit: '%' },
+    { name: 'Radiación', key: 'radiacion', unit: 'W/m²' },
+    { name: 'PM10', key: 'pm10', unit: 'µg/m³' },
+    { name: 'PM2.5', key: 'pm25', unit: 'µg/m³' }
+  ];
+  
+  const statsData = [['Variable', 'Mínimo', 'Máximo', 'Media', 'Desv. Est.']];
+  
+  variables.forEach(v => {
+    const values = rawData.map(d => d[v.key]).filter(val => val !== null && !isNaN(val));
+    const stats = calculateStats(values);
+    
+    if (stats) {
+      statsData.push([
+        `${v.name} (${v.unit})`,
+        stats.min.toFixed(2),
+        stats.max.toFixed(2),
+        stats.mean.toFixed(2),
+        stats.stdDev.toFixed(2)
+      ]);
+    }
+  });
+  
+  doc.autoTable({
+    head: [statsData[0]],
+    body: statsData.slice(1),
+    startY: yPos,
+    theme: 'grid',
+    headStyles: { fillColor: uccVerde, fontSize: 9, fontStyle: 'bold' },
+    bodyStyles: { fontSize: 8 },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    margin: { left: 15, right: 15 }
+  });
+}
+
+async function addVariableCharts(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress) {
+  const variables = [
+    { name: 'Temperatura', key: 'temperatura', unit: '°C', color: '#003366' },
+    { name: 'Humedad', key: 'humedad', unit: '%', color: '#7AC043' },
+    { name: 'Radiación', key: 'radiacion', unit: 'W/m²', color: '#f59e0b' },
+    { name: 'PM10', key: 'pm10', unit: 'µg/m³', color: '#ef4444' },
+    { name: 'PM2.5', key: 'pm25', unit: 'µg/m³', color: '#8b5cf6' }
+  ];
+  
+  for (let i = 0; i < variables.length; i++) {
+    doc.addPage();
+    let yPos = 20;
+    
+    const variable = variables[i];
+    status.textContent = `Procesando gráfico de ${variable.name}...`;
+    progress.style.width = `${40 + (i * 10)}%`;
+    
+    // Título de sección
+    doc.setFillColor(...uccAzul);
+    doc.rect(0, yPos - 5, pageWidth, 12, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${i + 2}. ANÁLISIS: ${variable.name.toUpperCase()}`, 15, yPos + 4);
+    yPos += 20;
+    
+    // Crear gráfico temporal
+    const chartImage = await createChartImage(variable, filtered);
+    if (chartImage) {
+      doc.addImage(chartImage, 'PNG', 15, yPos, pageWidth - 30, 100);
+      yPos += 110;
+    }
+    
+    // Estadísticas detalladas
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Estadísticas Detalladas - ${variable.name}`, 15, yPos);
+    yPos += 8;
+    
+    const values = rawData.map(d => d[variable.key]).filter(val => val !== null && !isNaN(val));
+    const stats = calculateStats(values);
+    
+    if (stats) {
+      const detailData = [
+        ['Métrica', 'Valor'],
+        ['Cantidad de registros', stats.count.toString()],
+        ['Mínimo', `${stats.min.toFixed(2)} ${variable.unit}`],
+        ['Máximo', `${stats.max.toFixed(2)} ${variable.unit}`],
+        ['Media', `${stats.mean.toFixed(2)} ${variable.unit}`],
+        ['Mediana', `${stats.median.toFixed(2)} ${variable.unit}`],
+        ['Desviación estándar', `${stats.stdDev.toFixed(2)} ${variable.unit}`],
+        ['Percentil 25 (Q1)', `${stats.q1.toFixed(2)} ${variable.unit}`],
+        ['Percentil 75 (Q3)', `${stats.q3.toFixed(2)} ${variable.unit}`],
+        ['Rango (Max-Min)', `${(stats.max - stats.min).toFixed(2)} ${variable.unit}`]
+      ];
+      
+      doc.autoTable({
+        head: [detailData[0]],
+        body: detailData.slice(1),
+        startY: yPos,
+        theme: 'striped',
+        headStyles: { fillColor: uccVerde, fontSize: 10, fontStyle: 'bold' },
+        bodyStyles: { fontSize: 9 },
+        columnStyles: {
+          0: { fontStyle: 'bold', cellWidth: 80 },
+          1: { cellWidth: 'auto' }
+        },
+        margin: { left: 15, right: 15 }
+      });
+      
+      yPos = doc.lastAutoTable.finalY + 10;
+      
+      // Análisis de tendencia
+      if (yPos < pageHeight - 40) {
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Análisis de Tendencia:', 15, yPos);
+        yPos += 6;
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        
+        const range = stats.max - stats.min;
+        const cv = (stats.stdDev / stats.mean) * 100; // Coeficiente de variación
+        
+        let tendencia = '';
+        if (cv < 10) {
+          tendencia = 'La variable muestra baja variabilidad, indicando condiciones estables.';
+        } else if (cv < 30) {
+          tendencia = 'La variable presenta variabilidad moderada.';
+        } else {
+          tendencia = 'La variable muestra alta variabilidad, con fluctuaciones significativas.';
+        }
+        
+        doc.text(`• ${tendencia}`, 20, yPos);
+        yPos += 5;
+        doc.text(`• Coeficiente de variación: ${cv.toFixed(2)}%`, 20, yPos);
+        yPos += 5;
+        doc.text(`• Amplitud del rango: ${range.toFixed(2)} ${variable.unit}`, 20, yPos);
+      }
+    }
+  }
+}
+
+async function createChartImage(variable, dataFiltered) {
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = 800;
+  tempCanvas.height = 400;
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  const chartData = dataFiltered.map(r => r[variable.key]);
+  const chartLabels = dataFiltered.map(r => parseDate(r.fecha));
+  
+  const tempChart = new Chart(tempCtx, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: `${variable.name} (${variable.unit})`,
+        data: chartData,
+        borderColor: variable.color,
+        backgroundColor: variable.color + '20',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: variable.color,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: {
+        legend: { 
+          display: true,
+          position: 'top',
+          labels: { font: { size: 14 } }
+        },
+        title: {
+          display: true,
+          text: `Evolución de ${variable.name}`,
+          font: { size: 16, weight: 'bold' }
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'day',
+            displayFormats: { day: 'dd/MM' }
+          },
+          ticks: { font: { size: 10 } }
+        },
+        y: {
+          beginAtZero: false,
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+  
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const chartImage = tempCanvas.toDataURL('image/png');
+  tempChart.destroy();
+  
+  return chartImage;
+}
+
+async function addForecastSection(doc, uccAzul, uccVerde, pageWidth, pageHeight, status, progress) {
+  if (Object.keys(forecastData).length === 0) return;
+  
+  doc.addPage();
+  let yPos = 20;
+  
+  status.textContent = 'Generando pronósticos...';
+  progress.style.width = '85%';
+  
+  doc.setFillColor(...uccAzul);
+  doc.rect(0, yPos - 5, pageWidth, 12, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('7. PRONÓSTICOS SARIMA', 15, yPos + 4);
+  yPos += 20;
+  
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Pronósticos generados mediante modelo SARIMA (Seasonal AutoRegressive Integrated Moving Average)', 15, yPos);
+  yPos += 8;
+  doc.text('Los intervalos de confianza del 80% y 95% representan la incertidumbre del pronóstico.', 15, yPos);
+  yPos += 15;
+  
+  // Tabla resumen
+  const forecastSummary = [['Variable', 'Próx. 24h', 'Mín. 7 días', 'Máx. 7 días', 'Tendencia']];
+  
+  Object.keys(forecastData).forEach(varKey => {
+    const forecast = forecastData[varKey];
+    if (forecast && forecast.pronosticos && forecast.pronosticos.length > 0) {
+      const next24h = forecast.pronosticos[0]?.pronostico;
+      const week = forecast.pronosticos.slice(0, 168);
+      const weekValues = week.map(p => parseFloat(p.pronostico)).filter(v => !isNaN(v));
+      
+      if (weekValues.length > 0) {
+        const minWeek = Math.min(...weekValues);
+        const maxWeek = Math.max(...weekValues);
+        const firstVal = weekValues[0];
+        const lastVal = weekValues[weekValues.length - 1];
+        const trend = lastVal > firstVal ? '↗ Ascendente' : lastVal < firstVal ? '↘ Descendente' : '→ Estable';
+        
+        forecastSummary.push([
+          getVariableDisplayName(varKey),
+          next24h ? next24h.toFixed(2) : 'N/A',
+          minWeek.toFixed(2),
+          maxWeek.toFixed(2),
+          trend
+        ]);
+      }
+    }
+  });
+  
+  if (forecastSummary.length > 1) {
+    doc.autoTable({
+      head: [forecastSummary[0]],
+      body: forecastSummary.slice(1),
+      startY: yPos,
+      theme: 'grid',
+      headStyles: { fillColor: uccVerde, fontSize: 9, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { left: 15, right: 15 }
+    });
+    
+    yPos = doc.lastAutoTable.finalY + 15;
+  }
+  
+  // Capturar gráfico de pronóstico
+  if (forecastChart && document.getElementById('forecastChartContainer').style.display !== 'none') {
+    const forecastCanvas = document.getElementById('forecastChart');
+    const forecastImage = forecastCanvas.toDataURL('image/png');
+    
+    if (yPos > pageHeight - 120) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Pronóstico - ${getVariableDisplayName(currentForecastVariable)}`, 15, yPos);
+    yPos += 10;
+    
+    doc.addImage(forecastImage, 'PNG', 15, yPos, pageWidth - 30, 100);
+  }
+}
+
+async function addDataTable(doc, uccAzul, pageWidth, pageHeight, status, progress) {
+  doc.addPage();
+  let yPos = 20;
+  
+  status.textContent = 'Generando tabla de datos...';
+  progress.style.width = '95%';
+  
+  doc.setFillColor(...uccAzul);
+  doc.rect(0, yPos - 5, pageWidth, 12, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('8. DATOS HISTÓRICOS', 15, yPos + 4);
+  yPos += 20;
+  
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Últimos ${Math.min(100, rawData.length)} registros del sistema de monitoreo`, 15, yPos);
+  yPos += 10;
+  
+  const tableData = [['Fecha', 'Temp (°C)', 'Hum (%)', 'Rad (W/m²)', 'PM10', 'PM2.5']];
+  const dataToShow = rawData.slice(-100).reverse();
+  
+  dataToShow.forEach(row => {
+    const fecha = parseDate(row.fecha);
+    const fechaStr = fecha ? fecha.toLocaleString('es-ES', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }) : row.fecha;
+    
+    tableData.push([
+      fechaStr,
+      row.temperatura !== null ? row.temperatura.toFixed(2) : '--',
+      row.humedad !== null ? row.humedad.toFixed(2) : '--',
+      row.radiacion !== null ? row.radiacion.toFixed(2) : '--',
+      row.pm10 !== null ? row.pm10.toFixed(2) : '--',
+      row.pm25 !== null ? row.pm25.toFixed(2) : '--'
+    ]);
+  });
+  
+  doc.autoTable({
+    head: [tableData[0]],
+    body: tableData.slice(1),
+    startY: yPos,
+    theme: 'striped',
+    headStyles: { fillColor: uccAzul, fontSize: 8, fontStyle: 'bold' },
+    bodyStyles: { fontSize: 7 },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    margin: { left: 10, right: 10 },
+    columnStyles: {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 20 },
+      2: { cellWidth: 20 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 20 },
+      5: { cellWidth: 20 }
+    }
+  });
+}
+
+function addPageNumbers(doc, pageWidth, pageHeight) {
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Página ${i} de ${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: 'center' }
+    );
+    
+    if (i > 1) {
+      doc.text(
+        'Measure Data Logger © 2025',
+        15,
+        pageHeight - 10
+      );
+    }
+  }
+}
     let currentVariable = 'temp';
     let forecastData = {};
     let forecastChart = null;
@@ -2323,19 +2962,8 @@
     document.getElementById('exportCSV').addEventListener('click', () => exportToCSV('datos.csv'));
     document.getElementById('csvBtn').addEventListener('click', () => exportToCSV('datos.csv'));
 
-    document.getElementById('pdfBtn').addEventListener('click', () => {
-      showNotification('Generando PDF...', 'info');
-      html2canvas(document.querySelector('#contentPDF'), { scale: 2 }).then(canvas => {
-        const img = canvas.toDataURL('image/png');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = 210;
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('Dashboard.pdf');
-        showNotification('PDF generado', 'success');
-      });
-    });
+    // Botón PDF con función profesional
+  document.getElementById('pdfBtn').addEventListener('click', generateProfessionalPDF);
 
     // Modo oscuro
     const modoOscuroBtn = document.getElementById('modoOscuroBtn');
