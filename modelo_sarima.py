@@ -136,7 +136,7 @@ def buscar_mejor_modelo(series):
     """Busca el mejor modelo SARIMA para una serie temporal"""
     p = d = q = [0, 1]
     P = D = Q = [0, 1]
-    m = 12  # estacionalidad de 12 horas
+    m = 24  # estacionalidad de 12 horas
     
     mejor_aic = float("inf")
     mejor_modelo = None
