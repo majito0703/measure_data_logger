@@ -1,8 +1,8 @@
 {
   "variable": "Temperature",
-  "fecha_generacion": "2026-02-21 12:44:57",
+  "fecha_generacion": "2026-02-22 02:02:52",
   "modelo": "SARIMA(1, 0, 1)(0, 1, 1, 24)",
-  "aic": 539.2467034172194,
+  "aic": 539.2467033894866,
   "observaciones_historicas": 275,
   "horas_pronostico": 72,
   "limite_permitido": null,
@@ -1111,579 +1111,579 @@
   "pronosticos": [
     {
       "fecha": "2026-02-17 16:00:00",
-      "pronostico": 25.701173703767914,
-      "confianza_80_min": 24.721168609147252,
-      "confianza_80_max": 26.681178798388576,
-      "confianza_95_min": 24.202385249394624,
-      "confianza_95_max": 27.199962158141204
+      "pronostico": 25.701228337093468,
+      "confianza_80_min": 24.721231247759746,
+      "confianza_80_max": 26.68122542642719,
+      "confianza_95_min": 24.20245212575004,
+      "confianza_95_max": 27.200004548436898
     },
     {
       "fecha": "2026-02-17 17:00:00",
-      "pronostico": 29.31908072902387,
-      "confianza_80_min": 27.884971486380326,
-      "confianza_80_max": 30.753189971667414,
-      "confianza_95_min": 27.125799911421424,
-      "confianza_95_max": 31.512361546626316
+      "pronostico": 29.319067462182623,
+      "confianza_80_min": 27.88497633673992,
+      "confianza_80_max": 30.753158587625325,
+      "confianza_95_min": 27.12581435244781,
+      "confianza_95_max": 31.512320571917435
     },
     {
       "fecha": "2026-02-17 18:00:00",
-      "pronostico": 30.38716080491395,
-      "confianza_80_min": 28.895246160767652,
-      "confianza_80_max": 31.87907544906025,
-      "confianza_95_min": 28.105474254679798,
-      "confianza_95_max": 32.6688473551481
+      "pronostico": 30.387120844272133,
+      "confianza_80_min": 28.89522497666517,
+      "confianza_80_max": 31.879016711879096,
+      "confianza_95_min": 28.10546301027683,
+      "confianza_95_max": 32.66877867826744
     },
     {
       "fecha": "2026-02-17 19:00:00",
-      "pronostico": 30.571837878487766,
-      "confianza_80_min": 29.071202804346715,
-      "confianza_80_max": 32.07247295262882,
-      "confianza_95_min": 28.27681458147031,
-      "confianza_95_max": 32.86686117550523
+      "pronostico": 30.571797000905462,
+      "confianza_80_min": 29.07118072410668,
+      "confianza_80_max": 32.07241327770425,
+      "confianza_95_min": 28.27680245194219,
+      "confianza_95_max": 32.866791549868736
     },
     {
       "fecha": "2026-02-17 20:00:00",
-      "pronostico": 30.487770898665044,
-      "confianza_80_min": 28.985794872703295,
-      "confianza_80_max": 31.989746924626793,
-      "confianza_95_min": 28.19069679281224,
-      "confianza_95_max": 32.78484500451785
+      "pronostico": 30.487737106439475,
+      "confianza_80_min": 28.98577986890255,
+      "confianza_80_max": 31.9896943439764,
+      "confianza_95_min": 28.190691735002805,
+      "confianza_95_max": 32.78478247787614
     },
     {
       "fecha": "2026-02-17 21:00:00",
-      "pronostico": 30.561117913311556,
-      "confianza_80_min": 29.058935100768025,
-      "confianza_80_max": 32.063300725855086,
-      "confianza_95_min": 28.263727554672926,
-      "confianza_95_max": 32.858508271950186
+      "pronostico": 30.56109047598528,
+      "confianza_80_min": 29.058926448617253,
+      "confianza_80_max": 32.06325450335331,
+      "confianza_95_min": 28.26372884679338,
+      "confianza_95_max": 32.858452105177186
     },
     {
       "fecha": "2026-02-17 22:00:00",
-      "pronostico": 30.555299269226154,
-      "confianza_80_min": 29.05308455446778,
-      "confianza_80_max": 32.05751398398453,
-      "confianza_95_min": 28.257860120360274,
-      "confianza_95_max": 32.85273841809203
+      "pronostico": 30.55527005891097,
+      "confianza_80_min": 29.053074128537403,
+      "confianza_80_max": 32.05746598928454,
+      "confianza_95_min": 28.257859638282554,
+      "confianza_95_max": 32.85268047953939
     },
     {
       "fecha": "2026-02-17 23:00:00",
-      "pronostico": 30.414815196130952,
-      "confianza_80_min": 28.912595559294505,
-      "confianza_80_max": 31.9170348329674,
-      "confianza_95_min": 28.117368519596262,
-      "confianza_95_max": 32.71226187266564
+      "pronostico": 30.414777694459854,
+      "confianza_80_min": 28.912576841841563,
+      "confianza_80_max": 31.916978547078145,
+      "confianza_95_min": 28.11735974590775,
+      "confianza_95_max": 32.71219564301196
     },
     {
       "fecha": "2026-02-18 00:00:00",
-      "pronostico": 30.18114787355046,
-      "confianza_80_min": 28.67892747729641,
-      "confianza_80_max": 31.683368269804514,
-      "confianza_95_min": 27.883700035586767,
-      "confianza_95_max": 32.47859571151416
+      "pronostico": 30.181123338032364,
+      "confianza_80_min": 28.67892172596386,
+      "confianza_80_max": 31.683324950100868,
+      "confianza_95_min": 27.883704228001392,
+      "confianza_95_max": 32.47854244806334
     },
     {
       "fecha": "2026-02-18 01:00:00",
-      "pronostico": 30.01420082787076,
-      "confianza_80_min": 28.511980314447495,
-      "confianza_80_max": 31.516421341294024,
-      "confianza_95_min": 27.71675281071222,
-      "confianza_95_max": 32.311648845029296
+      "pronostico": 30.014181267679724,
+      "confianza_80_min": 28.511979538435916,
+      "confianza_80_max": 31.516382996923532,
+      "confianza_95_min": 27.71676197844459,
+      "confianza_95_max": 32.31160055691486
     },
     {
       "fecha": "2026-02-18 02:00:00",
-      "pronostico": 29.839376735270626,
-      "confianza_80_min": 28.33715620376968,
-      "confianza_80_max": 31.341597266771572,
-      "confianza_95_min": 27.541928690464655,
-      "confianza_95_max": 32.136824780076594
+      "pronostico": 29.839357718553035,
+      "confianza_80_min": 28.33715597123044,
+      "confianza_80_max": 31.34155946587563,
+      "confianza_95_min": 27.54193840166878,
+      "confianza_95_max": 32.13677703543729
     },
     {
       "fecha": "2026-02-18 03:00:00",
-      "pronostico": 29.667804682675552,
-      "confianza_80_min": 28.16558414838974,
-      "confianza_80_max": 31.170025216961363,
-      "confianza_95_min": 27.3703566336105,
-      "confianza_95_max": 31.965252731740605
+      "pronostico": 29.667783708575236,
+      "confianza_80_min": 28.165581958467584,
+      "confianza_80_max": 31.169985458682888,
+      "confianza_95_min": 27.3703643874316,
+      "confianza_95_max": 31.96520302971887
     },
     {
       "fecha": "2026-02-18 04:00:00",
-      "pronostico": 29.497126637819306,
-      "confianza_80_min": 27.994906103224665,
-      "confianza_80_max": 30.999347172413948,
-      "confianza_95_min": 27.199678588281937,
-      "confianza_95_max": 31.794574687356675
+      "pronostico": 29.497107836136564,
+      "confianza_80_min": 27.994906085720096,
+      "confianza_80_max": 30.999309586553032,
+      "confianza_95_min": 27.19968851452064,
+      "confianza_95_max": 31.794527157752487
     },
     {
       "fecha": "2026-02-18 05:00:00",
-      "pronostico": 29.366792487646958,
-      "confianza_80_min": 27.864571953307035,
-      "confianza_80_max": 30.86901302198688,
-      "confianza_95_min": 27.069344438499144,
-      "confianza_95_max": 31.66424053679477
+      "pronostico": 29.366771595735035,
+      "confianza_80_min": 27.864569845573072,
+      "confianza_80_max": 30.868973345896997,
+      "confianza_95_min": 27.069352274508343,
+      "confianza_95_max": 31.664190916961726
     },
     {
       "fecha": "2026-02-18 06:00:00",
-      "pronostico": 29.233230726869145,
-      "confianza_80_min": 27.73121786293268,
-      "confianza_80_max": 30.73524359080561,
-      "confianza_95_min": 26.93610028219577,
-      "confianza_95_max": 31.53036117154252
+      "pronostico": 29.23320943331459,
+      "confianza_80_min": 27.731215441123094,
+      "confianza_80_max": 30.73520342550609,
+      "confianza_95_min": 26.93610785048451,
+      "confianza_95_max": 31.530311016144672
     },
     {
       "fecha": "2026-02-18 07:00:00",
-      "pronostico": 29.34883841056777,
-      "confianza_80_min": 27.84755429496207,
-      "confianza_80_max": 30.850122526173468,
-      "confianza_95_min": 27.05282249028849,
-      "confianza_95_max": 31.644854330847046
+      "pronostico": 29.348820218933863,
+      "confianza_80_min": 27.847555302153832,
+      "confianza_80_max": 30.850085135713893,
+      "confianza_95_min": 27.052833660724644,
+      "confianza_95_max": 31.64480677714308
     },
     {
       "fecha": "2026-02-18 08:00:00",
-      "pronostico": 29.952962221857064,
-      "confianza_80_min": 28.45179057518937,
-      "confianza_80_max": 31.454133868524757,
-      "confianza_95_min": 27.657118307975182,
-      "confianza_95_max": 32.248806135738945
+      "pronostico": 29.95294878419389,
+      "confianza_80_min": 28.45179638786683,
+      "confianza_80_max": 31.45410118052095,
+      "confianza_95_min": 27.657134311167408,
+      "confianza_95_max": 32.24876325722037
     },
     {
       "fecha": "2026-02-18 09:00:00",
-      "pronostico": 30.74450007711009,
-      "confianza_80_min": 29.243345783840816,
-      "confianza_80_max": 32.24565437037936,
-      "confianza_95_min": 28.448682702960845,
-      "confianza_95_max": 33.040317451259334
+      "pronostico": 30.74448859353703,
+      "confianza_80_min": 29.24335355871485,
+      "confianza_80_max": 32.24562362835921,
+      "confianza_95_min": 28.448700672640953,
+      "confianza_95_max": 33.04027651443311
     },
     {
       "fecha": "2026-02-18 10:00:00",
-      "pronostico": 31.41614339693988,
-      "confianza_80_min": 29.914991781115166,
-      "confianza_80_max": 32.9172950127646,
-      "confianza_95_min": 29.12033011758873,
-      "confianza_95_max": 33.71195667629103
+      "pronostico": 31.416092587828135,
+      "confianza_80_min": 29.91496023172535,
+      "confianza_80_max": 32.917224943930925,
+      "confianza_95_min": 29.12030876367984,
+      "confianza_95_max": 33.711876411976434
     },
     {
       "fecha": "2026-02-18 11:00:00",
-      "pronostico": 32.19448380773716,
-      "confianza_80_min": 30.693332605011374,
-      "confianza_80_max": 33.69563501046294,
-      "confianza_95_min": 29.89867116016631,
-      "confianza_95_max": 34.490296455308005
+      "pronostico": 32.19442150253793,
+      "confianza_80_min": 30.69328955973455,
+      "confianza_80_max": 33.695553445341304,
+      "confianza_95_min": 29.89863831047653,
+      "confianza_95_max": 34.49020469459932
     },
     {
       "fecha": "2026-02-18 12:00:00",
-      "pronostico": 33.16410261079517,
-      "confianza_80_min": 31.662951471805627,
-      "confianza_80_max": 34.66525374978471,
-      "confianza_95_min": 30.868290060700488,
-      "confianza_95_max": 35.45991516088985
+      "pronostico": 33.164081116792055,
+      "confianza_80_min": 31.66294923775638,
+      "confianza_80_max": 34.66521299582773,
+      "confianza_95_min": 30.868298022254947,
+      "confianza_95_max": 35.45986421132916
     },
     {
       "fecha": "2026-02-18 13:00:00",
-      "pronostico": 33.72778064278408,
-      "confianza_80_min": 32.226629513628446,
-      "confianza_80_max": 35.22893177193972,
-      "confianza_95_min": 31.431968107729062,
-      "confianza_95_max": 36.0235931778391
+      "pronostico": 33.7277787063692,
+      "confianza_80_min": 32.22664683717229,
+      "confianza_80_max": 35.22891057556611,
+      "confianza_95_min": 31.431995626879186,
+      "confianza_95_max": 36.023561785859215
     },
     {
       "fecha": "2026-02-18 14:00:00",
-      "pronostico": 33.72896323570768,
-      "confianza_80_min": 32.2278121080696,
-      "confianza_80_max": 35.23011436334576,
-      "confianza_95_min": 31.433150702973556,
-      "confianza_95_max": 36.024775768441806
+      "pronostico": 33.72893554390775,
+      "confianza_80_min": 32.22780367622886,
+      "confianza_80_max": 35.230067411586646,
+      "confianza_95_min": 31.43315246673934,
+      "confianza_95_max": 36.02471862107616
     },
     {
       "fecha": "2026-02-18 15:00:00",
-      "pronostico": 31.971714766171416,
-      "confianza_80_min": 30.47056363876693,
-      "confianza_80_max": 33.47286589357591,
-      "confianza_95_min": 29.67590223379454,
-      "confianza_95_max": 34.26752729854829
+      "pronostico": 31.971843306157034,
+      "confianza_80_min": 30.470711438712534,
+      "confianza_80_max": 33.47297517360153,
+      "confianza_95_min": 29.676060229347097,
+      "confianza_95_max": 34.26762638296697
     },
     {
       "fecha": "2026-02-18 16:00:00",
-      "pronostico": 31.57743994245909,
-      "confianza_80_min": 30.065722437540185,
-      "confianza_80_max": 33.08915744737799,
-      "confianza_95_min": 29.265467530189667,
-      "confianza_95_max": 33.88941235472851
+      "pronostico": 31.577597251649593,
+      "confianza_80_min": 30.065901863966598,
+      "confianza_80_max": 33.089292639332584,
+      "confianza_95_min": 29.265658664773532,
+      "confianza_95_max": 33.88953583852565
     },
     {
       "fecha": "2026-02-18 17:00:00",
-      "pronostico": 31.627251606547095,
-      "confianza_80_min": 30.103562669962578,
-      "confianza_80_max": 33.15094054313161,
-      "confianza_95_min": 29.296970469495292,
-      "confianza_95_max": 33.9575327435989
+      "pronostico": 31.62728914237751,
+      "confianza_80_min": 30.103625737226242,
+      "confianza_80_max": 33.15095254752878,
+      "confianza_95_min": 29.297047052283308,
+      "confianza_95_max": 33.95753123247171
     },
     {
       "fecha": "2026-02-18 18:00:00",
-      "pronostico": 31.293799916118168,
-      "confianza_80_min": 29.768272293173688,
-      "confianza_80_max": 32.81932753906265,
-      "confianza_95_min": 28.960706750942578,
-      "confianza_95_max": 33.62689308129376
+      "pronostico": 31.293784023931295,
+      "confianza_80_min": 29.768282437893635,
+      "confianza_80_max": 32.81928560996896,
+      "confianza_95_min": 28.96073067876842,
+      "confianza_95_max": 33.62683736909417
     },
     {
       "fecha": "2026-02-18 19:00:00",
-      "pronostico": 30.927961632569275,
-      "confianza_80_min": 29.402150519140818,
-      "confianza_80_max": 32.45377274599773,
-      "confianza_95_min": 28.59443490611259,
-      "confianza_95_max": 33.26148835902596
+      "pronostico": 30.927931824697712,
+      "confianza_80_min": 29.402146823488263,
+      "confianza_80_max": 32.45371682590716,
+      "confianza_95_min": 28.594445033433793,
+      "confianza_95_max": 33.26141861596163
     },
     {
       "fecha": "2026-02-18 20:00:00",
-      "pronostico": 30.62765470320625,
-      "confianza_80_min": 29.101799855203964,
-      "confianza_80_max": 32.153509551208536,
-      "confianza_95_min": 28.294061090490835,
-      "confianza_95_max": 32.961248315921665
+      "pronostico": 30.62762589376755,
+      "confianza_80_min": 29.10179716920492,
+      "confianza_80_max": 32.15345461833018,
+      "confianza_95_min": 28.294072233405405,
+      "confianza_95_max": 32.96117955412969
     },
     {
       "fecha": "2026-02-18 21:00:00",
-      "pronostico": 30.61606364088143,
-      "confianza_80_min": 29.09020204525785,
-      "confianza_80_max": 32.14192523650501,
-      "confianza_95_min": 28.282459708569775,
-      "confianza_95_max": 32.94966757319308
+      "pronostico": 30.616038410061886,
+      "confianza_80_min": 29.090202939547915,
+      "confianza_80_max": 32.14187388057586,
+      "confianza_95_min": 28.282474432657473,
+      "confianza_95_max": 32.9496023874663
     },
     {
       "fecha": "2026-02-18 22:00:00",
-      "pronostico": 30.576881703219026,
-      "confianza_80_min": 29.051019066519107,
-      "confianza_80_max": 32.10274433991894,
-      "confianza_95_min": 28.24327617871851,
-      "confianza_95_max": 32.91048722771954
+      "pronostico": 30.576853457530373,
+      "confianza_80_min": 29.05101694618827,
+      "confianza_80_max": 32.102689968872475,
+      "confianza_95_min": 28.243287888316697,
+      "confianza_95_max": 32.91041902674405
     },
     {
       "fecha": "2026-02-18 23:00:00",
-      "pronostico": 30.423292678869977,
-      "confianza_80_min": 28.897429881544227,
-      "confianza_80_max": 31.949155476195727,
-      "confianza_95_min": 28.089686908713446,
-      "confianza_95_max": 32.75689844902651
+      "pronostico": 30.42325559456279,
+      "confianza_80_min": 28.897418922631694,
+      "confianza_80_max": 31.949092266493885,
+      "confianza_95_min": 28.089689779749442,
+      "confianza_95_max": 32.75682140937614
     },
     {
       "fecha": "2026-02-19 00:00:00",
-      "pronostico": 30.18447779053824,
-      "confianza_80_min": 28.658614968429802,
-      "confianza_80_max": 31.710340612646675,
-      "confianza_95_min": 27.850871982479866,
-      "confianza_95_max": 32.51808359859661
+      "pronostico": 30.18445343406695,
+      "confianza_80_min": 28.658616737358628,
+      "confianza_80_max": 31.71029013077527,
+      "confianza_95_min": 27.850887581360105,
+      "confianza_95_max": 32.51801928677379
     },
     {
       "fecha": "2026-02-19 01:00:00",
-      "pronostico": 30.015508804246156,
-      "confianza_80_min": 28.489645978314048,
-      "confianza_80_max": 31.541371630178265,
-      "confianza_95_min": 27.681902990339978,
-      "confianza_95_max": 32.349114618152335
+      "pronostico": 30.015489320318338,
+      "confianza_80_min": 28.48965261978715,
+      "confianza_80_max": 31.541326020849525,
+      "confianza_95_min": 27.681923461764924,
+      "confianza_95_max": 32.34905517887175
     },
     {
       "fecha": "2026-02-19 02:00:00",
-      "pronostico": 29.839890502492114,
-      "confianza_80_min": 28.31402767597021,
-      "confianza_80_max": 31.36575332901402,
-      "confianza_95_min": 27.50628468768392,
-      "confianza_95_max": 32.173496317300305
+      "pronostico": 29.839871518061404,
+      "confianza_80_min": 28.314034816940538,
+      "confianza_80_max": 31.36570821918227,
+      "confianza_95_min": 27.50630565860616,
+      "confianza_95_max": 32.17343737751665
     },
     {
       "fecha": "2026-02-19 03:00:00",
-      "pronostico": 29.668006488123144,
-      "confianza_80_min": 28.14214366151448,
-      "confianza_80_max": 31.193869314731806,
-      "confianza_95_min": 27.334400673182266,
-      "confianza_95_max": 32.00161230306402
+      "pronostico": 29.66798552762059,
+      "confianza_80_min": 28.14214882641299,
+      "confianza_80_max": 31.193822228828193,
+      "confianza_95_min": 27.33441966803269,
+      "confianza_95_max": 32.00155138720849
     },
     {
       "fecha": "2026-02-19 04:00:00",
-      "pronostico": 29.49720590608901,
-      "confianza_80_min": 27.971343079585935,
-      "confianza_80_max": 31.023068732592087,
-      "confianza_95_min": 27.163600091309615,
-      "confianza_95_max": 31.830811720868407
+      "pronostico": 29.497187110107063,
+      "confianza_80_min": 27.9713504090051,
+      "confianza_80_max": 31.023023811209026,
+      "confianza_95_min": 27.163621250680723,
+      "confianza_95_max": 31.830752969533403
     },
     {
       "fecha": "2026-02-19 05:00:00",
-      "pronostico": 29.36682362386581,
-      "confianza_80_min": 27.840960797676704,
-      "confianza_80_max": 30.892686450054914,
-      "confianza_95_min": 27.03321780956659,
-      "confianza_95_max": 31.700429438165028
+      "pronostico": 29.366802734334403,
+      "confianza_80_min": 27.84096603354621,
+      "confianza_80_max": 30.892639435122597,
+      "confianza_95_min": 27.033236875387935,
+      "confianza_95_max": 31.70036859328087
     },
     {
       "fecha": "2026-02-19 06:00:00",
-      "pronostico": 29.23324295703549,
-      "confianza_80_min": 27.707584583122188,
-      "confianza_80_max": 30.75890133094879,
-      "confianza_95_min": 26.89994982550917,
-      "confianza_95_max": 31.566536088561808
+      "pronostico": 29.233221664471486,
+      "confianza_80_min": 27.707589503113528,
+      "confianza_80_max": 30.758853825829444,
+      "confianza_95_min": 26.899968621589117,
+      "confianza_95_max": 31.566474707353855
     },
     {
       "fecha": "2026-02-19 07:00:00",
-      "pronostico": 29.348843214521953,
-      "confianza_80_min": 27.823902289017763,
-      "confianza_80_max": 30.873784140026142,
-      "confianza_95_min": 27.01664732565089,
-      "confianza_95_max": 31.681039103393015
+      "pronostico": 29.348825023298925,
+      "confianza_80_min": 27.823910635672064,
+      "confianza_80_max": 30.873739410925786,
+      "confianza_95_min": 27.016669720608856,
+      "confianza_95_max": 31.680980325988994
     },
     {
       "fecha": "2026-02-19 08:00:00",
-      "pronostico": 29.952964108828603,
-      "confianza_80_min": 28.42813390737214,
-      "confianza_80_max": 31.477794310285066,
-      "confianza_95_min": 27.620937557775544,
-      "confianza_95_max": 32.284990659881664
+      "pronostico": 29.95295067133538,
+      "confianza_80_min": 28.42814705898312,
+      "confianza_80_max": 31.477754283687638,
+      "confianza_95_min": 27.62096478480806,
+      "confianza_95_max": 32.2849365578627
     },
     {
       "fecha": "2026-02-19 09:00:00",
-      "pronostico": 30.744500818304,
-      "confianza_80_min": 29.219687700995312,
-      "confianza_80_max": 32.269313935612686,
-      "confianza_95_min": 28.412500395200254,
-      "confianza_95_max": 33.07650124140775
+      "pronostico": 30.744489334801063,
+      "confianza_80_min": 29.219702814656124,
+      "confianza_80_max": 32.269275854946,
+      "confianza_95_min": 28.412529588549063,
+      "confianza_95_max": 33.07644908105306
     },
     {
       "fecha": "2026-02-19 10:00:00",
-      "pronostico": 31.416143688077504,
-      "confianza_80_min": 29.89133320667033,
-      "confianza_80_max": 32.940954169484684,
-      "confianza_95_min": 29.08414729623724,
-      "confianza_95_max": 33.74814007991777
+      "pronostico": 31.416092878994625,
+      "confianza_80_min": 29.89130899601842,
+      "confianza_80_max": 32.940876761970834,
+      "confianza_95_min": 29.08413716594416,
+      "confianza_95_max": 33.748048592045095
     },
     {
       "fecha": "2026-02-19 11:00:00",
-      "pronostico": 32.194483922094705,
-      "confianza_80_min": 30.66967384737683,
-      "confianza_80_max": 33.719293996812574,
-      "confianza_95_min": 29.86248815223206,
-      "confianza_95_max": 34.52647969195735
+      "pronostico": 32.19442161690733,
+      "confianza_80_min": 30.669638140819668,
+      "confianza_80_max": 33.71920509299498,
+      "confianza_95_min": 29.862466526139194,
+      "confianza_95_max": 34.52637670767546
     },
     {
       "fecha": "2026-02-19 12:00:00",
-      "pronostico": 33.164102655714295,
-      "confianza_80_min": 31.639292643743733,
-      "confianza_80_max": 34.68891266768485,
-      "confianza_95_min": 30.832106981815382,
-      "confianza_95_max": 35.496098329613204
+      "pronostico": 33.16408116171604,
+      "confianza_80_min": 31.639297748406957,
+      "confianza_80_max": 34.68886457502512,
+      "confianza_95_min": 30.832126166959455,
+      "confianza_95_max": 35.49603615647263
     },
     {
       "fecha": "2026-02-19 13:00:00",
-      "pronostico": 33.72778066042812,
-      "confianza_80_min": 32.20297065813888,
-      "confianza_80_max": 35.25259066271735,
-      "confianza_95_min": 31.39578500133551,
-      "confianza_95_max": 36.05977631952072
+      "pronostico": 33.727778724015224,
+      "confianza_80_min": 32.2029953203923,
+      "confianza_80_max": 35.25256212763815,
+      "confianza_95_min": 31.39582374407233,
+      "confianza_95_max": 36.059733703958116
     },
     {
       "fecha": "2026-02-19 14:00:00",
-      "pronostico": 33.72896324263818,
-      "confianza_80_min": 32.20415324184295,
-      "confianza_80_max": 35.25377324343341,
-      "confianza_95_min": 31.39696758583046,
-      "confianza_95_max": 36.0609588994459
+      "pronostico": 33.72893555083906,
+      "confianza_80_min": 32.2041521487106,
+      "confianza_80_max": 35.253718952967525,
+      "confianza_95_min": 31.396980573181757,
+      "confianza_95_max": 36.060890528496365
     },
     {
       "fecha": "2026-02-19 15:00:00",
-      "pronostico": 31.971714768893683,
-      "confianza_80_min": 30.446904768328423,
-      "confianza_80_max": 33.496524769458944,
-      "confianza_95_min": 29.63971911243767,
-      "confianza_95_max": 34.3037104253497
+      "pronostico": 31.971843308879635,
+      "confianza_80_min": 30.44705990698193,
+      "confianza_80_max": 33.496626710777335,
+      "confianza_95_min": 29.639888331575246,
+      "confianza_95_max": 34.30379828618402
     },
     {
       "fecha": "2026-02-19 16:00:00",
-      "pronostico": 31.577439943528386,
-      "confianza_80_min": 30.042226393219266,
-      "confianza_80_max": 33.112653493837506,
-      "confianza_95_min": 29.229533430765418,
-      "confianza_95_max": 33.92534645629135
+      "pronostico": 31.577597252719023,
+      "confianza_80_min": 30.042413066946583,
+      "confianza_80_max": 33.11278143849147,
+      "confianza_95_min": 29.22973564913947,
+      "confianza_95_max": 33.925458856298576
     },
     {
       "fecha": "2026-02-19 17:00:00",
-      "pronostico": 31.627251606967107,
-      "confianza_80_min": 30.080248437679746,
-      "confianza_80_max": 33.174254776254465,
-      "confianza_95_min": 29.261314427932057,
-      "confianza_95_max": 33.99318878600216
+      "pronostico": 31.62728914279758,
+      "confianza_80_min": 30.0803186481722,
+      "confianza_80_max": 33.17425963742296,
+      "confianza_95_min": 29.261401935345727,
+      "confianza_95_max": 33.99317635024943
     },
     {
       "fecha": "2026-02-19 18:00:00",
-      "pronostico": 31.29379991628315,
-      "confianza_80_min": 29.74498573805758,
-      "confianza_80_max": 32.84261409450872,
-      "confianza_95_min": 28.925093038088107,
-      "confianza_95_max": 33.66250679447819
+      "pronostico": 31.293784024096297,
+      "confianza_80_min": 29.745003010512196,
+      "confianza_80_max": 32.842565037680394,
+      "confianza_95_min": 28.925127866843425,
+      "confianza_95_max": 33.66244018134917
     },
     {
       "fecha": "2026-02-19 19:00:00",
-      "pronostico": 30.927961632634076,
-      "confianza_80_min": 29.378868225454806,
-      "confianza_80_max": 32.477055039813344,
-      "confianza_95_min": 28.55882771060607,
-      "confianza_95_max": 33.29709555466208
+      "pronostico": 30.927931824762524,
+      "confianza_80_min": 29.378871655192125,
+      "confianza_80_max": 32.47699199433293,
+      "confianza_95_min": 28.558848735270693,
+      "confianza_95_max": 33.297014914254355
     },
     {
       "fecha": "2026-02-19 20:00:00",
-      "pronostico": 30.627654703231705,
-      "confianza_80_min": 29.078518218774523,
-      "confianza_80_max": 32.17679118768889,
-      "confianza_95_min": 28.25845490019233,
-      "confianza_95_max": 32.996854506271085
+      "pronostico": 30.62762589379301,
+      "confianza_80_min": 29.0785226578097,
+      "confianza_80_max": 32.17672912977632,
+      "confianza_95_min": 28.258476939906398,
+      "confianza_95_max": 32.99677484767962
     },
     {
       "fecha": "2026-02-19 21:00:00",
-      "pronostico": 30.616063640891426,
-      "confianza_80_min": 29.06692051022106,
-      "confianza_80_max": 32.16520677156179,
-      "confianza_95_min": 28.246853673346134,
-      "confianza_95_max": 32.98527360843672
+      "pronostico": 30.616038410071887,
+      "confianza_80_min": 29.0669285294914,
+      "confianza_80_max": 32.165148290652375,
+      "confianza_95_min": 28.246879294150823,
+      "confianza_95_max": 32.98519752599295
     },
     {
       "fecha": "2026-02-19 22:00:00",
-      "pronostico": 30.576881703222952,
-      "confianza_80_min": 29.027737547122214,
-      "confianza_80_max": 32.12602585932369,
-      "confianza_95_min": 28.207670167417234,
-      "confianza_95_max": 32.94609323902867
+      "pronostico": 30.576853457534302,
+      "confianza_80_min": 29.027742551763467,
+      "confianza_80_max": 32.12596436330514,
+      "confianza_95_min": 28.207692773719902,
+      "confianza_95_max": 32.946014141348705
     },
     {
       "fecha": "2026-02-19 23:00:00",
-      "pronostico": 30.42329267887152,
-      "confianza_80_min": 28.874148364558934,
-      "confianza_80_max": 31.972436993184104,
-      "confianza_95_min": 28.054080901101663,
-      "confianza_95_max": 32.792504456641375
+      "pronostico": 30.42325559456433,
+      "confianza_80_min": 28.874144530617247,
+      "confianza_80_max": 31.972366658511415,
+      "confianza_95_min": 28.054094668840236,
+      "confianza_95_max": 32.79241652028843
     },
     {
       "fecha": "2026-02-20 00:00:00",
-      "pronostico": 30.184477790538846,
-      "confianza_80_min": 28.635333451816027,
-      "confianza_80_max": 31.733622129261665,
-      "confianza_95_min": 27.81526597543676,
-      "confianza_95_max": 32.55368960564093
+      "pronostico": 30.184453434067557,
+      "confianza_80_min": 28.635342345715507,
+      "confianza_80_max": 31.733564522419606,
+      "confianza_95_min": 27.81529247101929,
+      "confianza_95_max": 32.55361439711582
     },
     {
       "fecha": "2026-02-20 01:00:00",
-      "pronostico": 30.015508804246394,
-      "confianza_80_min": 28.46636446175737,
-      "confianza_80_max": 31.56465314673542,
-      "confianza_95_min": 27.64629698338439,
-      "confianza_95_max": 32.3847206251084
+      "pronostico": 30.015489320318576,
+      "confianza_80_min": 28.466378228201098,
+      "confianza_80_max": 31.564600412436054,
+      "confianza_95_min": 27.64632835151158,
+      "confianza_95_max": 32.38465028912557
     },
     {
       "fecha": "2026-02-20 02:00:00",
-      "pronostico": 29.839890502492207,
-      "confianza_80_min": 28.29074615942225,
-      "confianza_80_max": 31.389034845562165,
-      "confianza_95_min": 27.47067868074174,
-      "confianza_95_max": 32.20910232424267
+      "pronostico": 29.839871518061496,
+      "confianza_80_min": 28.290760425363203,
+      "confianza_80_max": 31.38898261075979,
+      "confianza_95_min": 27.47071054836622,
+      "confianza_95_max": 32.20903248775677
     },
     {
       "fecha": "2026-02-20 03:00:00",
-      "pronostico": 29.66800648812318,
-      "confianza_80_min": 28.118862144967768,
-      "confianza_80_max": 31.21715083127859,
-      "confianza_95_min": 27.298794666242024,
-      "confianza_95_max": 32.037218310004334
+      "pronostico": 29.667985527620626,
+      "confianza_80_min": 28.118874434836897,
+      "confianza_80_max": 31.217096620404355,
+      "confianza_95_min": 27.29882455779469,
+      "confianza_95_max": 32.037146497446564
     },
     {
       "fecha": "2026-02-20 04:00:00",
-      "pronostico": 29.497205906089025,
-      "confianza_80_min": 27.948061563037612,
-      "confianza_80_max": 31.04635024914044,
-      "confianza_95_min": 27.127994084366925,
-      "confianza_95_max": 31.866417727811125
+      "pronostico": 29.497187110107078,
+      "confianza_80_min": 27.9480760174274,
+      "confianza_80_max": 31.046298202786755,
+      "confianza_95_min": 27.128026140440273,
+      "confianza_95_max": 31.866348079773882
     },
     {
       "fecha": "2026-02-20 05:00:00",
-      "pronostico": 29.366823623865816,
-      "confianza_80_min": 27.817679281123656,
-      "confianza_80_max": 30.915967966607976,
-      "confianza_95_min": 26.997611802616674,
-      "confianza_95_max": 31.736035445114958
+      "pronostico": 29.36680273433441,
+      "confianza_80_min": 27.81769164196379,
+      "confianza_80_max": 30.91591382670503,
+      "confianza_95_min": 26.997641765140266,
+      "confianza_95_max": 31.735963703528554
     },
     {
       "fecha": "2026-02-20 06:00:00",
-      "pronostico": 29.233242957035493,
-      "confianza_80_min": 27.684299993529084,
-      "confianza_80_max": 30.782185920541902,
-      "confianza_95_min": 26.864339118750067,
-      "confianza_95_max": 31.60214679532092
+      "pronostico": 29.23322166447149,
+      "confianza_80_min": 27.68431203805578,
+      "confianza_80_max": 30.7821312908872,
+      "confianza_95_min": 26.864368810866566,
+      "confianza_95_max": 31.602074518076414
     },
     {
       "fecha": "2026-02-20 07:00:00",
-      "pronostico": 29.348843214521953,
-      "confianza_80_min": 27.800606909372828,
-      "confianza_80_max": 30.897079519671077,
-      "confianza_95_min": 26.981020116931546,
-      "confianza_95_max": 31.71666631211236
+      "pronostico": 29.348825023298925,
+      "confianza_80_min": 27.800622378738176,
+      "confianza_80_max": 30.897027667859675,
+      "confianza_95_min": 26.981053405136024,
+      "confianza_95_max": 31.716596641461827
     },
     {
       "fecha": "2026-02-20 08:00:00",
-      "pronostico": 29.952964108828603,
-      "confianza_80_min": 28.404836861610857,
-      "confianza_80_max": 31.50109135604635,
-      "confianza_95_min": 27.585307800951135,
-      "confianza_95_max": 32.32062041670607
+      "pronostico": 29.95295067133538,
+      "confianza_80_min": 28.40485713563542,
+      "confianza_80_max": 31.50104420703534,
+      "confianza_95_min": 27.585345920775232,
+      "confianza_95_max": 32.32055542189553
     },
     {
       "fecha": "2026-02-20 09:00:00",
-      "pronostico": 30.744500818304,
-      "confianza_80_min": 29.196390398139833,
-      "confianza_80_max": 32.29261123846817,
-      "confianza_95_min": 28.3768702451842,
-      "confianza_95_max": 33.1121313914238
+      "pronostico": 30.744489334801063,
+      "confianza_80_min": 29.196412634165977,
+      "confianza_80_max": 32.29256603543615,
+      "confianza_95_min": 28.376910331250798,
+      "confianza_95_max": 33.11206833835133
     },
     {
       "fecha": "2026-02-20 10:00:00",
-      "pronostico": 31.416143688077504,
-      "confianza_80_min": 29.86803586414746,
-      "confianza_80_max": 32.96425151200755,
-      "confianza_95_min": 29.048517085555147,
-      "confianza_95_max": 33.78377029059986
+      "pronostico": 31.416092878994625,
+      "confianza_80_min": 29.86801877585308,
+      "confianza_80_max": 32.96416698213617,
+      "confianza_95_min": 29.048517847967926,
+      "confianza_95_max": 33.78366791002132
     },
     {
       "fecha": "2026-02-20 11:00:00",
-      "pronostico": 32.194483922094705,
-      "confianza_80_min": 30.64637649873373,
-      "confianza_80_max": 33.74259134545568,
-      "confianza_95_min": 29.826857932189878,
-      "confianza_95_max": 34.56210991199953
+      "pronostico": 32.19442161690733,
+      "confianza_80_min": 30.646347914532836,
+      "confianza_80_max": 33.742495319281815,
+      "confianza_95_min": 29.826847198800944,
+      "confianza_95_max": 34.56199603501371
     },
     {
       "fecha": "2026-02-20 12:00:00",
-      "pronostico": 33.164102655714295,
-      "confianza_80_min": 31.615995294156352,
-      "confianza_80_max": 34.71221001727224,
-      "confianza_95_min": 30.79647676032905,
-      "confianza_95_max": 35.53172855109954
+      "pronostico": 33.16408116171604,
+      "confianza_80_min": 31.616007521175643,
+      "confianza_80_max": 34.712154802256435,
+      "confianza_95_min": 30.796506838176743,
+      "confianza_95_max": 35.531655485255335
     },
     {
       "fecha": "2026-02-20 13:00:00",
-      "pronostico": 33.72778066042812,
-      "confianza_80_min": 32.1796733084058,
-      "confianza_80_max": 35.27588801245043,
-      "confianza_95_min": 31.36015477962636,
-      "confianza_95_max": 36.09540654122988
+      "pronostico": 33.727778724015224,
+      "confianza_80_min": 32.17970509301526,
+      "confianza_80_max": 35.27585235501519,
+      "confianza_95_min": 31.360204415066754,
+      "confianza_95_max": 36.09535303296369
     },
     {
       "fecha": "2026-02-20 14:00:00",
-      "pronostico": 33.72896324263818,
-      "confianza_80_min": 32.180855892087386,
-      "confianza_80_max": 35.277070593188974,
-      "confianza_95_min": 31.36133736408692,
-      "confianza_95_max": 36.09658912118944
+      "pronostico": 33.72893555083906,
+      "confianza_80_min": 32.18086192131108,
+      "confianza_80_max": 35.277009180367045,
+      "confianza_95_min": 31.361361244141793,
+      "confianza_95_max": 36.096509857536326
     },
     {
       "fecha": "2026-02-20 15:00:00",
-      "pronostico": 31.971714768893683,
-      "confianza_80_min": 30.4236074185694,
-      "confianza_80_max": 33.51982211921796,
-      "confianza_95_min": 29.60408889068884,
-      "confianza_95_max": 34.339340647098524
+      "pronostico": 31.971843308879635,
+      "confianza_80_min": 30.423769679578935,
+      "confianza_80_max": 33.51991693818033,
+      "confianza_95_min": 29.604269002529975,
+      "confianza_95_max": 34.339417615229294
     }
   ]
 }
