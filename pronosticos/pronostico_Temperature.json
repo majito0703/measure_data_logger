@@ -1,6 +1,6 @@
 {
   "variable": "Temperature",
-  "fecha_generacion": "2026-02-27 01:57:40",
+  "fecha_generacion": "2026-02-27 12:58:14",
   "modelo": "SARIMA(1, 0, 1)(0, 1, 1, 24)",
   "aic": 539.2467033894866,
   "observaciones_historicas": 275,
